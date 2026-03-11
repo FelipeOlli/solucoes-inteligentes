@@ -1,0 +1,43 @@
+{
+  "name": "site-solucoes-inteligentes",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Site SI - Visão dono (gestão de serviços) + Visão cliente (acompanhamento)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "next": "^16.1.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6",
+    "nanoid": "^5.0.9",
+    "framer-motion": "^11.11.17",
+    "lucide-react": "^0.454.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0",
+    "@types/bcryptjs": "^2.4.6",
+    "tsx": "^4.19.2",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^8",
+    "eslint-config-next": "^16.1.6",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

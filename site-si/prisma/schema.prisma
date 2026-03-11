@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ClientToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  clienteId  String
+  cliente    Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+model Cliente {
+  id           String    @id @default(cuid())
+  nome         String
+  email        String    @unique
+  telefone     String    @unique
+  endereco     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  servicos     Servico[]
+  clientTokens ClientToken[]
+}
+
+model CategoriaServico {
+  id        String    @id @default(cuid())
+  nome      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  servicos  Servico[]
+}
+
+model Servico {
+  id                  String              @id @default(cuid())
+  codigo              String              @unique
+  clienteId           String
+  cliente             Cliente             @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  categoriaId         String?
+  categoria           CategoriaServico?   @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  tipoServico         String?
+  descricao           String
+  statusAtual         String              @default("ABERTO")
+  dataAbertura        DateTime
+  dataAgendamento     DateTime?
+  dataConclusao       DateTime?
+  prazoEstimado       DateTime?
+  valorEstimado       Float?
+  enderecoServico     String?
+  contatoPreferencial String?
+  imagens             String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  statusHist          StatusHist[]
+  notas               Nota[]
+}
+
+model StatusHist {
+  id             String   @id @default(cuid())
+  servicoId      String
+  servico        Servico  @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  statusAnterior String?
+  statusNovo     String
+  idAutor        String
+  createdAt      DateTime @default(now())
+}
+
+model Nota {
+  id              String   @id @default(cuid())
+  servicoId       String
+  servico         Servico  @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  conteudo        String
+  visivelCliente  Boolean
+  idAutor         String
+  createdAt       DateTime @default(now())
+}

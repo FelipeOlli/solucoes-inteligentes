@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Titillium+Web:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Temas: default | dark | brand-blue (azul da marca) */
+:root,
+[data-theme="default"] {
+  --color-primary: #122969;
+  --color-secondary: #19cb96;
+  --color-text: #050006;
+  --color-bg: #f9fafb;
+  --color-bg-page: #f9fafb;
+  --color-navbar: #ffffff;
+  --color-navbar-border: #e5e7eb;
+  --color-navbar-text: #122969;
+  --color-navbar-text-muted: #4b5563;
+  --color-cta-bg: #122969;
+  --color-cta-text: #ffffff;
+  --color-card: #ffffff;
+  --color-card-border: #e5e7eb;
+  --font-heading: 'Titillium Web', sans-serif;
+  --font-body: 'Poppins', sans-serif;
+}
+
+[data-theme="dark"] {
+  --color-primary: #3b82f6;
+  --color-secondary: #19cb96;
+  --color-text: #f3f4f6;
+  --color-bg: #0f0f0f;
+  --color-bg-page: #0f0f0f;
+  --color-navbar: #1a1a1a;
+  --color-navbar-border: #333333;
+  --color-navbar-text: #f9fafb;
+  --color-navbar-text-muted: #9ca3af;
+  --color-cta-bg: #ffffff;
+  --color-cta-text: #1a1a1a;
+  --color-card: #1a1a1a;
+  --color-card-border: #333333;
+}
+
+/* Azul da marca - manual Soluções Inteligentes */
+[data-theme="brand-blue"] {
+  --color-primary: #122969;
+  --color-secondary: #19cb96;
+  --color-text: #e0e7ff;
+  --color-bg: #0a1a45;
+  --color-bg-page: #0a1a45;
+  --color-navbar: #122969;
+  --color-navbar-border: #1a3a7a;
+  --color-navbar-text: #ffffff;
+  --color-navbar-text-muted: #93a3c9;
+  --color-cta-bg: #ffffff;
+  --color-cta-text: #122969;
+  --color-card: #122969;
+  --color-card-border: #1a3a7a;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background-color: var(--color-bg-page);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+html { scroll-behavior: smooth; }
+body { overflow-x: hidden; }
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.glass-strong {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.text-gradient {
+  background: linear-gradient(135deg, #19cb96 0%, #2ee5ad 50%, #19cb96 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 3s ease infinite;
+}
+@keyframes gradient-shift {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
+}
+.glow-green {
+  box-shadow: 0 0 20px rgba(25, 203, 150, 0.3), 0 0 40px rgba(25, 203, 150, 0.2);
+}
+
+/* Utilitários para temas (cartões, bordas, texto) */
+.bg-theme-page { background-color: var(--color-bg-page); }
+.bg-theme-card { background-color: var(--color-card); }
+.border-theme { border-color: var(--color-card-border); }
+.text-theme { color: var(--color-text); }
+.text-theme-muted { color: var(--color-navbar-text-muted); }
+.text-theme-primary { color: var(--color-primary); }
+.bg-theme-cta { background-color: var(--color-cta-bg); color: var(--color-cta-text); }

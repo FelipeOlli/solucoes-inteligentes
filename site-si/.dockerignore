@@ -1,0 +1,12 @@
+node_modules
+.next
+.env
+.env.local
+*.db
+*.db-journal
+.git
+.gitignore
+README.md
+# Dockerfile/.dockerignore stay in repo; excluding from context keeps image build smaller
+# Dockerfile
+# .dockerignore
