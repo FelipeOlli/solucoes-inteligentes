@@ -2,6 +2,7 @@
 FROM node:20-alpine
 
 WORKDIR /app
+ARG CACHEBUST=2
 
 COPY package.json package-lock.json* ./
 RUN npm install --legacy-peer-deps
