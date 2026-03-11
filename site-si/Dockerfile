@@ -1,5 +1,7 @@
 # Build + Runtime (uma etapa para ter Prisma no start)
-FROM node:20-alpine
+# Usar imagem baseada em Debian em vez de Alpine para evitar problemas
+# de compatibilidade do Prisma com libssl (libssl.so.1.1 em Alpine).
+FROM node:20
 
 WORKDIR /app
 ARG CACHEBUST=2
