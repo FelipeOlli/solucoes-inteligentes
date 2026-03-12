@@ -69,12 +69,13 @@ export default function DashboardLayout({
                 className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
                 style={{ backgroundColor: "var(--color-cta-bg)" }}
               >
-                <Image
+                {/* img evita problema do next/image com SVG em produção */}
+                <img
                   src={theme === "dark" || theme === "brand-blue" ? "/favicon.svg" : "/logo/logo-simbolo-branco.svg"}
                   alt="Soluções Inteligentes"
                   width={24}
                   height={24}
-                  className="w-6 h-6"
+                  className="w-6 h-6 object-contain"
                 />
               </span>
               <Image
