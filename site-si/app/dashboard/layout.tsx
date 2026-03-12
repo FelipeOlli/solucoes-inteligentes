@@ -64,26 +64,13 @@ export default function DashboardLayout({
           }}
         >
           <div className="flex items-center gap-6 min-w-0">
-            <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-              <span
-                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
-                style={{ backgroundColor: "var(--color-cta-bg)" }}
-              >
-                {/* img evita problema do next/image com SVG em produção */}
-                <img
-                  src={theme === "dark" || theme === "brand-blue" ? "/favicon.svg" : "/logo/logo-simbolo-branco.svg"}
-                  alt="Soluções Inteligentes"
-                  width={24}
-                  height={24}
-                  className="w-6 h-6 object-contain"
-                />
-              </span>
+            <Link href="/dashboard" className="flex items-center shrink-0">
               <Image
                 src={theme === "dark" || theme === "brand-blue" ? "/logo/logo-branco.svg" : "/logo/logo-azul.svg"}
                 alt="Soluções Inteligentes"
                 width={140}
                 height={16}
-                className="h-5 w-auto hidden sm:block"
+                className="h-5 w-auto"
               />
             </Link>
             <nav className="flex gap-5 text-sm shrink-0" style={{ color: "var(--color-navbar-text-muted)" }}>

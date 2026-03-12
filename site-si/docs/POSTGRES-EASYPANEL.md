@@ -78,7 +78,27 @@ O seed roda automaticamente na subida do backend e cria o usuário dono se ainda
 
 ---
 
-## 6. Se der erro de conexão
+## 6. Login ainda dá "E-mail ou senha inválidos"
+
+Confira na ordem:
+
+1. **Logs do backend** – No EasyPanel, abra o serviço backend → **Logs**. Deve aparecer algo como:
+   - `Usuário dono criado: dono@solucoesinteligentes.com` ou `Usuário dono já existe`
+   - Se aparecer erro de conexão ao Postgres, a **DATABASE_URL** ou a rede (host `sidb`) está errada.
+
+2. **Rodar o seed manualmente** – Abra o **Shell** do backend e execute:
+   ```bash
+   npx tsx prisma/seed.ts
+   ```
+   Deve aparecer "Usuário dono criado" ou "Usuário dono já existe". Depois tente o login de novo.
+
+3. **Senha correta** – O seed cria o usuário com senha **senha123** (tudo minúsculo, sem espaço).
+
+4. **Limpar token antigo** – No navegador: F12 → Application → Local Storage → apague a chave **si_token** (ou use aba anônima) e recarregue a página de login.
+
+---
+
+## 7. Se der erro de conexão
 
 - Confirme que **sidb** está na mesma rede/projeto que o **backend** (no EasyPanel isso costuma ser automático).
 - Confirme que a senha na URL está com `@` codificado: `%40`.
