@@ -69,7 +69,7 @@ Para o banco não sumir ao reiniciar o app:
 2. **Container path:** `/app/data`
 3. **Volume name:** por exemplo `site-si-data` (pode ser qualquer nome).
 
-Assim o arquivo `si.db` fica em `/app/data/si.db` e é mantido entre deploys/reinícios.
+Assim o arquivo `si.db` fica em `/app/data/si.db` e é mantido entre deploys/reinícios. **Sem esse volume**, a cada restart o banco é recriado vazio; mesmo assim o **seed roda na subida** e o usuário dono é criado de novo (login volta a funcionar, mas dados antigos se perdem).
 
 ### 3.6 Deploy
 
@@ -82,11 +82,7 @@ Assim o arquivo `si.db` fica em `/app/data/si.db` e é mantido entre deploys/rei
 ## 4. Primeiro acesso
 
 - **URL:** a que o EasyPanel exibir para o app (ou o domínio que você apontou).
-- **Área do dono:** acesse `/login`. O primeiro usuário precisa existir no banco:
-  - Se você tiver **seed**, rode o seed uma vez (pode ser em um job temporário no EasyPanel ou localmente apontando para o mesmo arquivo de banco, se tiver acesso).
-  - Ou crie o usuário manualmente via Prisma/script se tiver como executar no servidor.
-
-Se ainda não tiver seed rodando em produção, posso te ajudar a descrever um comando ou job único para “rodar seed no primeiro deploy”.
+- **Área do dono:** acesse `/login`. O **seed roda automaticamente** na subida do container (Dockerfile): se o banco estiver vazio, o usuário **dono@solucoesinteligentes.com** (senha: **senha123**) é criado; se já existir, nada muda. Assim o login funciona logo após o deploy e **também após reiniciar o servidor**. Se ainda falhar, veja `CHECKLIST-TOKEN-LOGIN.md` (variáveis, volume, redeploy).
 
 ---
 

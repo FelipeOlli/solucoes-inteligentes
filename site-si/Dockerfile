@@ -25,5 +25,6 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Criar/migrar DB e subir (DATABASE_URL no EasyPanel: file:/app/data/si.db)
-CMD sh -c "npx prisma db push --accept-data-loss 2>/dev/null || true && npm start"
+# Criar/migrar DB, garantir usuário dono (seed se DB vazio) e subir (DATABASE_URL no EasyPanel: file:/app/data/si.db)
+# O seed é idempotente: só cria dono@solucoesinteligentes.com se não existir — evita "E-mail ou senha inválidos" após restart
+CMD sh -c "npx prisma db push --accept-data-loss 2>/dev/null || true && npx tsx prisma/seed.ts && npm start"

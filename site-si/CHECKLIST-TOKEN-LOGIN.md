@@ -1,6 +1,8 @@
-# Checklist: resolver "Token ausente ou inválido" no login
+# Checklist: resolver "E-mail ou senha inválidos" ou "Token ausente ou inválido" no login
 
 Siga na ordem. Depois de cada passo, teste o login em **aba anônima** (ou apague o `si_token` no Local Storage).
+
+**Importante:** desde que o **volume** em `/app/data` esteja configurado, o banco persiste entre restarts. O **seed roda automaticamente** na subida do container (Dockerfile): se o banco estiver vazio, o usuário dono é criado; se já existir, nada é alterado. Assim o login volta a funcionar mesmo após reiniciar o servidor.
 
 ---
 
@@ -34,17 +36,11 @@ NEXT_PUBLIC_APP_URL=https://sitecnologia.tec.br
 
 ---
 
-## 4. Rodar o seed **dentro do container**
+## 4. Seed automático (e opcional: rodar manualmente)
 
-- Abra o **Shell** / **Console** do serviço backend (no EasyPanel).
-- Rode:
-
-```bash
-npx tsx prisma/seed.ts
-```
-
-- Deve aparecer: `Usuário dono criado: dono@solucoesinteligentes.com | senha: senha123` ou `Usuário dono já existe`.
-- Se der erro de "schema" ou "database", o `DATABASE_URL` está errado ou o volume não está em `/app/data`.
+- O **Dockerfile** já roda `npx tsx prisma/seed.ts` na subida do container. Com volume em `/app/data`, o banco persiste; o seed só cria o dono se o banco estiver vazio.
+- Se quiser conferir ou rodar de novo: abra o **Shell** do backend no EasyPanel e execute `npx tsx prisma/seed.ts`. Deve aparecer "Usuário dono criado" ou "Usuário dono já existe".
+- Se der erro de schema/database, confira `DATABASE_URL` e o volume em `/app/data`.
 
 ---
 
