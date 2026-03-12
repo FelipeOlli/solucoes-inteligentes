@@ -17,13 +17,13 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const { data, error: err } = await api<{ token: string }>("/auth/login", {
+    const { data, error: err, status } = await api<{ token: string }>("/auth/login", {
       method: "POST",
       body: { email, password },
     });
     setLoading(false);
     if (err || !data?.token) {
-      setError(err?.message || "E-mail ou senha inválidos.");
+      setError(status === 401 ? "E-mail ou senha inválidos." : (err?.message || "E-mail ou senha inválidos."));
       return;
     }
     setToken(data.token);
@@ -53,7 +53,8 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg font-body focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full px-4 py-2 border border-gray-400 rounded-lg font-body bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary"
+            style={{ color: "#000000" }}
           />
         </div>
         <div>
@@ -66,7 +67,8 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg font-body focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full px-4 py-2 border border-gray-400 rounded-lg font-body bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-primary"
+            style={{ color: "#000000" }}
           />
         </div>
         {error && <p className="text-red-600 text-sm">{error}</p>}

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { createTokenDono } from "@/lib/auth";
-import { jsonResponse, errorResponse, unauthorized } from "@/lib/api-response";
+import { jsonResponse, errorResponse } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,12 +14,12 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({ where: { email: String(email).trim().toLowerCase() } });
     if (!user) {
-      return unauthorized();
+      return errorResponse("E-mail ou senha inválidos.", "UNAUTHORIZED", 401);
     }
 
     const valid = await bcrypt.compare(String(password), user.passwordHash);
     if (!valid) {
-      return unauthorized();
+      return errorResponse("E-mail ou senha inválidos.", "UNAUTHORIZED", 401);
     }
 
     const token = await createTokenDono(user.id);

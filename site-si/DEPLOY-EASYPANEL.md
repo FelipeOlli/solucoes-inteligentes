@@ -108,4 +108,23 @@ Se ainda não tiver seed rodando em produção, posso te ajudar a descrever um c
 - **Deploy from Git:** faça push das alterações na branch configurada e clique em **Redeploy** / **Build** no EasyPanel.
 - O volume em `/app/data` é mantido, então o banco (e usuários/dados) permanecem.
 
+### 6.1 Deploy automático ao dar push (opcional)
+
+Para não precisar clicar em Redeploy no EasyPanel a cada push:
+
+1. **Token do GitHub no EasyPanel**
+   - No EasyPanel: **Settings** → **GitHub**.
+   - Crie um **Personal Access Token** no GitHub (em GitHub → Settings → Developer settings → Personal access tokens).
+   - Permissões sugeridas: repositório com acesso de leitura e, se o EasyPanel pedir, **Webhooks** (read and write) para o auto-deploy.
+   - Cole o token no EasyPanel e salve.
+
+2. **Ativar Auto Deploy no app**
+   - Abra o **app do Site SI** no EasyPanel.
+   - Nas configurações do serviço (Code source / Git ou equivalente), ative a opção **Auto Deploy**.
+   - O EasyPanel passa a registrar um webhook no seu repositório no GitHub.
+
+Depois disso, cada **push na branch configurada** (ex.: `main`) dispara o build e o redeploy automaticamente. O volume em `/app/data` continua sendo mantido entre deploys.
+
+---
+
 Se quiser, no próximo passo podemos: ajustar o Dockerfile para o seu repositório (monorepo ou só site-si) ou montar o comando/seed para criar o primeiro usuário em produção.

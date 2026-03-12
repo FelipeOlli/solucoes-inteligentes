@@ -63,6 +63,31 @@ body {
   background-color: var(--color-bg-page);
 }
 
+/* Inputs sempre com texto bem escuro para melhor leitura,
+   independente do tema aplicado na página ou de autofill do navegador. */
+input,
+textarea {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  font-weight: 500;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Forçar background e texto escuros mesmo com autofill (Chrome/Safari) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+  box-shadow: 0 0 0px 1000px #ffffff inset;
+  -webkit-text-fill-color: #000000 !important;
+  color: #000000 !important;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
 }
