@@ -3,8 +3,17 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { createTokenDono } from "@/lib/auth";
 import { jsonResponse, errorResponse } from "@/lib/api-response";
+import { checkLoginRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  const rate = checkLoginRateLimit(request);
+  if (!rate.ok) {
+    return errorResponse(
+      `Muitas tentativas de login. Tente novamente em ${rate.retryAfter} segundos.`,
+      "TOO_MANY_REQUESTS",
+      429
+    );
+  }
   try {
     const body = await request.json();
     const { email, password } = body;

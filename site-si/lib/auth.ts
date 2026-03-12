@@ -1,9 +1,17 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "default-secret-change-in-production-min-32-chars"
-);
+const DEFAULT_SECRET = "default-secret-change-in-production-min-32-chars";
+
+function getSecret(): Uint8Array {
+  const raw = process.env.JWT_SECRET || DEFAULT_SECRET;
+  if (process.env.NODE_ENV === "production" && (raw === DEFAULT_SECRET || raw.length < 32)) {
+    throw new Error("JWT_SECRET deve ser definido e ter pelo menos 32 caracteres em produção. Veja SEGURANCA.md.");
+  }
+  return new TextEncoder().encode(raw);
+}
+
+const SECRET = getSecret();
 
 export type PayloadDono = { role: "dono"; userId: string };
 export type PayloadCliente = { role: "cliente"; id_cliente: string };
