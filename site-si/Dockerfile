@@ -10,6 +10,8 @@ COPY package.json package-lock.json* ./
 RUN npm install --legacy-peer-deps
 
 COPY . .
+# Falhar o build se favicon/logo não estiverem no contexto (ex.: Build path errado no EasyPanel)
+RUN test -f public/favicon.svg && test -f public/logo/logo-simbolo-branco.svg || (echo "ERRO: public/favicon.svg ou public/logo/logo-simbolo-branco.svg não encontrados." && exit 1)
 
 # Build (DATABASE_URL pode ser qualquer path para o build)
 ENV DATABASE_URL="file:./dev.db"

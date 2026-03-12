@@ -33,6 +33,14 @@ Abre em [http://localhost:3000](http://localhost:3000).
 
 **Login (dono):** e-mail `dono@solucoesinteligentes.com`, senha `senha123`.
 
+## Assets (favicon e logo)
+
+- **`public/favicon.svg`** – ícone da aba (símbolo SI azul).
+- **`public/logo/logo-simbolo-branco.svg`** – símbolo SI branco (header dashboard tema padrão e Navbar da home).
+- **`public/logo/logo-branco.svg`**, **`public/logo/logo-azul.svg`** – logo completo (símbolo + texto).
+
+O build do Docker verifica a presença de `favicon.svg` e `logo-simbolo-branco.svg`; se faltar, o build falha.
+
 ## Estrutura atual (scaffold)
 
 - `app/page.tsx` – Home (links para área dono e acompanhamento)
