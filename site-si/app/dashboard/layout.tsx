@@ -66,13 +66,16 @@ export default function DashboardLayout({
           <div className="flex items-center gap-6 min-w-0">
             <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
               <span
-                className="w-9 h-9 rounded-full flex items-center justify-center font-heading font-bold text-lg shrink-0"
-                style={{
-                  backgroundColor: "var(--color-cta-bg)",
-                  color: "var(--color-cta-text)",
-                }}
+                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
+                style={{ backgroundColor: "var(--color-cta-bg)" }}
               >
-                SI
+                <Image
+                  src={theme === "dark" || theme === "brand-blue" ? "/favicon.svg" : "/logo/logo-simbolo-branco.svg"}
+                  alt="Soluções Inteligentes"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6"
+                />
               </span>
               <Image
                 src={theme === "dark" || theme === "brand-blue" ? "/logo/logo-branco.svg" : "/logo/logo-azul.svg"}
@@ -103,6 +106,13 @@ export default function DashboardLayout({
                 style={{ color: pathname === "/dashboard/categorias" ? "var(--color-navbar-text)" : "inherit" }}
               >
                 Categorias
+              </Link>
+              <Link
+                href="/dashboard/usuarios"
+                className={navLinkClass(pathname === "/dashboard/usuarios")}
+                style={{ color: pathname === "/dashboard/usuarios" ? "var(--color-navbar-text)" : "inherit" }}
+              >
+                Usuários
               </Link>
               <Link
                 href="/dashboard/servicos/novo"
