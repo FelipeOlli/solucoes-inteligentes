@@ -23,4 +23,5 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Postgres: aplicar migrações, seed (dono + categorias) e subir (DATABASE_URL no EasyPanel: postgresql://...)
-CMD sh -c "npx prisma migrate deploy && npx tsx prisma/seed.ts && npm start"
+# Logs de diagnóstico: confirmam se a imagem já está com provider postgresql + migrações presentes
+CMD sh -c "echo '--- prisma/schema.prisma (datasource) ---' && sed -n '1,25p' prisma/schema.prisma && echo '--- migrations ---' && (ls -la prisma/migrations 2>/dev/null || true) && npx prisma migrate deploy && npx tsx prisma/seed.ts && npm start"
