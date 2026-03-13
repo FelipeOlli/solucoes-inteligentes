@@ -109,7 +109,7 @@ export function Navbar() {
             exit={{ opacity: 0, y: -20 }}
             className="fixed inset-x-0 top-20 z-40 lg:hidden mx-4"
           >
-            <div className="rounded-2xl p-6 shadow-2xl bg-si-blue/95 border border-white/10">
+            <div className="rounded-2xl p-6 shadow-2xl bg-si-blue border border-white/10">
               <div className="flex flex-col gap-2">
                 {navItems.map((item) => (
                   <button
