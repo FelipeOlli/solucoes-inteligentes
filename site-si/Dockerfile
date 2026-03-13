@@ -6,6 +6,9 @@ FROM node:20
 WORKDIR /app
 ARG CACHEBUST=2
 
+ARG JWT_SECRET=build-secret-at-least-32-characters-long-123456
+ENV JWT_SECRET=$JWT_SECRET
+
 COPY package.json package-lock.json* ./
 RUN npm install --legacy-peer-deps
 
