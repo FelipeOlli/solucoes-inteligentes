@@ -33,15 +33,17 @@ export function Footer() {
 
   return (
     <footer className="relative bg-si-black border-t border-white/10">
-      <motion.button
-        type="button"
-        onClick={scrollToTop}
-        className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-si-green rounded-full flex items-center justify-center shadow-lg shadow-si-green/30"
-        whileHover={{ scale: 1.1, y: -5 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <ArrowUp className="w-5 h-5 text-white" />
-      </motion.button>
+      <div className="absolute -top-6 inset-x-0 flex justify-center pointer-events-none">
+        <motion.button
+          type="button"
+          onClick={scrollToTop}
+          className="w-12 h-12 bg-si-green rounded-full flex items-center justify-center shadow-lg shadow-si-green/30 pointer-events-auto"
+          whileHover={{ scale: 1.08, y: -4 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ArrowUp className="w-5 h-5 text-white" />
+        </motion.button>
+      </div>
 
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12">
