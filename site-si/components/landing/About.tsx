@@ -33,7 +33,7 @@ export function About() {
               transition={{ duration: 0.8 }}
               className="relative flex lg:hidden items-center justify-center mb-2"
             >
-              <div className="relative w-full max-w-xs px-6 py-8 glass-strong rounded-3xl flex items-center justify-center glow-green">
+              <div className="relative w-full max-w-[260px] sm:max-w-[300px] px-4 py-5 glass-strong rounded-2xl flex items-center justify-center shadow-[0_0_22px_rgba(25,203,150,0.18)]">
                 <motion.div
                   animate={{ scale: [1, 1.06, 1] }}
                   transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
@@ -44,7 +44,7 @@ export function About() {
                     alt="Soluções Inteligentes"
                     width={212}
                     height={200}
-                    className="max-h-48 w-auto max-w-full object-contain"
+                    className="max-h-36 sm:max-h-40 w-auto max-w-full object-contain"
                   />
                 </motion.div>
               </div>
