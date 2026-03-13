@@ -87,7 +87,7 @@ export default function NovoServicoPage() {
   return (
     <div>
       <Link href="/dashboard" className="text-primary underline text-sm mb-4 inline-block">← Voltar</Link>
-      <h1 className="font-heading text-2xl font-bold text-primary mb-6">Novo serviço</h1>
+      <h1 className="font-heading text-xl sm:text-2xl font-bold text-primary mb-6">Novo serviço</h1>
       <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Cliente</label>
@@ -113,11 +113,11 @@ export default function NovoServicoPage() {
             ))}
           </select>
         ) : (
-          <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-4 bg-gray-50 rounded-lg">
             <input placeholder="Nome" required value={novoCliente.nome} onChange={(e) => setNovoCliente((f) => ({ ...f, nome: e.target.value }))} className="px-4 py-2 border rounded-lg" />
             <input placeholder="E-mail" type="email" required value={novoCliente.email} onChange={(e) => setNovoCliente((f) => ({ ...f, email: e.target.value }))} className="px-4 py-2 border rounded-lg" />
             <input placeholder="Telefone" required value={novoCliente.telefone} onChange={(e) => setNovoCliente((f) => ({ ...f, telefone: e.target.value }))} className="px-4 py-2 border rounded-lg" />
-            <input placeholder="Endereço (opcional)" value={novoCliente.endereco} onChange={(e) => setNovoCliente((f) => ({ ...f, endereco: e.target.value }))} className="px-4 py-2 border rounded-lg col-span-2" />
+            <input placeholder="Endereço (opcional)" value={novoCliente.endereco} onChange={(e) => setNovoCliente((f) => ({ ...f, endereco: e.target.value }))} className="px-4 py-2 border rounded-lg sm:col-span-2" />
           </div>
         )}
         <div>
@@ -146,7 +146,7 @@ export default function NovoServicoPage() {
           <input type="file" accept="image/*" multiple onChange={(e) => setImagens(e.target.files ? Array.from(e.target.files) : [])} className="w-full px-4 py-2 border rounded-lg" />
         </div>
         {error && <p className="text-red-600 text-sm">{error}</p>}
-        <button type="submit" disabled={loading} className="px-6 py-2 bg-primary text-white rounded-lg disabled:opacity-50">
+        <button type="submit" disabled={loading} className="w-full sm:w-auto px-6 py-2 bg-primary text-white rounded-lg disabled:opacity-50">
           {loading ? "Criando…" : "Criar serviço"}
         </button>
       </form>

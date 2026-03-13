@@ -72,19 +72,19 @@ export default function UsuariosPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-bold text-primary mb-6">Usuários</h1>
-      <div className="flex gap-4 mb-6">
+      <h1 className="font-heading text-xl sm:text-2xl font-bold text-primary mb-6">Usuários</h1>
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
         <input
           type="search"
           placeholder="Buscar por e-mail..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="px-4 py-2 border rounded-lg font-body flex-1 max-w-md"
+          className="px-4 py-2 border rounded-lg font-body w-full sm:flex-1 sm:max-w-md"
         />
         <button
           type="button"
           onClick={() => setModal(true)}
-          className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:opacity-90"
+          className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:opacity-90 w-full sm:w-auto"
         >
           Novo usuário
         </button>
@@ -94,7 +94,7 @@ export default function UsuariosPage() {
       ) : usuarios.length === 0 ? (
         <p className="text-body text-gray-600">Nenhum usuário encontrado.</p>
       ) : (
-        <div className="bg-white border rounded-lg overflow-hidden">
+        <div className="bg-white border rounded-lg overflow-hidden overflow-x-auto">
           <table className="w-full font-body text-sm">
             <thead className="bg-gray-100">
               <tr>
@@ -118,7 +118,7 @@ export default function UsuariosPage() {
 
       {modal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-10 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-lg max-w-md w-full p-5 sm:p-6">
             <h2 className="font-heading text-xl font-bold text-primary mb-4">Novo usuário</h2>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
@@ -152,7 +152,7 @@ export default function UsuariosPage() {
                 />
               </div>
               {error && <p className="text-red-600 text-sm">{error}</p>}
-              <div className="flex gap-2 justify-end">
+              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
                 <button type="button" onClick={() => setModal(false)} className="px-4 py-2 border rounded-lg">
                   Cancelar
                 </button>

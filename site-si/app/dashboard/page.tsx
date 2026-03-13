@@ -52,19 +52,19 @@ export default function DashboardPage() {
 
   return (
     <div className="text-theme">
-      <h1 className="font-heading text-2xl font-bold text-theme-primary mb-6">Serviços</h1>
-      <div className="flex flex-wrap gap-4 mb-6">
+      <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-6">Serviços</h1>
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
         <input
           type="search"
           placeholder="Buscar por código ou cliente..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="px-4 py-2 border rounded-lg font-body max-w-xs bg-theme-card border-theme text-theme"
+          className="px-4 py-2 border rounded-lg font-body w-full sm:max-w-xs bg-theme-card border-theme text-theme"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border rounded-lg font-body bg-theme-card border-theme text-theme"
+          className="px-4 py-2 border rounded-lg font-body w-full sm:w-auto bg-theme-card border-theme text-theme"
         >
           <option value="">Todos os status</option>
           {Object.entries(STATUS_LABEL).map(([k, v]) => (
@@ -84,10 +84,10 @@ export default function DashboardPage() {
               href={`/dashboard/servicos/${s.id}`}
               className="block p-4 bg-theme-card border rounded-lg border-theme shadow-sm hover:shadow transition text-theme"
             >
-              <div className="flex justify-between items-start">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                <div className="min-w-0">
                   <span className="font-semibold text-theme-primary">{s.codigo}</span>
-                  <span className="ml-2">{s.cliente.nome}</span>
+                  <span className="ml-2 break-words">{s.cliente.nome}</span>
                 </div>
                 <span
                   className={`px-2 py-1 rounded text-sm ${
@@ -101,7 +101,7 @@ export default function DashboardPage() {
                   {STATUS_LABEL[s.statusAtual] || s.statusAtual}
                 </span>
               </div>
-              <p className="text-sm text-theme-muted mt-1">
+              <p className="text-sm text-theme-muted mt-1 break-words">
                 {s.categoria?.nome ?? s.tipoServico ?? "—"} – {new Date(s.dataAbertura).toLocaleDateString("pt-BR")}
                 {s.dataAgendamento && (
                   <span className="ml-2 text-theme-primary">Agendado: {new Date(s.dataAgendamento).toLocaleDateString("pt-BR")}</span>

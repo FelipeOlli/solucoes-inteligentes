@@ -116,7 +116,7 @@ function AcompanharContent() {
         </div>
       </header>
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <h2 className="font-heading text-lg font-bold text-primary mb-4">Seus serviços</h2>
+        <h2 className="font-heading text-lg sm:text-xl font-bold text-primary mb-4">Seus serviços</h2>
         {servicos.length === 0 ? (
           <p className="text-body text-gray-600">Nenhum serviço encontrado.</p>
         ) : (
@@ -127,13 +127,13 @@ function AcompanharContent() {
                 href={`/acompanhar/servicos/${s.id}`}
                 className="block p-4 bg-white border rounded-lg shadow-sm hover:shadow transition"
               >
-                <div className="flex justify-between items-start">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                   <span className="font-semibold text-primary">{s.codigo}</span>
                   <span className="px-2 py-1 rounded text-sm bg-secondary/20 text-primary">
                     {STATUS_LABEL[s.statusAtual] || s.statusAtual}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">{s.tipoServico} – {new Date(s.dataAbertura).toLocaleDateString("pt-BR")}</p>
+                <p className="text-sm text-gray-600 mt-1 break-words">{s.tipoServico} – {new Date(s.dataAbertura).toLocaleDateString("pt-BR")}</p>
               </Link>
             ))}
           </div>

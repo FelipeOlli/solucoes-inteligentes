@@ -94,11 +94,11 @@ export default function CategoriasPage() {
   return (
     <div>
       <Link href="/dashboard" className="text-theme-primary underline text-sm mb-4 inline-block">← Voltar ao dashboard</Link>
-      <h1 className="font-heading text-2xl font-bold text-theme-primary mb-4">Categorias de serviço</h1>
+      <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-4">Categorias de serviço</h1>
 
       <form onSubmit={handleCriar} className="bg-theme-card p-4 rounded-lg border border-theme mb-6 max-w-md">
         <h2 className="font-heading font-bold text-theme-primary mb-2">Nova categoria</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={novoNome}
@@ -106,7 +106,7 @@ export default function CategoriasPage() {
             placeholder="Nome da categoria"
             className="flex-1 px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
           />
-          <button type="submit" disabled={!novoNome.trim()} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50">
+          <button type="submit" disabled={!novoNome.trim()} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">
             Adicionar
           </button>
         </div>
@@ -114,7 +114,7 @@ export default function CategoriasPage() {
 
       {loadError && <p className="text-red-600 mb-4">{loadError} <button type="button" onClick={() => { setLoading(true); load(); }} className="underline ml-1">Recarregar</button></p>}
 
-      <div className="bg-theme-card rounded-lg border border-theme overflow-hidden">
+      <div className="bg-theme-card rounded-lg border border-theme overflow-hidden overflow-x-auto">
         <table className="w-full text-left text-theme">
           <thead className="border-b border-theme" style={{ backgroundColor: "var(--color-navbar)" }}>
             <tr>

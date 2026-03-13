@@ -71,10 +71,10 @@ export default function AcompanharServicoPage() {
       </header>
       <div className="max-w-4xl mx-auto px-4 py-6">
         <Link href="/acompanhar" className="text-primary underline text-sm mb-4 inline-block">← Voltar aos meus serviços</Link>
-        <div className="flex justify-between items-start mb-6">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-6">
+          <div className="min-w-0">
             <h2 className="font-heading text-2xl font-bold text-primary">{servico.codigo}</h2>
-            <p className="text-body text-gray-600">{servico.tipoServico}</p>
+            <p className="text-body text-gray-600 break-words">{servico.tipoServico}</p>
           </div>
           <span className={`px-3 py-1 rounded ${servico.statusAtual === "CONCLUIDO" ? "bg-gray-200" : servico.statusAtual === "CANCELADO" ? "bg-red-100 text-red-800" : "bg-secondary/20 text-primary"}`}>
             {STATUS_LABEL[servico.statusAtual]}
@@ -84,7 +84,7 @@ export default function AcompanharServicoPage() {
         <h3 className="font-heading font-bold text-primary mb-3">Linha do tempo</h3>
         <ul className="space-y-3">
           {sorted.map((item) => (
-            <li key={item.id} className="text-sm border-l-2 border-primary pl-3 bg-white p-3 rounded-r">
+            <li key={item.id} className="text-sm border-l-2 border-primary pl-3 bg-white p-3 rounded-r break-words">
               <span className="text-gray-500 block">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
               {item.type === "status" ? (
                 <p>

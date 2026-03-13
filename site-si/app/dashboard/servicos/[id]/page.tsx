@@ -159,10 +159,10 @@ export default function ServicoDetailPage() {
   return (
     <div className="text-theme">
       <Link href="/dashboard" className="text-theme-primary underline text-sm mb-4 inline-block">← Voltar aos serviços</Link>
-      <div className="flex justify-between items-start mb-6">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
+        <div className="min-w-0">
           <h1 className="font-heading text-2xl font-bold text-theme-primary">{servico.codigo}</h1>
-          <p className="text-body text-gray-600">
+          <p className="text-body text-gray-600 break-words">
             {servico.cliente.nome} – {servico.categoria?.nome ?? servico.tipoServico ?? "—"}
           </p>
           {servico.dataAgendamento && (
@@ -172,7 +172,7 @@ export default function ServicoDetailPage() {
             <p className="text-sm font-medium mt-1">Valor: R$ {Number(servico.valorEstimado).toLocaleString("pt-BR")}</p>
           )}
         </div>
-        <span className={`px-3 py-1 rounded ${servico.statusAtual === "CONCLUIDO" ? "bg-gray-200" : servico.statusAtual === "CANCELADO" ? "bg-red-100" : "bg-secondary/20 text-primary"}`}>
+        <span className={`px-3 py-1 rounded self-start ${servico.statusAtual === "CONCLUIDO" ? "bg-gray-200" : servico.statusAtual === "CANCELADO" ? "bg-red-100" : "bg-secondary/20 text-primary"}`}>
           {STATUS_LABEL[servico.statusAtual]}
         </span>
       </div>
@@ -210,14 +210,14 @@ export default function ServicoDetailPage() {
           {canChangeStatus && (
             <form onSubmit={handleStatus} className="bg-theme-card p-4 rounded-lg border border-theme">
               <h2 className="font-heading font-bold text-theme-primary mb-2">Alterar status</h2>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
                 <select value={novoStatus} onChange={(e) => setNovoStatus(e.target.value)} className="px-4 py-2 border rounded-lg flex-1 min-w-[140px] bg-theme-card border-theme text-theme">
                   <option value="">Novo status...</option>
                   {STATUS_LIST.filter((s) => s !== servico.statusAtual).map((s) => (
                     <option key={s} value={s}>{STATUS_LABEL[s]}</option>
                   ))}
                 </select>
-                <button type="submit" disabled={!novoStatus} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50">Atualizar</button>
+                <button type="submit" disabled={!novoStatus} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">Atualizar</button>
               </div>
             </form>
           )}
@@ -241,7 +241,7 @@ export default function ServicoDetailPage() {
                 ))}
               </select>
             </div>
-            <button type="submit" disabled={savingEdit} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50">Salvar</button>
+            <button type="submit" disabled={savingEdit} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">Salvar</button>
           </form>
 
           <form onSubmit={handleNota} className="bg-theme-card p-4 rounded-lg border border-theme">
@@ -251,12 +251,12 @@ export default function ServicoDetailPage() {
               <input type="checkbox" checked={notaVisivel} onChange={(e) => setNotaVisivel(e.target.checked)} />
               Visível ao cliente
             </label>
-            <button type="submit" disabled={!notaConteudo.trim()} className="px-4 py-2 bg-secondary text-white rounded-lg disabled:opacity-50">Adicionar nota</button>
+            <button type="submit" disabled={!notaConteudo.trim()} className="px-4 py-2 bg-secondary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">Adicionar nota</button>
           </form>
 
           <div className="bg-theme-card p-4 rounded-lg border border-theme">
             <h2 className="font-heading font-bold text-theme-primary mb-2">Link para o cliente</h2>
-            <button type="button" onClick={handleLinkCliente} className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90">
+            <button type="button" onClick={handleLinkCliente} className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 w-full sm:w-auto">
               Gerar e copiar link
             </button>
             {linkUrl && <p className="mt-2 text-sm text-theme-muted">Copiado!</p>}
