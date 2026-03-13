@@ -29,6 +29,8 @@ export function Navbar() {
     setIsMobileMenuOpen(false);
   };
 
+  const solidNavbar = isScrolled || isMobileMenuOpen;
+
   return (
     <>
       <motion.nav
@@ -36,7 +38,9 @@ export function Navbar() {
         animate={{ y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          isScrolled ? "bg-si-blue/90 backdrop-blur-xl shadow-2xl py-3" : "bg-transparent py-5"
+          solidNavbar
+            ? "bg-si-blue backdrop-blur-xl shadow-2xl py-3"
+            : "bg-si-blue/60 backdrop-blur-xl shadow-xl py-5"
         }`}
       >
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between">
@@ -105,7 +109,7 @@ export function Navbar() {
             exit={{ opacity: 0, y: -20 }}
             className="fixed inset-x-0 top-20 z-40 lg:hidden mx-4"
           >
-            <div className="glass-strong rounded-2xl p-6 shadow-2xl">
+            <div className="rounded-2xl p-6 shadow-2xl bg-si-blue/95 border border-white/10">
               <div className="flex flex-col gap-2">
                 {navItems.map((item) => (
                   <button
