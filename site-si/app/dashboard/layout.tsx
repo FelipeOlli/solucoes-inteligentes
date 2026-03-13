@@ -53,6 +53,7 @@ export default function DashboardLayout({
 
   const navLinkClass = (active: boolean) =>
     `text-sm transition opacity-90 hover:opacity-100 ${active ? "font-semibold underline" : ""}`;
+  const darkLikeTheme = theme === "dark" || theme === "brand-blue";
 
   return (
     <div className="min-h-screen transition-colors" style={{ backgroundColor: "var(--color-bg-page)" }}>
@@ -190,9 +191,9 @@ export default function DashboardLayout({
                       onClick={() => handleThemeChange(t)}
                       className="px-2 py-1.5 rounded-lg text-xs border transition"
                       style={{
-                        color: theme === t ? "var(--color-cta-text)" : "var(--color-navbar-text)",
-                        backgroundColor: theme === t ? "var(--color-cta-bg)" : "transparent",
-                        borderColor: "var(--color-navbar-border)",
+                        color: theme === t ? "#ffffff" : (darkLikeTheme ? "#ffffff" : "var(--color-navbar-text)"),
+                        backgroundColor: theme === t ? "var(--color-secondary)" : "transparent",
+                        borderColor: theme === t ? "var(--color-secondary)" : "var(--color-navbar-border)",
                       }}
                     >
                       {THEME_LABELS[t]}

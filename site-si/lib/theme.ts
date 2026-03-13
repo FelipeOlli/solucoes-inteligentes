@@ -24,5 +24,5 @@ export function applyStoredTheme(): void {
 export const THEME_LABELS: Record<ThemeId, string> = {
   default: "Padrão",
   dark: "Preto",
-  "brand-blue": "Azul marca",
+  "brand-blue": "Azul",
 };
