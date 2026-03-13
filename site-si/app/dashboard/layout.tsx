@@ -39,7 +39,7 @@ export default function DashboardLayout({
 
   function handleSair() {
     clearToken();
-    router.push("/login");
+    router.push("/");
     router.refresh();
   }
 
