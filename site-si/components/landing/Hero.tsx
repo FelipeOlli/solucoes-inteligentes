@@ -20,7 +20,7 @@ export function Hero() {
 
       <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-32">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8 order-2 lg:order-1">
+          <div className="space-y-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -99,12 +99,12 @@ export function Hero() {
           </div>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.5 }}
-            className="relative flex items-center justify-center order-1 lg:order-2 mb-10 lg:mb-0"
+            className="relative hidden lg:flex items-center justify-center"
           >
-            <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md px-8 py-10 glass-strong rounded-3xl flex items-center justify-center glow-green">
+            <div className="relative min-w-[240px] px-10 py-12 glass-strong rounded-3xl flex items-center justify-center glow-green">
               <motion.div
                 animate={{ scale: [1, 1.06, 1] }}
                 transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
@@ -115,7 +115,7 @@ export function Hero() {
                   alt="Soluções Inteligentes"
                   width={212}
                   height={200}
-                  className="max-h-56 w-auto max-w-full object-contain"
+                  className="max-h-44 w-auto max-w-full object-contain"
                   priority
                 />
               </motion.div>
