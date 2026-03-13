@@ -85,6 +85,14 @@ textarea::placeholder {
   opacity: 0.9;
 }
 
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="brand-blue"] input,
+[data-theme="brand-blue"] textarea {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 /* Forçar background e texto escuros mesmo com autofill (Chrome/Safari) */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -94,6 +102,26 @@ textarea:-webkit-autofill {
   box-shadow: 0 0 0px 1000px #ffffff inset;
   -webkit-text-fill-color: #000000 !important;
   color: #000000 !important;
+}
+
+[data-theme="dark"] input:-webkit-autofill,
+[data-theme="dark"] input:-webkit-autofill:hover,
+[data-theme="dark"] input:-webkit-autofill:focus,
+[data-theme="dark"] textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #0f0f0f inset;
+  box-shadow: 0 0 0px 1000px #0f0f0f inset;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+[data-theme="brand-blue"] input:-webkit-autofill,
+[data-theme="brand-blue"] input:-webkit-autofill:hover,
+[data-theme="brand-blue"] input:-webkit-autofill:focus,
+[data-theme="brand-blue"] textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #122969 inset;
+  box-shadow: 0 0 0px 1000px #122969 inset;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
