@@ -77,6 +77,14 @@ textarea::placeholder {
   color: #6b7280 !important;
 }
 
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder,
+[data-theme="brand-blue"] input::placeholder,
+[data-theme="brand-blue"] textarea::placeholder {
+  color: #ffffff !important;
+  opacity: 0.9;
+}
+
 /* Forçar background e texto escuros mesmo com autofill (Chrome/Safari) */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
