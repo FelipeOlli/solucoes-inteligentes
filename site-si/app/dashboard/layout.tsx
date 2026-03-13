@@ -178,6 +178,28 @@ export default function DashboardLayout({
           </nav>
           {mobileNavOpen && (
             <nav className="md:hidden mt-3 pt-3 border-t grid gap-2" style={{ borderColor: "var(--color-navbar-border)" }}>
+              <div className="mb-2">
+                <p className="text-xs font-medium mb-2" style={{ color: "var(--color-navbar-text-muted)" }}>
+                  Tema
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["default", "dark", "brand-blue"] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => handleThemeChange(t)}
+                      className="px-2 py-1.5 rounded-lg text-xs border transition"
+                      style={{
+                        color: theme === t ? "var(--color-cta-text)" : "var(--color-navbar-text)",
+                        backgroundColor: theme === t ? "var(--color-cta-bg)" : "transparent",
+                        borderColor: "var(--color-navbar-border)",
+                      }}
+                    >
+                      {THEME_LABELS[t]}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <Link
                 href="/dashboard"
                 className={navLinkClass(pathname === "/dashboard")}
