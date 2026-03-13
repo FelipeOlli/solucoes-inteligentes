@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Target, Lightbulb, Heart, TrendingUp, Users, Award, Shield, Clock } from "lucide-react";
 import { ScrollReveal } from "./ScrollReveal";
 
@@ -25,6 +26,29 @@ export function About() {
       <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-8">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="relative flex lg:hidden items-center justify-center mb-2"
+            >
+              <div className="relative w-full max-w-xs px-6 py-8 glass-strong rounded-3xl flex items-center justify-center glow-green">
+                <motion.div
+                  animate={{ scale: [1, 1.06, 1] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                  className="flex items-center justify-center"
+                >
+                  <Image
+                    src="/logo/logo-branco-2.svg"
+                    alt="Soluções Inteligentes"
+                    width={212}
+                    height={200}
+                    className="max-h-48 w-auto max-w-full object-contain"
+                  />
+                </motion.div>
+              </div>
+            </motion.div>
             <ScrollReveal direction="left">
               <span className="text-si-green font-poppins text-sm font-semibold tracking-[0.2em] uppercase">Quem Somos</span>
               <h2 className="font-titillium text-3xl sm:text-4xl lg:text-5xl font-bold text-white mt-3 leading-tight">
