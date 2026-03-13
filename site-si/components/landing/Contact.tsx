@@ -21,14 +21,14 @@ const trustBadges = [
 
 export function Contact() {
   return (
-    <section id="contact" className="relative py-24 overflow-hidden bg-primary">
+    <section id="contact" className="relative py-16 sm:py-24 overflow-hidden bg-primary">
       <div className="absolute inset-0">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-si-green/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-si-green/5 rounded-full blur-3xl" />
       </div>
       <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-12">
         <ScrollReveal direction="up">
-          <div className="glass-strong rounded-3xl p-8 sm:p-12 lg:p-16 overflow-hidden relative">
+          <div className="glass-strong rounded-3xl p-5 sm:p-12 lg:p-16 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-64 h-64 bg-si-green/10 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/50 rounded-full blur-3xl" />
             <div className="relative grid lg:grid-cols-2 gap-12 items-center">
@@ -36,15 +36,21 @@ export function Contact() {
                 <span className="inline-flex items-center gap-2 bg-si-green/10 text-si-green font-poppins text-sm font-semibold px-4 py-2 rounded-full">
                   <Send className="w-4 h-4" /> Entre em Contato
                 </span>
-                <h2 className="font-titillium text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
+                <h2 className="font-titillium text-2xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
                   Pronto para <span className="text-gradient">transformar</span> seu negócio?
                 </h2>
-                <p className="font-poppins text-white/70 text-lg">
+                <p className="font-poppins text-white/70 text-base sm:text-lg">
                   Entre em contato conosco e descubra como podemos ajudar sua empresa a crescer com soluções tecnológicas inteligentes.
                 </p>
-                <p className="font-poppins text-si-green font-semibold text-lg">Orçamento rápido e sem compromisso!</p>
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <AnimatedButton href="https://wa.me/5521965318993" variant="primary" size="lg" icon={<MessageCircle className="w-5 h-5" />}>
+                <p className="font-poppins text-si-green font-semibold text-base sm:text-lg">Orçamento rápido e sem compromisso!</p>
+                <div className="flex flex-col sm:flex-row items-stretch gap-3 sm:gap-4 pt-2 sm:pt-4">
+                  <AnimatedButton
+                    href="https://wa.me/5521965318993"
+                    variant="primary"
+                    size="lg"
+                    icon={<MessageCircle className="w-5 h-5" />}
+                    className="w-full sm:w-auto text-base"
+                  >
                     Falar no WhatsApp
                   </AnimatedButton>
                   <AnimatedButton
@@ -52,6 +58,7 @@ export function Contact() {
                     variant="outline"
                     size="lg"
                     icon={<Instagram className="w-5 h-5" />}
+                    className="w-full sm:w-auto text-base"
                   >
                     Seguir no Instagram
                   </AnimatedButton>
@@ -61,16 +68,21 @@ export function Contact() {
                 {contactInfo.map((item, index) => (
                   <ScrollReveal key={index} direction="right" delay={index * 0.1}>
                     <motion.div
-                      className="flex items-center gap-4 glass rounded-xl p-4 hover:border-si-green/30 transition-all cursor-pointer group"
+                      className="flex items-center gap-3 sm:gap-4 glass rounded-xl p-4 hover:border-si-green/30 transition-all cursor-pointer group min-w-0"
                       whileHover={{ scale: 1.02, x: 5 }}
                     >
                       <div className={`w-12 h-12 bg-gradient-to-br ${item.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
                         <item.icon className="w-6 h-6 text-si-green" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-poppins text-white/60 text-sm">{item.title}</p>
                         {item.href ? (
-                          <a href={item.href} target="_blank" rel="noopener noreferrer" className="font-poppins text-white font-semibold hover:text-si-green transition-colors">
+                          <a
+                            href={item.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-poppins text-white font-semibold hover:text-si-green transition-colors break-all sm:break-normal"
+                          >
                             {item.value}
                           </a>
                         ) : (
@@ -86,7 +98,7 @@ export function Contact() {
           </div>
         </ScrollReveal>
         <ScrollReveal direction="up" delay={0.3}>
-          <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-6">
+          <div className="mt-10 sm:mt-12 grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
             {trustBadges.map((badge, index) => (
               <motion.div
                 key={index}
