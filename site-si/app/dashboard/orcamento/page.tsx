@@ -17,11 +17,11 @@ export default function OrcamentoPage() {
 
   const vS = Number(valorServico.replace(/,/g, ".")) || 0;
   const vM = Number(valorMaterial.replace(/,/g, ".")) || 0;
-  const lucroDigitado = Number(lucro.replace(/,/g, ".")) || 0;
-  const A1 = vS + vM;
-  const lucroEstimado = A1 * 0.3;
-  const lucroAplicado = lucro.trim() !== "" ? lucroDigitado : FIXO;
-  const resultado = A1 >= 0 ? (A1 + lucroAplicado) / COEF : 0;
+  const A1 = vS + vM; // Base: serviço + material
+  const lucroEstimado = A1 * 0.3; // sugestão de lucro
+  const lucroAplicado = lucro.trim() !== "" ? (Number(lucro.replace(/,/g, ".")) || 0) : lucroEstimado;
+  const liquidoDesejado = A1 + lucroAplicado;
+  const resultado = liquidoDesejado >= 0 ? (liquidoDesejado + FIXO) / COEF : 0;
   const exibirResultado = valorServico !== "" || valorMaterial !== "";
 
   return (
