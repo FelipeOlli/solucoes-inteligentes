@@ -58,7 +58,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen transition-colors" style={{ backgroundColor: "var(--color-bg-page)" }}>
       {/* Barra fixa estilo pill inspirada no layout de referência */}
-      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-5xl">
+      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-6xl">
         <div
           className="rounded-2xl md:rounded-full border px-4 md:px-5 py-2.5 shadow-lg backdrop-blur-md transition-colors"
           style={{
@@ -67,15 +67,61 @@ export default function DashboardLayout({
           }}
         >
           <div className="flex items-center justify-between gap-3">
-            <Link href="/dashboard" className="flex items-center shrink-0">
-              <Image
-                src={theme === "dark" || theme === "brand-blue" ? "/logo/logo-branco.svg" : "/logo/logo-azul.svg"}
-                alt="Soluções Inteligentes"
-                width={140}
-                height={16}
-                className="h-5 w-auto"
-              />
-            </Link>
+            <div className="flex items-center gap-6">
+              <Link href="/dashboard" className="flex items-center shrink-0">
+                <Image
+                  src={theme === "dark" || theme === "brand-blue" ? "/logo/logo-simbolo-branco.svg" : "/favicon.svg"}
+                  alt="Soluções Inteligentes"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7"
+                />
+              </Link>
+              <nav className="hidden md:flex gap-5 text-sm shrink-0" style={{ color: "var(--color-navbar-text-muted)" }}>
+                <Link
+                  href="/dashboard"
+                  className={navLinkClass(pathname === "/dashboard")}
+                  style={{ color: pathname === "/dashboard" ? "var(--color-navbar-text)" : "inherit" }}
+                >
+                  Serviços
+                </Link>
+                <Link
+                  href="/dashboard/clientes"
+                  className={navLinkClass(pathname === "/dashboard/clientes")}
+                  style={{ color: pathname === "/dashboard/clientes" ? "var(--color-navbar-text)" : "inherit" }}
+                >
+                  Clientes
+                </Link>
+                <Link
+                  href="/dashboard/categorias"
+                  className={navLinkClass(pathname === "/dashboard/categorias")}
+                  style={{ color: pathname === "/dashboard/categorias" ? "var(--color-navbar-text)" : "inherit" }}
+                >
+                  Categorias
+                </Link>
+                <Link
+                  href="/dashboard/usuarios"
+                  className={navLinkClass(pathname === "/dashboard/usuarios")}
+                  style={{ color: pathname === "/dashboard/usuarios" ? "var(--color-navbar-text)" : "inherit" }}
+                >
+                  Usuários
+                </Link>
+                <Link
+                  href="/dashboard/orcamento"
+                  className={navLinkClass(pathname === "/dashboard/orcamento")}
+                  style={{ color: pathname === "/dashboard/orcamento" ? "var(--color-navbar-text)" : "inherit" }}
+                >
+                  Orçamento
+                </Link>
+                <Link
+                  href="/dashboard/servicos/novo"
+                  className="font-medium"
+                  style={{ color: "var(--color-navbar-text)" }}
+                >
+                  + Novo serviço
+                </Link>
+              </nav>
+            </div>
             <div className="flex items-center gap-2">
               <div className="relative hidden md:block">
                 <button
@@ -140,50 +186,6 @@ export default function DashboardLayout({
               </button>
             </div>
           </div>
-          <nav className="hidden md:flex mt-2 md:mt-0 md:ml-4 gap-5 text-sm shrink-0" style={{ color: "var(--color-navbar-text-muted)" }}>
-            <Link
-              href="/dashboard"
-              className={navLinkClass(pathname === "/dashboard")}
-              style={{ color: pathname === "/dashboard" ? "var(--color-navbar-text)" : "inherit" }}
-            >
-              Serviços
-            </Link>
-            <Link
-              href="/dashboard/clientes"
-              className={navLinkClass(pathname === "/dashboard/clientes")}
-              style={{ color: pathname === "/dashboard/clientes" ? "var(--color-navbar-text)" : "inherit" }}
-            >
-              Clientes
-            </Link>
-            <Link
-              href="/dashboard/categorias"
-              className={navLinkClass(pathname === "/dashboard/categorias")}
-              style={{ color: pathname === "/dashboard/categorias" ? "var(--color-navbar-text)" : "inherit" }}
-            >
-              Categorias
-            </Link>
-            <Link
-              href="/dashboard/usuarios"
-              className={navLinkClass(pathname === "/dashboard/usuarios")}
-              style={{ color: pathname === "/dashboard/usuarios" ? "var(--color-navbar-text)" : "inherit" }}
-            >
-              Usuários
-            </Link>
-            <Link
-              href="/dashboard/orcamento"
-              className={navLinkClass(pathname === "/dashboard/orcamento")}
-              style={{ color: pathname === "/dashboard/orcamento" ? "var(--color-navbar-text)" : "inherit" }}
-            >
-              Orçamento
-            </Link>
-            <Link
-              href="/dashboard/servicos/novo"
-              className="font-medium"
-              style={{ color: "var(--color-navbar-text)" }}
-            >
-              + Novo serviço
-            </Link>
-          </nav>
           {mobileNavOpen && (
             <nav className="md:hidden mt-3 pt-3 border-t grid gap-2" style={{ borderColor: "var(--color-navbar-border)" }}>
               <div className="mb-2">
