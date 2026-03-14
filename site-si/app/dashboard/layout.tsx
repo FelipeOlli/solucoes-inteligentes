@@ -140,7 +140,7 @@ export default function DashboardLayout({
               </button>
             </div>
           </div>
-          <nav className="hidden md:flex mt-2 md:mt-0 gap-5 text-sm shrink-0" style={{ color: "var(--color-navbar-text-muted)" }}>
+          <nav className="hidden md:flex mt-2 md:mt-0 md:ml-4 gap-5 text-sm shrink-0" style={{ color: "var(--color-navbar-text-muted)" }}>
             <Link
               href="/dashboard"
               className={navLinkClass(pathname === "/dashboard")}
