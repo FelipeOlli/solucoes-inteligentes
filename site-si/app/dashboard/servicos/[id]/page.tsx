@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
 import { api } from "@/lib/api";
 import { STATUS_LIST } from "@/lib/status";
 
@@ -158,7 +157,6 @@ export default function ServicoDetailPage() {
 
   return (
     <div className="text-theme">
-      <Link href="/dashboard" className="text-theme-primary underline text-sm mb-4 inline-block">← Voltar aos serviços</Link>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
         <div className="min-w-0">
           <h1 className="font-heading text-2xl font-bold text-theme-primary">{servico.codigo}</h1>

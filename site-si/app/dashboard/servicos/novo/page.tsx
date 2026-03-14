@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { api } from "@/lib/api";
 
 type Cliente = { id: string; nome: string; email: string; telefone: string };
@@ -100,7 +99,6 @@ export default function NovoServicoPage() {
 
   return (
     <div className="text-theme">
-      <Link href="/dashboard" className="text-theme-primary underline text-sm mb-4 inline-block">← Voltar</Link>
       <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-6">Novo serviço</h1>
       <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
         <div>

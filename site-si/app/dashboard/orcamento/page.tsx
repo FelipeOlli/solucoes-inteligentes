@@ -26,9 +26,6 @@ export default function OrcamentoPage() {
 
   return (
     <div className="text-theme">
-      <Link href="/dashboard" className="text-theme-primary underline text-sm mb-4 inline-block">
-        ← Voltar ao dashboard
-      </Link>
       <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-2">Orçamento</h1>
       <p className="text-body text-theme-muted mb-6">Informe os valores para calcular o valor final do serviço.</p>
 

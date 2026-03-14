@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { api } from "@/lib/api";
 
 type Categoria = { id: string; nome: string };
@@ -93,7 +92,6 @@ export default function CategoriasPage() {
 
   return (
     <div>
-      <Link href="/dashboard" className="text-theme-primary underline text-sm mb-4 inline-block">← Voltar ao dashboard</Link>
       <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-4">Categorias de serviço</h1>
 
       <form onSubmit={handleCriar} className="bg-theme-card p-4 rounded-lg border border-theme mb-6 max-w-md">
