@@ -57,10 +57,10 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen transition-colors" style={{ backgroundColor: "var(--color-bg-page)" }}>
-      {/* Barra no estilo pill: fundo da página + barra arredondada centralizada */}
-      <header className="pt-4 pb-2 px-4">
+      {/* Barra fixa estilo pill inspirada no layout de referência */}
+      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-5xl">
         <div
-          className="max-w-5xl mx-auto rounded-2xl md:rounded-full border px-4 md:px-5 py-2.5 shadow-sm transition-colors"
+          className="rounded-2xl md:rounded-full border px-4 md:px-5 py-2.5 shadow-lg backdrop-blur-md transition-colors"
           style={{
             backgroundColor: "var(--color-navbar)",
             borderColor: "var(--color-navbar-border)",
@@ -260,7 +260,7 @@ export default function DashboardLayout({
           )}
         </div>
       </header>
-      <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
+      <main className="max-w-6xl mx-auto px-4 pt-28 pb-6">{children}</main>
     </div>
   );
 }
