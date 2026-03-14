@@ -26,9 +26,7 @@ export default function OrcamentoPage() {
         ← Voltar ao dashboard
       </Link>
       <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-2">Orçamento</h1>
-      <p className="text-body text-theme-muted mb-6">
-        Cálculo: (Valor do serviço + Valor do material + {FIXO}) ÷ (1 − 0,1291). A1 = serviço + material.
-      </p>
+      <p className="text-body text-theme-muted mb-6">Informe os valores para calcular o valor final do serviço.</p>
 
       <div className="bg-theme-card p-6 rounded-lg border border-theme max-w-md">
         <div className="space-y-4">
@@ -54,18 +52,19 @@ export default function OrcamentoPage() {
               className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Valor final do serviço (R$)</label>
+            <input
+              type="text"
+              value={exibirResultado ? formatBRL(resultado) : ""}
+              readOnly
+              placeholder="Calculado automaticamente"
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme font-semibold"
+            />
+          </div>
         </div>
 
-        {exibirResultado && (
-          <div className="mt-6 pt-4 border-t border-theme">
-            <p className="text-sm text-theme-muted">
-              A1 (serviço + material) = {formatBRL(A1)}
-            </p>
-            <p className="font-heading text-lg font-bold text-theme-primary mt-2">
-              Orçamento = {formatBRL(resultado)}
-            </p>
-          </div>
-        )}
+        {exibirResultado && <p className="mt-4 text-xs text-theme-muted">Cálculo atualizado automaticamente.</p>}
       </div>
     </div>
   );

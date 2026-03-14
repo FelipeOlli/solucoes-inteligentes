@@ -63,15 +63,15 @@ export default function ClientesPage() {
   }
 
   return (
-    <div>
-      <h1 className="font-heading text-xl sm:text-2xl font-bold text-primary mb-6">Clientes</h1>
+    <div className="text-theme">
+      <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-6">Clientes</h1>
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
         <input
           type="search"
           placeholder="Buscar por nome, e-mail ou telefone..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="px-4 py-2 border rounded-lg font-body w-full sm:flex-1 sm:max-w-md"
+          className="px-4 py-2 border rounded-lg font-body w-full sm:flex-1 sm:max-w-md bg-theme-card border-theme text-theme"
         />
         <button
           type="button"
@@ -82,22 +82,22 @@ export default function ClientesPage() {
         </button>
       </div>
       {loading ? (
-        <p className="text-body text-gray-600">Carregando…</p>
+        <p className="text-body text-theme-muted">Carregando…</p>
       ) : clientes.length === 0 ? (
-        <p className="text-body text-gray-600">Nenhum cliente encontrado.</p>
+        <p className="text-body text-theme-muted">Nenhum cliente encontrado.</p>
       ) : (
-        <div className="bg-white border rounded-lg overflow-hidden overflow-x-auto">
-          <table className="w-full font-body text-sm">
-            <thead className="bg-gray-100">
+        <div className="bg-theme-card border border-theme rounded-lg overflow-hidden overflow-x-auto">
+          <table className="w-full font-body text-sm text-theme">
+            <thead className="border-b border-theme" style={{ backgroundColor: "var(--color-navbar)" }}>
               <tr>
-                <th className="text-left p-3">Nome</th>
-                <th className="text-left p-3">E-mail</th>
-                <th className="text-left p-3">Telefone</th>
+                <th className="text-left p-3 font-heading text-theme-primary">Nome</th>
+                <th className="text-left p-3 font-heading text-theme-primary">E-mail</th>
+                <th className="text-left p-3 font-heading text-theme-primary">Telefone</th>
               </tr>
             </thead>
             <tbody>
               {clientes.map((c) => (
-                <tr key={c.id} className="border-t">
+                <tr key={c.id} className="border-t border-theme">
                   <td className="p-3">{c.nome}</td>
                   <td className="p-3">{c.email}</td>
                   <td className="p-3">{c.telefone}</td>
@@ -110,48 +110,48 @@ export default function ClientesPage() {
 
       {modal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-10 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-5 sm:p-6">
-            <h2 className="font-heading text-xl font-bold text-primary mb-4">Novo cliente</h2>
+          <div className="bg-theme-card border border-theme rounded-lg max-w-md w-full p-5 sm:p-6 text-theme">
+            <h2 className="font-heading text-xl font-bold text-theme-primary mb-4">Novo cliente</h2>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Nome</label>
+                <label className="block text-sm font-medium text-theme-muted mb-1">Nome</label>
                 <input
                   required
                   value={form.nome}
                   onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">E-mail</label>
+                <label className="block text-sm font-medium text-theme-muted mb-1">E-mail</label>
                 <input
                   type="email"
                   required
                   value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Telefone</label>
+                <label className="block text-sm font-medium text-theme-muted mb-1">Telefone</label>
                 <input
                   required
                   value={form.telefone}
                   onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Endereço (opcional)</label>
+                <label className="block text-sm font-medium text-theme-muted mb-1">Endereço (opcional)</label>
                 <input
                   value={form.endereco}
                   onChange={(e) => setForm((f) => ({ ...f, endereco: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
                 />
               </div>
               {error && <p className="text-red-600 text-sm">{error}</p>}
               <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
-                <button type="button" onClick={() => setModal(false)} className="px-4 py-2 border rounded-lg">
+                <button type="button" onClick={() => setModal(false)} className="px-4 py-2 border border-theme rounded-lg text-theme">
                   Cancelar
                 </button>
                 <button type="submit" disabled={saving} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50">
