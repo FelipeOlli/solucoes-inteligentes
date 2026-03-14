@@ -114,10 +114,34 @@ export default function NovoServicoPage() {
           </select>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-4 bg-theme-card border border-theme rounded-lg">
-            <input placeholder="Nome" required value={novoCliente.nome} onChange={(e) => setNovoCliente((f) => ({ ...f, nome: e.target.value }))} className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" />
-            <input placeholder="E-mail" type="email" required value={novoCliente.email} onChange={(e) => setNovoCliente((f) => ({ ...f, email: e.target.value }))} className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" />
-            <input placeholder="Telefone" required value={novoCliente.telefone} onChange={(e) => setNovoCliente((f) => ({ ...f, telefone: e.target.value }))} className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" />
-            <input placeholder="Endereço (opcional)" value={novoCliente.endereco} onChange={(e) => setNovoCliente((f) => ({ ...f, endereco: e.target.value }))} className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2" />
+            <input
+              placeholder="Nome"
+              required
+              value={novoCliente.nome}
+              onChange={(e) => setNovoCliente((f) => ({ ...f, nome: e.target.value }))}
+              className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
+            />
+            <input
+              placeholder="Telefone"
+              required
+              value={novoCliente.telefone}
+              onChange={(e) => setNovoCliente((f) => ({ ...f, telefone: e.target.value }))}
+              className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+            />
+            <input
+              placeholder="E-mail"
+              type="email"
+              required
+              value={novoCliente.email}
+              onChange={(e) => setNovoCliente((f) => ({ ...f, email: e.target.value }))}
+              className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+            />
+            <input
+              placeholder="Endereço (opcional)"
+              value={novoCliente.endereco}
+              onChange={(e) => setNovoCliente((f) => ({ ...f, endereco: e.target.value }))}
+              className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
+            />
           </div>
         )}
         <div>

@@ -13,11 +13,15 @@ function formatBRL(value: number) {
 export default function OrcamentoPage() {
   const [valorServico, setValorServico] = useState("");
   const [valorMaterial, setValorMaterial] = useState("");
+  const [lucro, setLucro] = useState("");
 
   const vS = Number(valorServico.replace(/,/g, ".")) || 0;
   const vM = Number(valorMaterial.replace(/,/g, ".")) || 0;
+  const lucroDigitado = Number(lucro.replace(/,/g, ".")) || 0;
   const A1 = vS + vM;
-  const resultado = A1 >= 0 ? (A1 + FIXO) / COEF : 0;
+  const lucroEstimado = A1 * 0.3;
+  const lucroAplicado = lucro.trim() !== "" ? lucroDigitado : FIXO;
+  const resultado = A1 >= 0 ? (A1 + lucroAplicado) / COEF : 0;
   const exibirResultado = valorServico !== "" || valorMaterial !== "";
 
   return (
@@ -49,6 +53,17 @@ export default function OrcamentoPage() {
               value={valorMaterial}
               onChange={(e) => setValorMaterial(e.target.value.replace(/[^0-9,.-]/g, ""))}
               placeholder="0,00"
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Lucro (R$)</label>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={lucro}
+              onChange={(e) => setLucro(e.target.value.replace(/[^0-9,.-]/g, ""))}
+              placeholder={A1 > 0 ? formatBRL(lucroEstimado) : "Estimativa de 30%"}
               className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
             />
           </div>
