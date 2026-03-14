@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 
@@ -10,6 +10,7 @@ type Categoria = { id: string; nome: string };
 
 export default function NovoServicoPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [clienteId, setClienteId] = useState("");
@@ -22,6 +23,7 @@ export default function NovoServicoPage() {
   const [imagens, setImagens] = useState<File[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const valorFromQuery = searchParams.get("valor");
 
   useEffect(() => {
     api<Cliente[]>("/clientes").then(({ data, status }) => {
@@ -30,6 +32,18 @@ export default function NovoServicoPage() {
     });
     api<Categoria[]>("/categorias").then(({ data }) => setCategorias(data || []));
   }, [router]);
+
+  useEffect(() => {
+    if (!valorFromQuery || valorEstimado.trim() !== "") return;
+    const n = Number(valorFromQuery.replace(",", "."));
+    if (!Number.isFinite(n) || n <= 0) return;
+    setValorEstimado(
+      n.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    );
+  }, [valorFromQuery, valorEstimado]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

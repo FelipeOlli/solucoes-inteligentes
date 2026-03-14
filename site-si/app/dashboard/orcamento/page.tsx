@@ -80,6 +80,17 @@ export default function OrcamentoPage() {
         </div>
 
         {exibirResultado && <p className="mt-4 text-xs text-theme-muted">Cálculo atualizado automaticamente.</p>}
+
+        {exibirResultado && (
+          <div className="mt-4">
+            <Link
+              href={`/dashboard/servicos/novo?valor=${encodeURIComponent(resultado.toFixed(2))}`}
+              className="inline-flex px-4 py-2 rounded-lg bg-theme-cta font-medium hover:opacity-90"
+            >
+              Novo serviço com valor final
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
