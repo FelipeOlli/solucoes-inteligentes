@@ -74,7 +74,7 @@ export default function LoginPage() {
         className="h-10 w-auto mb-2"
         priority
       />
-      <p className="text-body text-theme-muted mb-6">Área do dono</p>
+      <p className="text-body text-theme-muted mb-6">Minha área</p>
 
       <div className="w-full max-w-sm p-6 rounded-xl bg-theme-card border border-theme shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-4">

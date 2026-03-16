@@ -72,7 +72,7 @@ export function Navbar() {
               href="/login"
               className="flex items-center gap-2 px-4 py-2 text-white/90 hover:text-white font-poppins text-sm font-medium"
             >
-              <LogIn className="w-4 h-4" /> Área do dono
+              <LogIn className="w-4 h-4" /> Minha área
             </Link>
             <Link
               href="/acompanhar"
@@ -121,7 +121,7 @@ export function Navbar() {
                   </button>
                 ))}
                 <Link href="/login" className="py-3 px-4 text-white/80 hover:text-si-green font-poppins flex items-center gap-2">
-                  <LogIn className="w-4 h-4" /> Área do dono
+                  <LogIn className="w-4 h-4" /> Minha área
                 </Link>
                 <Link href="/acompanhar" className="py-3 px-4 text-white/80 hover:text-si-green font-poppins flex items-center gap-2">
                   <Eye className="w-4 h-4" /> Acompanhar serviço
