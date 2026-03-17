@@ -136,7 +136,7 @@ export default function NovoServicoPage() {
               className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
             />
             <input
-              placeholder="Nome para contato (opcional)"
+              placeholder="Nome do Contato (opcional)"
               value={novoCliente.nomeContato}
               onChange={(e) => setNovoCliente((f) => ({ ...f, nomeContato: e.target.value }))}
               className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
@@ -163,7 +163,7 @@ export default function NovoServicoPage() {
               className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
             />
             <textarea
-              placeholder="Observações (opcional)"
+              placeholder="Observação (opcional)"
               value={novoCliente.observacoes}
               onChange={(e) => setNovoCliente((f) => ({ ...f, observacoes: e.target.value }))}
               rows={2}

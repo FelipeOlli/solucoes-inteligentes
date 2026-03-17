@@ -93,10 +93,10 @@ export default function ClientesPage() {
             <thead className="border-b border-theme" style={{ backgroundColor: "var(--color-navbar)" }}>
               <tr>
                 <th className="text-left p-3 font-heading text-theme-primary">Cliente</th>
-                <th className="text-left p-3 font-heading text-theme-primary">Nome para contato</th>
+                <th className="text-left p-3 font-heading text-theme-primary">Nome do Contato</th>
                 <th className="text-left p-3 font-heading text-theme-primary">E-mail</th>
                 <th className="text-left p-3 font-heading text-theme-primary">Telefone</th>
-                <th className="text-left p-3 font-heading text-theme-primary">Observações</th>
+                <th className="text-left p-3 font-heading text-theme-primary">Observação</th>
               </tr>
             </thead>
             <tbody>
@@ -130,12 +130,12 @@ export default function ClientesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">Nome para contato</label>
+                <label className="block text-sm font-medium text-theme-muted mb-1">Nome do Contato</label>
                 <input
                   value={form.nomeContato}
                   onChange={(e) => setForm((f) => ({ ...f, nomeContato: e.target.value }))}
                   className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                  placeholder="Nome da pessoa do telefone (opcional)"
+                  placeholder="Responsável para contato (opcional)"
                 />
               </div>
               <div>
@@ -166,7 +166,7 @@ export default function ClientesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">Observações (opcional)</label>
+                <label className="block text-sm font-medium text-theme-muted mb-1">Observação (opcional)</label>
                 <textarea
                   value={form.observacoes}
                   onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}
