@@ -53,6 +53,17 @@ Em produção atrás de proxy (ex.: EasyPanel/Nginx), o proxy pode adicionar ou 
 
 ---
 
+## 6.1 Esqueci a senha (redefinição por e-mail)
+
+- **Duplo fator:** o usuário recebe um link por e-mail com token de uso único; a nova senha só é alterada após validar o token.
+- **Token:** gerado com `crypto.randomBytes(32)`; no banco é armazenado apenas o **hash SHA-256** do token (nunca o valor em claro).
+- **Validade:** 1 hora (`lib/password-reset-token.ts`). Após uso, o registro é marcado com `usedAt` (único uso).
+- **Sem enumeração de usuário:** a resposta de **POST /api/auth/forgot-password** é sempre a mesma (“Se o e-mail estiver cadastrado…”), independente de o e-mail existir ou não.
+- **Rate limit:** esqueci a senha limitado por IP (5/15 min) e por e-mail (2/15 min); redefinir senha limitado por IP (10/15 min). Ver `lib/rate-limit.ts`.
+- **E-mail:** exige `RESEND_API_KEY` (e opcionalmente `RESEND_FROM`). Sem configuração, a API retorna 503.
+
+---
+
 ## 7. Ambiente e deploy
 
 - **Variáveis sensíveis** (JWT_SECRET, DATABASE_URL) apenas em variáveis de ambiente do servidor, nunca no código ou no repositório.
@@ -71,3 +82,4 @@ Em produção atrás de proxy (ex.: EasyPanel/Nginx), o proxy pode adicionar ou 
 | APIs dono/cliente       | getAuthFromRequest + isDono/isCliente              |
 | Senhas                  | bcrypt; considerar política de senha forte        |
 | Token em URL (cliente)  | Evitar vazamento; considerar POST no futuro       |
+| Esqueci a senha         | Token em hash, uso único, 1h, rate limit, mesma resposta |

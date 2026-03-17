@@ -2,6 +2,10 @@
 
 Passo a passo para publicar o site Soluções Inteligentes em um servidor Hetzner com EasyPanel.
 
+**Banco de dados (recomendado para produção e crescimento):** use **PostgreSQL** em um serviço separado no EasyPanel. O site já está preparado (Prisma + migrações). Guia completo: **[docs/POSTGRES-EASYPANEL.md](docs/POSTGRES-EASYPANEL.md)**. Resumo: criar serviço Postgres (ex.: `sidb`), definir `DATABASE_URL` no app e remover o volume `/app/data` do app. Para pensar em backups e evolução do banco: **[docs/BANCO-CRESCIMENTO.md](docs/BANCO-CRESCIMENTO.md)**.
+
+**Alternativa simples:** SQLite com volume em `/app/data` (um único serviço; adequado para testes ou uso leve).
+
 ---
 
 ## 1. O que você precisa
@@ -50,7 +54,7 @@ Adicione no painel do app:
 
 | Nome | Valor | Obrigatório |
 |------|--------|-------------|
-| `DATABASE_URL` | `file:/app/data/si.db` | Sim |
+| `DATABASE_URL` | **PostgreSQL (recomendado):** `postgresql://user:senha@sidb:5432/sintel` — veja [docs/POSTGRES-EASYPANEL.md](docs/POSTGRES-EASYPANEL.md). **SQLite:** `file:/app/data/si.db` | Sim |
 | `JWT_SECRET` | Uma chave longa e aleatória (mín. 32 caracteres) | Sim |
 | `NEXT_PUBLIC_APP_URL` | URL final do site (ex.: `https://solucoesinteligentes.com.br`) | Recomendado |
 
@@ -61,15 +65,15 @@ Adicione no painel do app:
 - **Port:** `3000` (o app Next.js usa 3000 por padrão).
 - No EasyPanel, normalmente você informa a porta do container (3000) e o EasyPanel faz o proxy/reverso.
 
-### 3.5 Volume (persistir o banco SQLite)
+### 3.5 Volume (apenas se usar SQLite)
 
-Para o banco não sumir ao reiniciar o app:
+Se você optou por **SQLite** (`DATABASE_URL=file:/app/data/si.db`), para o banco não sumir ao reiniciar o app:
 
 1. Em **Volumes** ou **Storage** do app, adicione um volume.
 2. **Container path:** `/app/data`
 3. **Volume name:** por exemplo `site-si-data` (pode ser qualquer nome).
 
-Assim o arquivo `si.db` fica em `/app/data/si.db` e é mantido entre deploys/reinícios. **Sem esse volume**, a cada restart o banco é recriado vazio; mesmo assim o **seed roda na subida** e o usuário dono é criado de novo (login volta a funcionar, mas dados antigos se perdem).
+Assim o arquivo `si.db` fica em `/app/data/si.db` e é mantido entre deploys/reinícios. **Se usar PostgreSQL**, não é necessário volume no app para o banco (os dados ficam no serviço Postgres).
 
 ### 3.6 Deploy
 
@@ -82,7 +86,7 @@ Assim o arquivo `si.db` fica em `/app/data/si.db` e é mantido entre deploys/rei
 ## 4. Primeiro acesso
 
 - **URL:** a que o EasyPanel exibir para o app (ou o domínio que você apontou).
-- **Área do dono:** acesse `/login`. O **seed roda automaticamente** na subida do container (Dockerfile): se o banco estiver vazio, o usuário **dono@solucoesinteligentes.com** (senha: **senha123**) é criado; se já existir, nada muda. Assim o login funciona logo após o deploy e **também após reiniciar o servidor**. Se ainda falhar, veja `CHECKLIST-TOKEN-LOGIN.md` (variáveis, volume, redeploy).
+- **Minha área:** acesse `/login`. O **seed roda automaticamente** na subida do container (Dockerfile): se o banco estiver vazio, o usuário **dono@solucoesinteligentes.com** (senha: **senha123**) é criado; se já existir, nada muda. Assim o login funciona logo após o deploy e **também após reiniciar o servidor**. Se ainda falhar, veja `CHECKLIST-TOKEN-LOGIN.md` (variáveis, volume, redeploy).
 
 ---
 
@@ -92,8 +96,8 @@ Assim o arquivo `si.db` fica em `/app/data/si.db` e é mantido entre deploys/rei
 |-------|------------------|
 | Build | Dockerfile na raiz do site-si |
 | Porta do app | 3000 |
-| Volume | `/app/data` (persistir SQLite) |
-| `DATABASE_URL` | `file:/app/data/si.db` |
+| **PostgreSQL (recomendado)** | Serviço Postgres (ex.: `sidb`) + `DATABASE_URL=postgresql://...` no app; sem volume no app. Ver [docs/POSTGRES-EASYPANEL.md](docs/POSTGRES-EASYPANEL.md) |
+| **SQLite** | `DATABASE_URL=file:/app/data/si.db` + volume `/app/data` |
 | `JWT_SECRET` | Chave forte (≥ 32 caracteres) |
 | `NEXT_PUBLIC_APP_URL` | URL pública do site |
 
@@ -102,7 +106,7 @@ Assim o arquivo `si.db` fica em `/app/data/si.db` e é mantido entre deploys/rei
 ## 6. Atualizar o site depois
 
 - **Deploy from Git:** faça push das alterações na branch configurada e clique em **Redeploy** / **Build** no EasyPanel.
-- O volume em `/app/data` é mantido, então o banco (e usuários/dados) permanecem.
+- Com **PostgreSQL**, os dados ficam no serviço do banco. Com **SQLite**, o volume em `/app/data` é mantido entre deploys.
 
 ### 6.1 Deploy automático ao dar push (opcional)
 
@@ -119,7 +123,7 @@ Para não precisar clicar em Redeploy no EasyPanel a cada push:
    - Nas configurações do serviço (Code source / Git ou equivalente), ative a opção **Auto Deploy**.
    - O EasyPanel passa a registrar um webhook no seu repositório no GitHub.
 
-Depois disso, cada **push na branch configurada** (ex.: `main`) dispara o build e o redeploy automaticamente. O volume em `/app/data` continua sendo mantido entre deploys.
+Depois disso, cada **push na branch configurada** (ex.: `main`) dispara o build e o redeploy automaticamente. Com SQLite, o volume em `/app/data` continua sendo mantido entre deploys.
 
 ---
 

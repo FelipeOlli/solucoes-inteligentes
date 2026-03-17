@@ -13,7 +13,7 @@ export async function GET(
   const { id } = await params;
   const cliente = await prisma.cliente.findUnique({
     where: { id },
-    select: { id: true, nome: true, email: true, telefone: true, endereco: true, createdAt: true, updatedAt: true },
+    select: { id: true, nome: true, nomeContato: true, email: true, telefone: true, endereco: true, observacoes: true, createdAt: true, updatedAt: true },
   });
   if (!cliente) return notFound();
   return jsonResponse(cliente);

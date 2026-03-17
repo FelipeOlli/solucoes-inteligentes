@@ -13,7 +13,7 @@ export default function NovoServicoPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [clienteId, setClienteId] = useState("");
-  const [novoCliente, setNovoCliente] = useState({ nome: "", email: "", telefone: "", endereco: "" });
+  const [novoCliente, setNovoCliente] = useState({ nome: "", nomeContato: "", email: "", telefone: "", endereco: "", observacoes: "" });
   const [usarNovoCliente, setUsarNovoCliente] = useState(false);
   const [categoriaId, setCategoriaId] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -57,9 +57,11 @@ export default function NovoServicoPage() {
     if (usarNovoCliente) {
       body.cliente = {
         nome: novoCliente.nome.trim(),
+        nomeContato: novoCliente.nomeContato.trim() || undefined,
         email: novoCliente.email.trim(),
         telefone: novoCliente.telefone.trim(),
         endereco: novoCliente.endereco.trim() || undefined,
+        observacoes: novoCliente.observacoes.trim() || undefined,
       };
     } else {
       if (!clienteId) {
@@ -127,10 +129,16 @@ export default function NovoServicoPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-4 bg-theme-card border border-theme rounded-lg">
             <input
-              placeholder="Nome"
+              placeholder="Cliente (razão social ou nome)"
               required
               value={novoCliente.nome}
               onChange={(e) => setNovoCliente((f) => ({ ...f, nome: e.target.value }))}
+              className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
+            />
+            <input
+              placeholder="Nome para contato (opcional)"
+              value={novoCliente.nomeContato}
+              onChange={(e) => setNovoCliente((f) => ({ ...f, nomeContato: e.target.value }))}
               className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
             />
             <input
@@ -153,6 +161,13 @@ export default function NovoServicoPage() {
               value={novoCliente.endereco}
               onChange={(e) => setNovoCliente((f) => ({ ...f, endereco: e.target.value }))}
               className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
+            />
+            <textarea
+              placeholder="Observações (opcional)"
+              value={novoCliente.observacoes}
+              onChange={(e) => setNovoCliente((f) => ({ ...f, observacoes: e.target.value }))}
+              rows={2}
+              className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2 resize-y"
             />
           </div>
         )}

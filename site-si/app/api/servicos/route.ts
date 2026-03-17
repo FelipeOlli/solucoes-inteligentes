@@ -57,11 +57,13 @@ export async function POST(request: NextRequest) {
     } else if (body.cliente) {
       const c = body.cliente;
       const nome = String(c.nome || "").trim();
+      const nomeContato = c.nomeContato != null ? String(c.nomeContato).trim() || null : null;
       const email = String(c.email || "").trim().toLowerCase();
       const telefone = String(c.telefone || "").trim();
       const endereco = c.endereco != null ? String(c.endereco).trim() || null : null;
+      const observacoes = c.observacoes != null ? String(c.observacoes).trim() || null : null;
       if (!nome || !email || !telefone) {
-        return badRequest("Cliente novo exige nome, e-mail e telefone.");
+        return badRequest("Cliente novo exige cliente (nome), e-mail e telefone.");
       }
       const existingEmail = await prisma.cliente.findUnique({ where: { email } });
       if (existingEmail) {
@@ -71,7 +73,7 @@ export async function POST(request: NextRequest) {
         if (existingTel) clienteId = existingTel.id;
         else {
           const novo = await prisma.cliente.create({
-            data: { nome, email, telefone, endereco },
+            data: { nome, nomeContato, email, telefone, endereco, observacoes },
           });
           clienteId = novo.id;
         }

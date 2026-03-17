@@ -5,6 +5,8 @@
   "description": "Site SI - Visão dono (gestão de serviços) + Visão cliente (acompanhamento)",
   "scripts": {
     "dev": "next dev",
+    "dev:webpack": "next dev --webpack",
+    "dev:log": "node scripts/dev-with-log.js",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
@@ -20,7 +22,8 @@
     "nanoid": "^5.0.9",
     "next": "^16.1.6",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "resend": "^6.9.4"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -37,6 +40,6 @@
     "typescript": "^5"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.9.0 <22"
   }
 }

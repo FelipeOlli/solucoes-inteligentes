@@ -8,9 +8,11 @@ import { api } from "@/lib/api";
 type Cliente = {
   id: string;
   nome: string;
+  nomeContato?: string | null;
   email: string;
   telefone: string;
   endereco?: string | null;
+  observacoes?: string | null;
 };
 
 export default function ClientesPage() {
@@ -19,7 +21,7 @@ export default function ClientesPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ nome: "", email: "", telefone: "", endereco: "" });
+  const [form, setForm] = useState({ nome: "", nomeContato: "", email: "", telefone: "", endereco: "", observacoes: "" });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -46,7 +48,7 @@ export default function ClientesPage() {
     setSaving(true);
     const { data, error: err, status } = await api<Cliente>("/clientes", {
       method: "POST",
-      body: { nome: form.nome.trim(), email: form.email.trim(), telefone: form.telefone.trim(), endereco: form.endereco.trim() || undefined },
+      body: { nome: form.nome.trim(), nomeContato: form.nomeContato.trim() || undefined, email: form.email.trim(), telefone: form.telefone.trim(), endereco: form.endereco.trim() || undefined, observacoes: form.observacoes.trim() || undefined },
     });
     setSaving(false);
     if (status === 401) {
@@ -58,7 +60,7 @@ export default function ClientesPage() {
       return;
     }
     setModal(false);
-    setForm({ nome: "", email: "", telefone: "", endereco: "" });
+    setForm({ nome: "", nomeContato: "", email: "", telefone: "", endereco: "", observacoes: "" });
     load();
   }
 
@@ -68,7 +70,7 @@ export default function ClientesPage() {
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
         <input
           type="search"
-          placeholder="Buscar por nome, e-mail ou telefone..."
+          placeholder="Buscar por cliente, e-mail ou telefone..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
           className="px-4 py-2 border rounded-lg font-body w-full sm:flex-1 sm:max-w-md bg-theme-card border-theme text-theme"
@@ -90,17 +92,21 @@ export default function ClientesPage() {
           <table className="w-full font-body text-sm text-theme">
             <thead className="border-b border-theme" style={{ backgroundColor: "var(--color-navbar)" }}>
               <tr>
-                <th className="text-left p-3 font-heading text-theme-primary">Nome</th>
+                <th className="text-left p-3 font-heading text-theme-primary">Cliente</th>
+                <th className="text-left p-3 font-heading text-theme-primary">Nome para contato</th>
                 <th className="text-left p-3 font-heading text-theme-primary">E-mail</th>
                 <th className="text-left p-3 font-heading text-theme-primary">Telefone</th>
+                <th className="text-left p-3 font-heading text-theme-primary">Observações</th>
               </tr>
             </thead>
             <tbody>
               {clientes.map((c) => (
                 <tr key={c.id} className="border-t border-theme">
                   <td className="p-3">{c.nome}</td>
+                  <td className="p-3">{c.nomeContato ?? "—"}</td>
                   <td className="p-3">{c.email}</td>
                   <td className="p-3">{c.telefone}</td>
+                  <td className="p-3 max-w-xs truncate" title={c.observacoes ?? undefined}>{c.observacoes ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -114,12 +120,22 @@ export default function ClientesPage() {
             <h2 className="font-heading text-xl font-bold text-theme-primary mb-4">Novo cliente</h2>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">Nome</label>
+                <label className="block text-sm font-medium text-theme-muted mb-1">Cliente</label>
                 <input
                   required
                   value={form.nome}
                   onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
                   className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                  placeholder="Razão social ou nome da pessoa"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-theme-muted mb-1">Nome para contato</label>
+                <input
+                  value={form.nomeContato}
+                  onChange={(e) => setForm((f) => ({ ...f, nomeContato: e.target.value }))}
+                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                  placeholder="Nome da pessoa do telefone (opcional)"
                 />
               </div>
               <div>
@@ -147,6 +163,15 @@ export default function ClientesPage() {
                   value={form.endereco}
                   onChange={(e) => setForm((f) => ({ ...f, endereco: e.target.value }))}
                   className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-theme-muted mb-1">Observações (opcional)</label>
+                <textarea
+                  value={form.observacoes}
+                  onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}
+                  rows={3}
+                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme resize-y"
                 />
               </div>
               {error && <p className="text-red-600 text-sm">{error}</p>}

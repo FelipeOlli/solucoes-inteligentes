@@ -13,6 +13,19 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  passwordResets PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   // hash do token (nunca armazenar o token em claro)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime? // preenchido ao usar (único uso)
+  createdAt DateTime @default(now())
+  @@index([tokenHash])
+  @@index([userId, createdAt])
 }
 
 model ClientToken {
@@ -25,10 +38,12 @@ model ClientToken {
 
 model Cliente {
   id           String    @id @default(cuid())
-  nome         String
+  nome         String    // Cliente (razão social ou nome da pessoa)
+  nomeContato  String?   // Nome da pessoa do telefone (contato responsável)
   email        String    @unique
   telefone     String    @unique
   endereco     String?
+  observacoes  String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   servicos     Servico[]

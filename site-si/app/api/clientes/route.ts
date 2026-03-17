@@ -14,13 +14,14 @@ export async function GET(request: NextRequest) {
       ? {
           OR: [
             { nome: { contains: q } },
+            { nomeContato: { contains: q } },
             { email: { contains: q } },
             { telefone: { contains: q } },
           ],
         }
       : undefined,
     orderBy: { nome: "asc" },
-    select: { id: true, nome: true, email: true, telefone: true, endereco: true, createdAt: true },
+    select: { id: true, nome: true, nomeContato: true, email: true, telefone: true, endereco: true, observacoes: true, createdAt: true },
   });
   return jsonResponse(clientes);
 }
@@ -32,12 +33,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const nome = String(body.nome || "").trim();
+    const nomeContato = body.nomeContato != null ? String(body.nomeContato).trim() || null : null;
     const email = String(body.email || "").trim().toLowerCase();
     const telefone = String(body.telefone || "").trim();
     const endereco = body.endereco != null ? String(body.endereco).trim() || null : null;
+    const observacoes = body.observacoes != null ? String(body.observacoes).trim() || null : null;
 
     if (!nome || !email || !telefone) {
-      return errorResponse("Nome, e-mail e telefone são obrigatórios", "BAD_REQUEST", 400);
+      return errorResponse("Cliente, e-mail e telefone são obrigatórios", "BAD_REQUEST", 400);
     }
 
     const existingEmail = await prisma.cliente.findUnique({ where: { email } });
@@ -47,10 +50,10 @@ export async function POST(request: NextRequest) {
     if (existingTel) return conflict("Já existe um cliente com este telefone.");
 
     const cliente = await prisma.cliente.create({
-      data: { nome, email, telefone, endereco },
+      data: { nome, nomeContato, email, telefone, endereco, observacoes },
     });
     return jsonResponse(
-      { id: cliente.id, nome: cliente.nome, email: cliente.email, telefone: cliente.telefone, endereco: cliente.endereco, createdAt: cliente.createdAt },
+      { id: cliente.id, nome: cliente.nome, nomeContato: cliente.nomeContato, email: cliente.email, telefone: cliente.telefone, endereco: cliente.endereco, observacoes: cliente.observacoes, createdAt: cliente.createdAt },
       201
     );
   } catch (e) {
