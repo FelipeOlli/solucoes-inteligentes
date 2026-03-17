@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,7 +9,7 @@ import { getStoredTheme, setStoredTheme, THEME_LABELS, type ThemeId } from "@/li
 
 const MIN_PASSWORD_LENGTH = 8;
 
-export default function RedefinirSenhaPage() {
+function RedefinirSenhaContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [token, setToken] = useState("");
@@ -177,5 +177,19 @@ export default function RedefinirSenhaPage() {
         Voltar ao login
       </Link>
     </main>
+  );
+}
+
+export default function RedefinirSenhaPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen flex items-center justify-center p-8 bg-theme-page">
+          <p className="text-theme-muted">Carregando…</p>
+        </main>
+      }
+    >
+      <RedefinirSenhaContent />
+    </Suspense>
   );
 }
