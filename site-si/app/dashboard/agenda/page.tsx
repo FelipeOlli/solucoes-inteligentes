@@ -81,7 +81,6 @@ export default function AgendaPage() {
   const router = useRouter();
   const [cursor, setCursor] = useState(() => new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("day");
-  const [monthDirection, setMonthDirection] = useState(1);
   const [events, setEvents] = useState<AgendaEvent[]>([]);
   const [google, setGoogle] = useState<GoogleStatus>({ connected: false });
   const [loading, setLoading] = useState(true);
@@ -226,35 +225,6 @@ export default function AgendaPage() {
     return cursor.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   }, [viewMode, cursor, weekDays]);
   const periodKey = `${viewMode}-${bounds.start.toISOString()}`;
-  const prevLabel = viewMode === "day" ? "Dia anterior" : viewMode === "week" ? "Semana anterior" : "Mês anterior";
-  const nextLabel = viewMode === "day" ? "Próximo dia" : viewMode === "week" ? "Próxima semana" : "Próximo mês";
-
-  function goPrev() {
-    setMonthDirection(-1);
-    setCursor((prev) => {
-      const d = new Date(prev);
-      if (viewMode === "day") d.setDate(d.getDate() - 1);
-      else if (viewMode === "week") d.setDate(d.getDate() - 7);
-      else d.setMonth(d.getMonth() - 1, 1);
-      return d;
-    });
-  }
-
-  function goNext() {
-    setMonthDirection(1);
-    setCursor((prev) => {
-      const d = new Date(prev);
-      if (viewMode === "day") d.setDate(d.getDate() + 1);
-      else if (viewMode === "week") d.setDate(d.getDate() + 7);
-      else d.setMonth(d.getMonth() + 1, 1);
-      return d;
-    });
-  }
-
-  function goToday() {
-    setMonthDirection(0);
-    setCursor(new Date());
-  }
 
   return (
     <div className="text-theme space-y-4">
@@ -287,27 +257,6 @@ export default function AgendaPage() {
               Mês
             </button>
           </div>
-          <button
-            type="button"
-            onClick={goPrev}
-            className="px-3 py-2 rounded-lg border border-theme bg-theme-card"
-          >
-            {prevLabel}
-          </button>
-          <button
-            type="button"
-            onClick={goToday}
-            className="px-3 py-2 rounded-lg border border-theme bg-theme-card"
-          >
-            Hoje
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            className="px-3 py-2 rounded-lg border border-theme bg-theme-card"
-          >
-            {nextLabel}
-          </button>
         </div>
       </div>
 
@@ -378,9 +327,9 @@ export default function AgendaPage() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={periodKey}
-            initial={{ opacity: 0, x: monthDirection < 0 ? -20 : monthDirection > 0 ? 20 : 0 }}
+            initial={{ opacity: 0, x: 0 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: monthDirection < 0 ? 20 : monthDirection > 0 ? -20 : 0 }}
+            exit={{ opacity: 0, x: 0 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
             className="space-y-2"
           >
