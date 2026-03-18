@@ -17,9 +17,11 @@ type Servico = {
 
 const STATUS_LABEL: Record<string, string> = {
   ABERTO: "Aberto",
+  AGENDADO: "Agendado",
   EM_ANDAMENTO: "Em andamento",
   AGUARDANDO_PECA: "Aguardando peça",
   AGUARDANDO_CLIENTE: "Aguardando cliente",
+  AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
   CONCLUIDO: "Concluído",
   CANCELADO: "Cancelado",
 };
@@ -129,7 +131,7 @@ function AcompanharContent() {
               >
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                   <span className="font-semibold text-primary">{s.codigo}</span>
-                  <span className="px-2 py-1 rounded text-sm bg-secondary/20 text-primary">
+                  <span className={`px-2 py-1 rounded text-sm ${s.statusAtual === "ABERTO" ? "bg-secondary/20 text-white" : "bg-secondary/20 text-primary"}`}>
                     {STATUS_LABEL[s.statusAtual] || s.statusAtual}
                   </span>
                 </div>

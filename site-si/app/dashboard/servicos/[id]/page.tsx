@@ -11,9 +11,23 @@ const STATUS_LABEL: Record<string, string> = {
   EM_ANDAMENTO: "Em andamento",
   AGUARDANDO_PECA: "Aguardando peça",
   AGUARDANDO_CLIENTE: "Aguardando cliente",
+  AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
   CONCLUIDO: "Concluído",
   CANCELADO: "Cancelado",
 };
+
+const IMAGE_FILE_RE = /\.(avif|bmp|gif|heic|heif|jpe?g|png|svg|webp)$/i;
+
+function isImageFileName(name: string): boolean {
+  return IMAGE_FILE_RE.test(name);
+}
+
+function getStatusBadgeClass(status: string): string {
+  if (status === "CONCLUIDO") return "bg-gray-200 text-gray-700";
+  if (status === "CANCELADO") return "bg-red-100 text-red-800";
+  if (status === "ABERTO") return "bg-secondary/20 text-white";
+  return "bg-secondary/20 text-primary";
+}
 
 type Categoria = { id: string; nome: string };
 
@@ -46,6 +60,8 @@ export default function ServicoDetailPage() {
   const [notaVisivel, setNotaVisivel] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [uploadingImg, setUploadingImg] = useState(false);
+  const [draggingFotos, setDraggingFotos] = useState(false);
+  const [draggingOrcamento, setDraggingOrcamento] = useState(false);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [editDataAgendamento, setEditDataAgendamento] = useState("");
   const [editValor, setEditValor] = useState("");
@@ -128,12 +144,11 @@ export default function ServicoDetailPage() {
     }
   }
 
-  async function handleUploadImagens(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files?.length || !servico) return;
+  async function uploadFiles(files: File[]) {
+    if (!files.length || !servico) return;
     setUploadingImg(true);
     const formData = new FormData();
-    Array.from(files).forEach((f) => formData.append("file", f));
+    files.forEach((f) => formData.append("file", f));
     const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
     const res = await fetch(`/api/servicos/${id}/upload`, {
       method: "POST",
@@ -141,8 +156,39 @@ export default function ServicoDetailPage() {
       body: formData,
     });
     setUploadingImg(false);
-    e.target.value = "";
     if (res.ok) load();
+  }
+
+  async function handleUploadFotosInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (!files.length) return;
+    const imageFiles = files.filter((f) => f.type.startsWith("image/") || isImageFileName(f.name));
+    await uploadFiles(imageFiles);
+  }
+
+  async function handleUploadOrcamentoInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (!files.length) return;
+    await uploadFiles(files);
+  }
+
+  async function handleDropFotos(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDraggingFotos(false);
+    const files = Array.from(e.dataTransfer.files ?? []);
+    if (!files.length) return;
+    const imageFiles = files.filter((f) => f.type.startsWith("image/") || isImageFileName(f.name));
+    await uploadFiles(imageFiles);
+  }
+
+  async function handleDropOrcamento(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDraggingOrcamento(false);
+    const files = Array.from(e.dataTransfer.files ?? []);
+    if (!files.length) return;
+    await uploadFiles(files);
   }
 
   if (loading) return <p className="text-body">Carregando…</p>;
@@ -154,6 +200,8 @@ export default function ServicoDetailPage() {
   ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
   const canChangeStatus = servico.statusAtual !== "CONCLUIDO" && servico.statusAtual !== "CANCELADO";
+  const imageUrls = (servico.imagens ?? []).filter((url) => isImageFileName(url));
+  const anexoUrls = (servico.imagens ?? []).filter((url) => !isImageFileName(url));
 
   return (
     <div className="text-theme">
@@ -170,7 +218,7 @@ export default function ServicoDetailPage() {
             <p className="text-sm font-medium mt-1">Valor: R$ {Number(servico.valorEstimado).toLocaleString("pt-BR")}</p>
           )}
         </div>
-        <span className={`px-3 py-1 rounded self-start ${servico.statusAtual === "CONCLUIDO" ? "bg-gray-200" : servico.statusAtual === "CANCELADO" ? "bg-red-100" : "bg-secondary/20 text-primary"}`}>
+        <span className={`px-3 py-1 rounded self-start ${getStatusBadgeClass(servico.statusAtual)}`}>
           {STATUS_LABEL[servico.statusAtual]}
         </span>
       </div>
@@ -262,19 +310,78 @@ export default function ServicoDetailPage() {
 
           <div className="bg-theme-card p-4 rounded-lg border border-theme">
             <h2 className="font-heading font-bold text-theme-primary mb-2">Fotos / imagens</h2>
-            {servico.imagens && servico.imagens.length > 0 && (
+            {imageUrls.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
-                {servico.imagens.map((url) => (
+                {imageUrls.map((url) => (
                   <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="block">
                     <img src={url} alt="" className="w-20 h-20 object-cover rounded border" />
                   </a>
                 ))}
               </div>
             )}
-            <label className="block">
-              <span className="sr-only">Anexar foto</span>
-              <input type="file" accept="image/*" multiple disabled={uploadingImg} onChange={handleUploadImagens} className="w-full text-sm" />
-            </label>
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDraggingFotos(true);
+              }}
+              onDragLeave={() => setDraggingFotos(false)}
+              onDrop={handleDropFotos}
+              className={`rounded-lg border border-dashed p-3 transition ${draggingFotos ? "border-primary bg-primary/10" : "border-theme"}`}
+            >
+              <label className="block">
+                <span className="sr-only">Anexar foto</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  disabled={uploadingImg}
+                  onChange={handleUploadFotosInput}
+                  className="w-full text-sm text-theme-muted file:mr-3 file:rounded-md file:border-0 file:px-4 file:py-2 file:bg-primary file:text-white file:font-medium hover:file:opacity-90"
+                />
+              </label>
+              <p className="text-xs text-theme-muted mt-2">Arraste e solte imagens aqui ou clique em Escolher arquivos.</p>
+            </div>
+            {uploadingImg && <p className="text-sm text-theme-muted mt-1">Enviando…</p>}
+          </div>
+
+          <div className="bg-theme-card p-4 rounded-lg border border-theme">
+            <h2 className="font-heading font-bold text-theme-primary mb-2">Anexar orçamento</h2>
+            {anexoUrls.length > 0 && (
+              <ul className="mb-3 space-y-1 text-sm">
+                {anexoUrls.map((url) => {
+                  const filename = decodeURIComponent(url.split("/").pop() || "arquivo");
+                  return (
+                    <li key={url}>
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">
+                        {filename}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDraggingOrcamento(true);
+              }}
+              onDragLeave={() => setDraggingOrcamento(false)}
+              onDrop={handleDropOrcamento}
+              className={`rounded-lg border border-dashed p-3 transition ${draggingOrcamento ? "border-primary bg-primary/10" : "border-theme"}`}
+            >
+              <label className="block">
+                <span className="sr-only">Anexar orçamento</span>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,image/*"
+                  multiple
+                  disabled={uploadingImg}
+                  onChange={handleUploadOrcamentoInput}
+                  className="w-full text-sm text-theme-muted file:mr-3 file:rounded-md file:border-0 file:px-4 file:py-2 file:bg-primary file:text-white file:font-medium hover:file:opacity-90"
+                />
+              </label>
+              <p className="text-xs text-theme-muted mt-2">Arraste e solte arquivos de orçamento aqui ou clique em Escolher arquivos.</p>
+            </div>
             {uploadingImg && <p className="text-sm text-theme-muted mt-1">Enviando…</p>}
           </div>
         </div>

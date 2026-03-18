@@ -8,9 +8,11 @@ import { api } from "@/lib/api";
 
 const STATUS_LABEL: Record<string, string> = {
   ABERTO: "Aberto",
+  AGENDADO: "Agendado",
   EM_ANDAMENTO: "Em andamento",
   AGUARDANDO_PECA: "Aguardando peça",
   AGUARDANDO_CLIENTE: "Aguardando cliente",
+  AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
   CONCLUIDO: "Concluído",
   CANCELADO: "Cancelado",
 };
@@ -76,7 +78,7 @@ export default function AcompanharServicoPage() {
             <h2 className="font-heading text-2xl font-bold text-primary">{servico.codigo}</h2>
             <p className="text-body text-gray-600 break-words">{servico.tipoServico}</p>
           </div>
-          <span className={`px-3 py-1 rounded ${servico.statusAtual === "CONCLUIDO" ? "bg-gray-200" : servico.statusAtual === "CANCELADO" ? "bg-red-100 text-red-800" : "bg-secondary/20 text-primary"}`}>
+          <span className={`px-3 py-1 rounded ${servico.statusAtual === "CONCLUIDO" ? "bg-gray-200" : servico.statusAtual === "CANCELADO" ? "bg-red-100 text-red-800" : servico.statusAtual === "ABERTO" ? "bg-secondary/20 text-white" : "bg-secondary/20 text-primary"}`}>
             {STATUS_LABEL[servico.statusAtual]}
           </span>
         </div>

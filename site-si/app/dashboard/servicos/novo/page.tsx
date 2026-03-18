@@ -20,6 +20,9 @@ export default function NovoServicoPage() {
   const [dataAgendamento, setDataAgendamento] = useState("");
   const [valorEstimado, setValorEstimado] = useState("");
   const [imagens, setImagens] = useState<File[]>([]);
+  const [orcamentoFiles, setOrcamentoFiles] = useState<File[]>([]);
+  const [draggingImagens, setDraggingImagens] = useState(false);
+  const [draggingOrcamento, setDraggingOrcamento] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const valorFromQuery = searchParams.get("valor");
@@ -43,6 +46,29 @@ export default function NovoServicoPage() {
       })
     );
   }, [valorFromQuery, valorEstimado]);
+
+  function mergeUniqueFiles(current: File[], incoming: File[]) {
+    const merged = [...current];
+    for (const file of incoming) {
+      const exists = merged.some(
+        (f) => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
+      );
+      if (!exists) merged.push(file);
+    }
+    return merged;
+  }
+
+  async function uploadFiles(servicoId: string, files: File[]) {
+    if (!files.length) return;
+    const formData = new FormData();
+    files.forEach((f) => formData.append("file", f));
+    const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
+    await fetch(`/api/servicos/${servicoId}/upload`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -85,15 +111,9 @@ export default function NovoServicoPage() {
       setLoading(false);
       return;
     }
-    if (data?.id && imagens.length > 0) {
-      const formData = new FormData();
-      imagens.forEach((f) => formData.append("file", f));
-      const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
-      await fetch(`/api/servicos/${data.id}/upload`, {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      });
+    if (data?.id) {
+      await uploadFiles(data.id, imagens);
+      await uploadFiles(data.id, orcamentoFiles);
     }
     setLoading(false);
     if (data?.id) router.push(`/dashboard/servicos/${data.id}`);
@@ -194,13 +214,61 @@ export default function NovoServicoPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-theme-muted mb-1">Fotos ou imagens (opcional)</label>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => setImagens(e.target.files ? Array.from(e.target.files) : [])}
-            className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme file:mr-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:bg-primary file:text-white"
-          />
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDraggingImagens(true);
+            }}
+            onDragLeave={() => setDraggingImagens(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDraggingImagens(false);
+              const dropped = Array.from(e.dataTransfer.files ?? []).filter((f) => f.type.startsWith("image/"));
+              if (!dropped.length) return;
+              setImagens((prev) => mergeUniqueFiles(prev, dropped));
+            }}
+            className={`rounded-lg border border-dashed p-3 transition ${draggingImagens ? "border-primary bg-primary/10" : "border-theme"}`}
+          >
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setImagens((prev) => mergeUniqueFiles(prev, e.target.files ? Array.from(e.target.files) : []))}
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme file:mr-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:bg-primary file:text-white"
+            />
+            <p className="text-xs text-theme-muted mt-2">Arraste e solte imagens aqui ou clique em Escolher arquivos.</p>
+            {imagens.length > 0 && <p className="text-xs text-theme-muted mt-1">{imagens.length} arquivo(s) selecionado(s).</p>}
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-theme-muted mb-1">Anexar orçamento (opcional)</label>
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDraggingOrcamento(true);
+            }}
+            onDragLeave={() => setDraggingOrcamento(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDraggingOrcamento(false);
+              const dropped = Array.from(e.dataTransfer.files ?? []);
+              if (!dropped.length) return;
+              setOrcamentoFiles((prev) => mergeUniqueFiles(prev, dropped));
+            }}
+            className={`rounded-lg border border-dashed p-3 transition ${draggingOrcamento ? "border-primary bg-primary/10" : "border-theme"}`}
+          >
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,image/*"
+              multiple
+              onChange={(e) => setOrcamentoFiles((prev) => mergeUniqueFiles(prev, e.target.files ? Array.from(e.target.files) : []))}
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme file:mr-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:bg-primary file:text-white"
+            />
+            <p className="text-xs text-theme-muted mt-2">Arraste e solte arquivos aqui ou clique em Escolher arquivos.</p>
+            {orcamentoFiles.length > 0 && (
+              <p className="text-xs text-theme-muted mt-1">{orcamentoFiles.length} arquivo(s) de orçamento selecionado(s).</p>
+            )}
+          </div>
         </div>
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <button type="submit" disabled={loading} className="w-full sm:w-auto px-6 py-2 bg-primary text-white rounded-lg disabled:opacity-50">

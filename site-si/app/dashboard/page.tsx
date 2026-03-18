@@ -23,6 +23,7 @@ const STATUS_LABEL: Record<string, string> = {
   EM_ANDAMENTO: "Em andamento",
   AGUARDANDO_PECA: "Aguardando peça",
   AGUARDANDO_CLIENTE: "Aguardando cliente",
+  AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
   CONCLUIDO: "Concluído",
   CANCELADO: "Cancelado",
 };
@@ -95,7 +96,9 @@ export default function DashboardPage() {
                       ? "bg-gray-200 text-gray-700"
                       : s.statusAtual === "CANCELADO"
                         ? "bg-red-100 text-red-800"
-                        : "bg-secondary/20 text-primary"
+                        : s.statusAtual === "ABERTO"
+                          ? "bg-secondary/20 text-white"
+                          : "bg-secondary/20 text-primary"
                   }`}
                 >
                   {STATUS_LABEL[s.statusAtual] || s.statusAtual}
