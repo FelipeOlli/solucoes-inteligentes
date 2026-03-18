@@ -25,8 +25,7 @@ function isImageFileName(name: string): boolean {
 function getStatusBadgeClass(status: string): string {
   if (status === "CONCLUIDO") return "bg-gray-200 text-gray-700";
   if (status === "CANCELADO") return "bg-red-100 text-red-800";
-  if (status === "ABERTO") return "bg-secondary/20 text-white";
-  return "bg-secondary/20 text-primary";
+  return "bg-secondary/20 text-white";
 }
 
 type Categoria = { id: string; nome: string };
@@ -212,7 +211,7 @@ export default function ServicoDetailPage() {
             {servico.cliente.nome} – {servico.categoria?.nome ?? servico.tipoServico ?? "—"}
           </p>
           {servico.dataAgendamento && (
-            <p className="text-sm text-primary mt-1">Agendado: {new Date(servico.dataAgendamento).toLocaleString("pt-BR")}</p>
+            <p className="text-sm text-white mt-1">Agendado: {new Date(servico.dataAgendamento).toLocaleString("pt-BR")}</p>
           )}
           {servico.valorEstimado != null && (
             <p className="text-sm font-medium mt-1">Valor: R$ {Number(servico.valorEstimado).toLocaleString("pt-BR")}</p>
@@ -352,7 +351,12 @@ export default function ServicoDetailPage() {
                   const filename = decodeURIComponent(url.split("/").pop() || "arquivo");
                   return (
                     <li key={url}>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white underline break-all"
+                      >
                         {filename}
                       </a>
                     </li>

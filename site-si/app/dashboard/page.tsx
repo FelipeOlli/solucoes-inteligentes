@@ -96,9 +96,7 @@ export default function DashboardPage() {
                       ? "bg-gray-200 text-gray-700"
                       : s.statusAtual === "CANCELADO"
                         ? "bg-red-100 text-red-800"
-                        : s.statusAtual === "ABERTO"
-                          ? "bg-secondary/20 text-white"
-                          : "bg-secondary/20 text-primary"
+                        : "bg-secondary/20 text-white"
                   }`}
                 >
                   {STATUS_LABEL[s.statusAtual] || s.statusAtual}
@@ -107,7 +105,7 @@ export default function DashboardPage() {
               <p className="text-sm text-theme-muted mt-1 break-words">
                 {s.categoria?.nome ?? s.tipoServico ?? "—"} – {new Date(s.dataAbertura).toLocaleDateString("pt-BR")}
                 {s.dataAgendamento && (
-                  <span className="ml-2 text-theme-primary">Agendado: {new Date(s.dataAgendamento).toLocaleDateString("pt-BR")}</span>
+                  <span className="ml-2 text-white">Agendado: {new Date(s.dataAgendamento).toLocaleDateString("pt-BR")}</span>
                 )}
                 {s.valorEstimado != null && (
                   <span className="ml-2 font-medium">R$ {Number(s.valorEstimado).toLocaleString("pt-BR")}</span>
