@@ -19,6 +19,7 @@ export default function NovoServicoPage() {
   const [descricao, setDescricao] = useState("");
   const [dataAgendamento, setDataAgendamento] = useState("");
   const [valorEstimado, setValorEstimado] = useState("");
+  const [formaPagamento, setFormaPagamento] = useState("");
   const [imagens, setImagens] = useState<File[]>([]);
   const [orcamentoFiles, setOrcamentoFiles] = useState<File[]>([]);
   const [draggingImagens, setDraggingImagens] = useState(false);
@@ -79,6 +80,7 @@ export default function NovoServicoPage() {
       descricao: descricao.trim(),
       data_agendamento: dataAgendamento || null,
       valor_estimado: valorEstimado ? Number(valorEstimado.trim().replace(",", ".")) || null : null,
+      forma_pagamento: formaPagamento || null,
     };
     if (usarNovoCliente) {
       body.cliente = {
@@ -207,6 +209,20 @@ export default function NovoServicoPage() {
         <div>
           <label className="block text-sm font-medium text-theme-muted mb-1">Valor do serviço (R$)</label>
           <input type="text" inputMode="decimal" placeholder="0,00" value={valorEstimado} onChange={(e) => setValorEstimado(e.target.value)} className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-theme-muted mb-1">Forma de pagamento</label>
+          <select
+            value={formaPagamento}
+            onChange={(e) => setFormaPagamento(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+          >
+            <option value="">Selecione...</option>
+            <option value="DINHEIRO">Dinheiro</option>
+            <option value="PIX">PIX</option>
+            <option value="CREDITO">Crédito</option>
+            <option value="DEBITO">Débito</option>
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-theme-muted mb-1">Descrição</label>

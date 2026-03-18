@@ -43,6 +43,7 @@ type ServicoDetail = {
   prazoEstimado?: string | null;
   valorEstimado?: number | null;
   imagens?: string[] | null;
+  formaPagamento?: string | null;
   cliente: { nome: string; email: string; telefone: string };
   statusHist: { id: string; statusAnterior: string | null; statusNovo: string; idAutor: string; createdAt: string }[];
   notas: { id: string; conteudo: string; visivelCliente: boolean; createdAt: string }[];
@@ -65,6 +66,7 @@ export default function ServicoDetailPage() {
   const [editDataAgendamento, setEditDataAgendamento] = useState("");
   const [editValor, setEditValor] = useState("");
   const [editCategoriaId, setEditCategoriaId] = useState("");
+  const [editFormaPagamento, setEditFormaPagamento] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   const [error, setError] = useState("");
 
@@ -85,7 +87,9 @@ export default function ServicoDetailPage() {
     setEditDataAgendamento(servico.dataAgendamento ? new Date(servico.dataAgendamento).toISOString().slice(0, 16) : "");
     setEditValor(servico.valorEstimado != null ? String(servico.valorEstimado) : "");
     setEditCategoriaId(servico.categoria?.id ?? "");
-  }, [servico?.id, servico?.dataAgendamento, servico?.valorEstimado, servico?.categoria?.id]);
+    setEditFormaPagamento(servico.formaPagamento ?? "");
+    setNovoStatus(servico.statusAtual);
+  }, [servico?.id, servico?.dataAgendamento, servico?.valorEstimado, servico?.categoria?.id, servico?.statusAtual, servico?.formaPagamento]);
 
   useEffect(() => {
     api<Categoria[]>("/categorias").then(({ data }) => data && setCategorias(data));
@@ -95,10 +99,11 @@ export default function ServicoDetailPage() {
     e.preventDefault();
     setError("");
     setSavingEdit(true);
-    const body: { data_agendamento?: string | null; valor_estimado?: number | null; categoria_id?: string | null } = {};
+    const body: { data_agendamento?: string | null; valor_estimado?: number | null; categoria_id?: string | null; forma_pagamento?: string | null } = {};
     body.data_agendamento = editDataAgendamento ? new Date(editDataAgendamento).toISOString() : null;
     body.valor_estimado = editValor.trim() ? Number(editValor.trim().replace(",", ".")) || null : null;
     body.categoria_id = editCategoriaId || null;
+    body.forma_pagamento = editFormaPagamento || null;
     const { status } = await api(`/servicos/${id}`, { method: "PATCH", body });
     setSavingEdit(false);
     if (status === 401) router.push("/login");
@@ -258,7 +263,7 @@ export default function ServicoDetailPage() {
               <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
                 <select value={novoStatus} onChange={(e) => setNovoStatus(e.target.value)} className="px-4 py-2 border rounded-lg flex-1 min-w-[140px] bg-theme-card border-theme text-theme">
                   <option value="">Novo status...</option>
-                  {STATUS_LIST.filter((s) => s !== servico.statusAtual).map((s) => (
+                  {STATUS_LIST.map((s) => (
                     <option key={s} value={s}>{STATUS_LABEL[s]}</option>
                   ))}
                 </select>
@@ -284,6 +289,20 @@ export default function ServicoDetailPage() {
                 {categorias.map((c) => (
                   <option key={c.id} value={c.id}>{c.nome}</option>
                 ))}
+              </select>
+            </div>
+            <div className="space-y-2 mb-3">
+              <label className="block text-sm font-medium text-theme-muted">Forma de pagamento</label>
+              <select
+                value={editFormaPagamento}
+                onChange={(e) => setEditFormaPagamento(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+              >
+                <option value="">—</option>
+                <option value="DINHEIRO">Dinheiro</option>
+                <option value="PIX">PIX</option>
+                <option value="CREDITO">Crédito</option>
+                <option value="DEBITO">Débito</option>
               </select>
             </div>
             <button type="submit" disabled={savingEdit} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">Salvar</button>

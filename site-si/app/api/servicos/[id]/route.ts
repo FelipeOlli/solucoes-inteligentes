@@ -71,6 +71,10 @@ export async function PATCH(
   if (body.endereco_servico !== undefined) data.enderecoServico = body.endereco_servico ? String(body.endereco_servico).trim() : null;
   if (body.contato_preferencial !== undefined) data.contatoPreferencial = body.contato_preferencial ? String(body.contato_preferencial).trim() : null;
   if (body.categoria_id !== undefined) data.categoriaId = body.categoria_id ? String(body.categoria_id).trim() : null;
+  if (body.forma_pagamento !== undefined || body.formaPagamento !== undefined) {
+    const fp = String(body.forma_pagamento ?? body.formaPagamento ?? "").trim().toUpperCase();
+    data.formaPagamento = fp || null;
+  }
   if (body.imagens !== undefined) {
     const arr = Array.isArray(body.imagens) ? body.imagens.map((u: unknown) => String(u)) : [];
     data.imagens = arr.length > 0 ? JSON.stringify(arr) : null;

@@ -100,6 +100,8 @@ export async function POST(request: NextRequest) {
         ? JSON.stringify(imagensJson.map((u: unknown) => String(u)))
         : null;
 
+    const formaPagamento = (body.forma_pagamento ?? body.formaPagamento ?? "").trim() || null;
+
     const servico = await prisma.servico.create({
       data: {
         codigo,
@@ -114,6 +116,7 @@ export async function POST(request: NextRequest) {
         enderecoServico: body.endereco != null ? String(body.endereco).trim() || null : null,
         contatoPreferencial: body.contato != null ? String(body.contato).trim() || null : null,
         imagens: imagensStr,
+        formaPagamento: formaPagamento || null,
       },
       include: {
         cliente: { select: { id: true, nome: true, email: true, telefone: true } },
@@ -147,6 +150,7 @@ export async function POST(request: NextRequest) {
         enderecoServico: servico.enderecoServico,
         contatoPreferencial: servico.contatoPreferencial,
         imagens: servico.imagens ? (JSON.parse(servico.imagens) as string[]) : null,
+        formaPagamento: servico.formaPagamento,
         createdAt: servico.createdAt,
       },
       201
