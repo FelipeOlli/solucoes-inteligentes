@@ -4,10 +4,7 @@ import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { forbidden, unauthorized } from "@/lib/api-response";
 import { createGoogleOAuthState, getGoogleConnectUrl } from "@/lib/google-calendar";
 
-export async function GET(request: NextRequest) {
-  const auth = await getAuthFromRequest(request);
-  if (!auth || !isDono(auth)) return auth ? forbidden() : unauthorized();
-
+async function buildConnectUrlWithState() {
   const state = createGoogleOAuthState();
   const cookieStore = await cookies();
   cookieStore.set("google_oauth_state", state, {
@@ -17,8 +14,22 @@ export async function GET(request: NextRequest) {
     maxAge: 600,
     path: "/",
   });
+  return getGoogleConnectUrl(state);
+}
 
-  const url = getGoogleConnectUrl(state);
+export async function GET(request: NextRequest) {
+  const auth = await getAuthFromRequest(request);
+  if (!auth || !isDono(auth)) return auth ? forbidden() : unauthorized();
+
+  const url = await buildConnectUrlWithState();
   return NextResponse.redirect(url);
+}
+
+export async function POST(request: NextRequest) {
+  const auth = await getAuthFromRequest(request);
+  if (!auth || !isDono(auth)) return auth ? forbidden() : unauthorized();
+
+  const url = await buildConnectUrlWithState();
+  return NextResponse.json({ url });
 }
 

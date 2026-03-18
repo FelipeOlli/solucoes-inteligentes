@@ -137,6 +137,22 @@ export default function AgendaPage() {
     await load();
   }
 
+  async function connectGoogle() {
+    const { data, error: err, status } = await api<{ url: string }>("/integrations/google-calendar/connect", {
+      method: "POST",
+      body: {},
+    });
+    if (status === 401) {
+      router.push("/login");
+      return;
+    }
+    if (err || !data?.url) {
+      setError(err?.message || "Não foi possível iniciar conexão com Google.");
+      return;
+    }
+    window.location.href = data.url;
+  }
+
   async function disconnectGoogle() {
     const { error: err, status } = await api("/integrations/google-calendar", { method: "DELETE" });
     if (status === 401) {
@@ -201,9 +217,13 @@ export default function AgendaPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {!google.connected ? (
-              <a href="/api/integrations/google-calendar/connect" className="px-3 py-2 bg-primary text-white rounded-lg">
+              <button
+                type="button"
+                onClick={connectGoogle}
+                className="px-3 py-2 bg-primary text-white rounded-lg"
+              >
                 Conectar Google
-              </a>
+              </button>
             ) : (
               <>
                 <button type="button" onClick={() => resyncGoogle("resync")} className="px-3 py-2 rounded-lg border border-theme bg-theme-card">
