@@ -78,7 +78,7 @@ export default function NovoServicoPage() {
     const body: Record<string, unknown> = {
       categoria_id: categoriaId,
       descricao: descricao.trim(),
-      data_agendamento: dataAgendamento || null,
+      data_agendamento: dataAgendamento ? new Date(dataAgendamento).toISOString() : null,
       valor_estimado: valorEstimado ? Number(valorEstimado.trim().replace(",", ".")) || null : null,
       forma_pagamento: formaPagamento || null,
     };
