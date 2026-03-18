@@ -27,9 +27,32 @@ type GoogleStatus = {
   };
 };
 
+type ViewMode = "day" | "week" | "month";
+
+function startOfDay(base: Date) {
+  return new Date(base.getFullYear(), base.getMonth(), base.getDate());
+}
+
 function monthBounds(base: Date) {
   const start = new Date(base.getFullYear(), base.getMonth(), 1);
   const end = new Date(base.getFullYear(), base.getMonth() + 1, 1);
+  return { start, end };
+}
+
+function dayBounds(base: Date) {
+  const start = startOfDay(base);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 1);
+  return { start, end };
+}
+
+function weekBounds(base: Date) {
+  const pivot = startOfDay(base);
+  const day = pivot.getDay();
+  const start = new Date(pivot);
+  start.setDate(pivot.getDate() - day);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 7);
   return { start, end };
 }
 
@@ -57,6 +80,7 @@ function buildMonthGrid(base: Date): Date[] {
 export default function AgendaPage() {
   const router = useRouter();
   const [cursor, setCursor] = useState(() => new Date());
+  const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [monthDirection, setMonthDirection] = useState(1);
   const [events, setEvents] = useState<AgendaEvent[]>([]);
   const [google, setGoogle] = useState<GoogleStatus>({ connected: false });
@@ -64,8 +88,20 @@ export default function AgendaPage() {
   const [draggingEventId, setDraggingEventId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const bounds = useMemo(() => monthBounds(cursor), [cursor]);
+  const bounds = useMemo(() => {
+    if (viewMode === "day") return dayBounds(cursor);
+    if (viewMode === "week") return weekBounds(cursor);
+    return monthBounds(cursor);
+  }, [cursor, viewMode]);
   const grid = useMemo(() => buildMonthGrid(cursor), [cursor]);
+  const weekDays = useMemo(() => {
+    const { start } = weekBounds(cursor);
+    return Array.from({ length: 7 }).map((_, idx) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + idx);
+      return d;
+    });
+  }, [cursor]);
   const eventsByDay = useMemo(() => {
     const map = new Map<string, AgendaEvent[]>();
     for (const ev of events) {
@@ -79,6 +115,10 @@ export default function AgendaPage() {
     }
     return map;
   }, [events]);
+  const dayEvents = useMemo(() => {
+    const k = dayKey(cursor);
+    return eventsByDay.get(k) || [];
+  }, [eventsByDay, cursor]);
 
   async function load() {
     setLoading(true);
@@ -101,7 +141,7 @@ export default function AgendaPage() {
 
   useEffect(() => {
     load();
-  }, [cursor]);
+  }, [cursor, viewMode]);
 
   async function moveEvent(eventId: string, targetDay: Date) {
     const current = events.find((e) => e.id === eventId);
@@ -169,46 +209,104 @@ export default function AgendaPage() {
     await load();
   }
 
-  const monthLabel = cursor.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-  const monthKey = `${cursor.getFullYear()}-${cursor.getMonth()}`;
+  const periodLabel = useMemo(() => {
+    if (viewMode === "day") {
+      return cursor.toLocaleDateString("pt-BR", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+    }
+    if (viewMode === "week") {
+      const start = weekDays[0];
+      const end = weekDays[6];
+      return `${start.toLocaleDateString("pt-BR")} - ${end.toLocaleDateString("pt-BR")}`;
+    }
+    return cursor.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  }, [viewMode, cursor, weekDays]);
+  const periodKey = `${viewMode}-${bounds.start.toISOString()}`;
+  const prevLabel = viewMode === "day" ? "Dia anterior" : viewMode === "week" ? "Semana anterior" : "Mês anterior";
+  const nextLabel = viewMode === "day" ? "Próximo dia" : viewMode === "week" ? "Próxima semana" : "Próximo mês";
+
+  function goPrev() {
+    setMonthDirection(-1);
+    setCursor((prev) => {
+      const d = new Date(prev);
+      if (viewMode === "day") d.setDate(d.getDate() - 1);
+      else if (viewMode === "week") d.setDate(d.getDate() - 7);
+      else d.setMonth(d.getMonth() - 1, 1);
+      return d;
+    });
+  }
+
+  function goNext() {
+    setMonthDirection(1);
+    setCursor((prev) => {
+      const d = new Date(prev);
+      if (viewMode === "day") d.setDate(d.getDate() + 1);
+      else if (viewMode === "week") d.setDate(d.getDate() + 7);
+      else d.setMonth(d.getMonth() + 1, 1);
+      return d;
+    });
+  }
+
+  function goToday() {
+    setMonthDirection(0);
+    setCursor(new Date());
+  }
 
   return (
     <div className="text-theme space-y-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary">Agenda</h1>
-          <p className="text-sm text-theme-muted">Arraste os serviços entre os dias para reagendar rapidamente.</p>
+          <p className="text-sm text-theme-muted">Visualize por dia, semana ou mês e reagende serviços com facilidade.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 justify-end">
+          <div className="inline-flex rounded-lg border border-theme overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setViewMode("day")}
+              className={`px-3 py-2 text-sm ${viewMode === "day" ? "bg-primary text-white" : "bg-theme-card"}`}
+            >
+              Dia
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("week")}
+              className={`px-3 py-2 text-sm border-x border-theme ${viewMode === "week" ? "bg-primary text-white" : "bg-theme-card"}`}
+            >
+              Semana
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("month")}
+              className={`px-3 py-2 text-sm ${viewMode === "month" ? "bg-primary text-white" : "bg-theme-card"}`}
+            >
+              Mês
+            </button>
+          </div>
           <button
             type="button"
-            onClick={() => {
-              setMonthDirection(-1);
-              setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1));
-            }}
+            onClick={goPrev}
             className="px-3 py-2 rounded-lg border border-theme bg-theme-card"
           >
-            Mês anterior
+            {prevLabel}
           </button>
           <button
             type="button"
-            onClick={() => {
-              setMonthDirection(0);
-              setCursor(new Date());
-            }}
+            onClick={goToday}
             className="px-3 py-2 rounded-lg border border-theme bg-theme-card"
           >
             Hoje
           </button>
           <button
             type="button"
-            onClick={() => {
-              setMonthDirection(1);
-              setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1));
-            }}
+            onClick={goNext}
             className="px-3 py-2 rounded-lg border border-theme bg-theme-card"
           >
-            Próximo mês
+            {nextLabel}
           </button>
         </div>
       </div>
@@ -274,52 +372,39 @@ export default function AgendaPage() {
 
       <div className="bg-theme-card border border-theme rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-heading font-bold text-theme-primary capitalize">{monthLabel}</h3>
+          <h3 className="font-heading font-bold text-theme-primary capitalize">{periodLabel}</h3>
           {loading && <span className="text-sm text-theme-muted">Carregando…</span>}
-        </div>
-        <div className="grid grid-cols-7 gap-2 text-xs uppercase text-theme-muted mb-2">
-          {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((w) => (
-            <div key={w} className="px-2">{w}</div>
-          ))}
         </div>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            key={monthKey}
+            key={periodKey}
             initial={{ opacity: 0, x: monthDirection < 0 ? -20 : monthDirection > 0 ? 20 : 0 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: monthDirection < 0 ? 20 : monthDirection > 0 ? -20 : 0 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="grid grid-cols-7 gap-2"
+            className="space-y-2"
           >
-            {grid.map((day) => {
-              const k = dayKey(day);
-              const dayEvents = eventsByDay.get(k) || [];
-              const isCurrentMonth = day.getMonth() === cursor.getMonth();
-              return (
-                <div
-                  key={k}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={async (e) => {
-                    e.preventDefault();
-                    const eventId = e.dataTransfer.getData("text/event-id");
-                    if (!eventId) return;
-                    await moveEvent(eventId, day);
-                    setDraggingEventId(null);
-                  }}
-                  className={`min-h-[120px] rounded-lg border p-2 ${isCurrentMonth ? "border-theme" : "border-theme opacity-50"}`}
-                >
-                  <div className="text-xs mb-2 font-medium">{day.getDate()}</div>
-                  <div className="space-y-1">
-                    {dayEvents.map((ev) => (
+            {viewMode !== "day" && (
+              <div className="grid grid-cols-7 gap-2 text-xs uppercase text-theme-muted mb-2">
+                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((w) => (
+                  <div key={w} className="px-2">{w}</div>
+                ))}
+              </div>
+            )}
+
+            {viewMode === "day" && (
+              <div className="rounded-lg border border-theme p-3 min-h-[240px]">
+                <div className="text-xs mb-3 font-medium text-theme-muted">
+                  {cursor.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" })}
+                </div>
+                <div className="space-y-2">
+                  {dayEvents.length === 0 ? (
+                    <p className="text-sm text-theme-muted">Nenhum serviço agendado para este dia.</p>
+                  ) : (
+                    dayEvents.map((ev) => (
                       <div
                         key={ev.id}
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData("text/event-id", ev.id);
-                          setDraggingEventId(ev.id);
-                        }}
-                        onDragEnd={() => setDraggingEventId(null)}
-                        className={`rounded px-2 py-1 text-xs cursor-move transition-opacity duration-150 ${draggingEventId === ev.id ? "opacity-50" : ""}`}
+                        className="rounded px-3 py-2 text-sm"
                         style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-cta-text)" }}
                         title={`${ev.title} (${new Date(ev.start).toLocaleString("pt-BR")})`}
                       >
@@ -330,11 +415,110 @@ export default function AgendaPage() {
                           </div>
                         </Link>
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  )}
                 </div>
-              );
-            })}
+              </div>
+            )}
+
+            {viewMode === "week" && (
+              <div className="grid grid-cols-7 gap-2">
+                {weekDays.map((day) => {
+                  const k = dayKey(day);
+                  const weekEvents = eventsByDay.get(k) || [];
+                  return (
+                    <div
+                      key={k}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={async (e) => {
+                        e.preventDefault();
+                        const eventId = e.dataTransfer.getData("text/event-id");
+                        if (!eventId) return;
+                        await moveEvent(eventId, day);
+                        setDraggingEventId(null);
+                      }}
+                      className="min-h-[220px] rounded-lg border border-theme p-2"
+                    >
+                      <div className="text-xs mb-2 font-medium">
+                        {day.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                      </div>
+                      <div className="space-y-1">
+                        {weekEvents.map((ev) => (
+                          <div
+                            key={ev.id}
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData("text/event-id", ev.id);
+                              setDraggingEventId(ev.id);
+                            }}
+                            onDragEnd={() => setDraggingEventId(null)}
+                            className={`rounded px-2 py-1 text-xs cursor-move transition-opacity duration-150 ${draggingEventId === ev.id ? "opacity-50" : ""}`}
+                            style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-cta-text)" }}
+                            title={`${ev.title} (${new Date(ev.start).toLocaleString("pt-BR")})`}
+                          >
+                            <Link href={`/dashboard/servicos/${ev.id}`} className="block">
+                              <div className="font-medium truncate">{ev.title}</div>
+                              <div className="opacity-90">
+                                {new Date(ev.start).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                              </div>
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {viewMode === "month" && (
+              <div className="grid grid-cols-7 gap-2">
+                {grid.map((day) => {
+                  const k = dayKey(day);
+                  const monthEvents = eventsByDay.get(k) || [];
+                  const isCurrentMonth = day.getMonth() === cursor.getMonth();
+                  return (
+                    <div
+                      key={k}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={async (e) => {
+                        e.preventDefault();
+                        const eventId = e.dataTransfer.getData("text/event-id");
+                        if (!eventId) return;
+                        await moveEvent(eventId, day);
+                        setDraggingEventId(null);
+                      }}
+                      className={`min-h-[120px] rounded-lg border p-2 ${isCurrentMonth ? "border-theme" : "border-theme opacity-50"}`}
+                    >
+                      <div className="text-xs mb-2 font-medium">{day.getDate()}</div>
+                      <div className="space-y-1">
+                        {monthEvents.map((ev) => (
+                          <div
+                            key={ev.id}
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData("text/event-id", ev.id);
+                              setDraggingEventId(ev.id);
+                            }}
+                            onDragEnd={() => setDraggingEventId(null)}
+                            className={`rounded px-2 py-1 text-xs cursor-move transition-opacity duration-150 ${draggingEventId === ev.id ? "opacity-50" : ""}`}
+                            style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-cta-text)" }}
+                            title={`${ev.title} (${new Date(ev.start).toLocaleString("pt-BR")})`}
+                          >
+                            <Link href={`/dashboard/servicos/${ev.id}`} className="block">
+                              <div className="font-medium truncate">{ev.title}</div>
+                              <div className="opacity-90">
+                                {new Date(ev.start).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                              </div>
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
