@@ -6,6 +6,8 @@ Passo a passo para publicar o site Soluções Inteligentes em um servidor Hetzne
 
 **Alternativa simples:** SQLite com volume em `/app/data` (um único serviço; adequado para testes ou uso leve).
 
+Para um processo reutilizável em projetos futuros (incluindo validação local antes do push), use também o playbook: **[docs/PLAYBOOK-EASYPANEL-PROJETOS.md](docs/PLAYBOOK-EASYPANEL-PROJETOS.md)**.
+
 ---
 
 ## 1. O que você precisa
