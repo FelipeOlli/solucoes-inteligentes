@@ -57,6 +57,9 @@ Adicione no painel do app:
 | `DATABASE_URL` | **PostgreSQL (recomendado):** `postgresql://user:senha@sidb:5432/sintel` — veja [docs/POSTGRES-EASYPANEL.md](docs/POSTGRES-EASYPANEL.md). **SQLite:** `file:/app/data/si.db` | Sim |
 | `JWT_SECRET` | Uma chave longa e aleatória (mín. 32 caracteres) | Sim |
 | `NEXT_PUBLIC_APP_URL` | URL final do site (ex.: `https://solucoesinteligentes.com.br`) | Recomendado |
+| `GOOGLE_CLIENT_ID` | Client ID do OAuth 2.0 (Google Cloud Console) | Se usar agenda Google |
+| `GOOGLE_CLIENT_SECRET` | Client Secret do OAuth 2.0 | Se usar agenda Google |
+| `GOOGLE_REDIRECT_URI` | Ex.: `https://seu-dominio.com/api/integrations/google-calendar/callback` | Se usar agenda Google |
 
 **Exemplo de JWT_SECRET:** gere uma string aleatória (ex.: `openssl rand -base64 32`) e use o resultado.
 
@@ -81,6 +84,8 @@ Assim o arquivo `si.db` fica em `/app/data/si.db` e é mantido entre deploys/rei
 2. Aguarde o build (pode levar alguns minutos).
 3. Quando o status ficar “Running”, o site estará no ar na URL que o EasyPanel mostrar (ex.: `https://site-si.seudominio.com` ou a que você configurou).
 
+Se usar integração de agenda Google, veja também o checklist de ativação em `docs/GOOGLE-AGENDA-ROLLOUT.md`.
+
 ---
 
 ## 4. Primeiro acesso
@@ -100,6 +105,7 @@ Assim o arquivo `si.db` fica em `/app/data/si.db` e é mantido entre deploys/rei
 | **SQLite** | `DATABASE_URL=file:/app/data/si.db` + volume `/app/data` |
 | `JWT_SECRET` | Chave forte (≥ 32 caracteres) |
 | `NEXT_PUBLIC_APP_URL` | URL pública do site |
+| `GOOGLE_*` | Credenciais OAuth para sincronização com Google Agenda |
 
 ---
 

@@ -86,6 +86,13 @@ export default function DashboardLayout({
                   Serviços
                 </Link>
                 <Link
+                  href="/dashboard/agenda"
+                  className={navLinkClass(pathname === "/dashboard/agenda")}
+                  style={{ color: pathname === "/dashboard/agenda" ? "var(--color-navbar-text)" : "inherit" }}
+                >
+                  Agenda
+                </Link>
+                <Link
                   href="/dashboard/clientes"
                   className={navLinkClass(pathname === "/dashboard/clientes")}
                   style={{ color: pathname === "/dashboard/clientes" ? "var(--color-navbar-text)" : "inherit" }}
@@ -217,6 +224,14 @@ export default function DashboardLayout({
                 onClick={() => setMobileNavOpen(false)}
               >
                 Serviços
+              </Link>
+              <Link
+                href="/dashboard/agenda"
+                className={navLinkClass(pathname === "/dashboard/agenda")}
+                style={{ color: pathname === "/dashboard/agenda" ? "var(--color-navbar-text)" : "inherit" }}
+                onClick={() => setMobileNavOpen(false)}
+              >
+                Agenda
               </Link>
               <Link
                 href="/dashboard/clientes"

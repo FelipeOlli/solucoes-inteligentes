@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { gerarCodigoServico } from "@/lib/codigo-servico";
 import { jsonResponse, unauthorized, forbidden, badRequest, conflict, errorResponse } from "@/lib/api-response";
+import { enqueueServicoSync, processAgendaSyncQueue } from "@/lib/agenda-sync";
 
 export async function GET(request: NextRequest) {
   const auth = await getAuthFromRequest(request);
@@ -117,6 +118,7 @@ export async function POST(request: NextRequest) {
         contatoPreferencial: body.contato != null ? String(body.contato).trim() || null : null,
         imagens: imagensStr,
         formaPagamento: formaPagamento || null,
+        googleSyncState: dataAgendamento ? "PENDING_CREATE" : "IN_SYNC",
       },
       include: {
         cliente: { select: { id: true, nome: true, email: true, telefone: true } },
@@ -132,6 +134,13 @@ export async function POST(request: NextRequest) {
         idAutor: auth.userId,
       },
     });
+
+    if (servico.dataAgendamento) {
+      await enqueueServicoSync(servico.id, "UPSERT", { source: "servicos_post" });
+      await processAgendaSyncQueue().catch((err) => {
+        console.warn("Falha ao processar sync após criação de serviço:", err);
+      });
+    }
 
     return jsonResponse(
       {

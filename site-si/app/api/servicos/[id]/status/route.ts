@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { isTransitionAllowed, STATUS_LIST } from "@/lib/status";
 import { jsonResponse, unauthorized, forbidden, notFound, badRequest } from "@/lib/api-response";
+import { enqueueServicoSync, processAgendaSyncQueue } from "@/lib/agenda-sync";
 
 async function getServicoId(idOrCodigo: string): Promise<string | null> {
   const byId = await prisma.servico.findUnique({ where: { id: idOrCodigo }, select: { id: true } });
@@ -39,7 +40,13 @@ export async function PATCH(
   await prisma.$transaction([
     prisma.servico.update({
       where: { id },
-      data: { statusAtual: statusNovo, dataConclusao, updatedAt: new Date() },
+      data: {
+        statusAtual: statusNovo,
+        dataConclusao,
+        updatedAt: new Date(),
+        googleSyncState: statusNovo === "CANCELADO" ? "PENDING_DELETE" : "PENDING_UPDATE",
+        googleLastError: null,
+      },
     }),
     prisma.statusHist.create({
       data: {
@@ -55,5 +62,15 @@ export async function PATCH(
     where: { id },
     include: { cliente: { select: { id: true, nome: true, email: true, telefone: true } } },
   });
+
+  if (statusNovo === "CANCELADO") {
+    await enqueueServicoSync(id, "DELETE", { source: "status_patch_cancel" });
+  } else {
+    await enqueueServicoSync(id, "UPSERT", { source: "status_patch" });
+  }
+  await processAgendaSyncQueue().catch((err) => {
+    console.warn("Falha ao processar sync após mudança de status:", err);
+  });
+
   return jsonResponse(updated!);
 }

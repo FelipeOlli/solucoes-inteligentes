@@ -14,6 +14,14 @@ enum FormaPagamento {
   DEBITO
 }
 
+enum GoogleSyncState {
+  PENDING_CREATE
+  PENDING_UPDATE
+  PENDING_DELETE
+  IN_SYNC
+  ERROR
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -84,10 +92,53 @@ model Servico {
   contatoPreferencial String?
   imagens             String?
   formaPagamento      FormaPagamento?
+  googleEventId       String?             @unique
+  googleEtag          String?
+  googleUpdatedAt     DateTime?
+  googleSyncState     GoogleSyncState?    @default(IN_SYNC)
+  googleLastError     String?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   statusHist          StatusHist[]
   notas               Nota[]
+  agendaSyncJobs      AgendaSyncQueue[]
+}
+
+model GoogleCalendarIntegration {
+  id                  String   @id @default(cuid())
+  provider            String   @default("google")
+  accountEmail        String?
+  calendarId          String   @default("primary")
+  accessToken         String
+  refreshToken        String
+  tokenType           String?
+  scope               String?
+  expiryDate          DateTime?
+  watchChannelId      String?
+  watchResourceId     String?
+  watchExpiresAt      DateTime?
+  nextSyncToken       String?
+  lastSyncedAt        DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([provider])
+}
+
+model AgendaSyncQueue {
+  id          String   @id @default(cuid())
+  servicoId   String
+  servico     Servico  @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  action      String
+  payload     String?
+  attempts    Int      @default(0)
+  lastError   String?
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([processedAt, createdAt])
+  @@index([servicoId, createdAt])
 }
 
 model StatusHist {

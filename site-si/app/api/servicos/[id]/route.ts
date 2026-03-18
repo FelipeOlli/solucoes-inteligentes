@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { jsonResponse, unauthorized, forbidden, notFound, badRequest } from "@/lib/api-response";
+import { enqueueServicoSync, processAgendaSyncQueue } from "@/lib/agenda-sync";
 
 async function getServicoId(idOrCodigo: string): Promise<string | null> {
   const byId = await prisma.servico.findUnique({ where: { id: idOrCodigo }, select: { id: true } });
@@ -62,6 +63,12 @@ export async function PATCH(
   const id = await getServicoId((await params).id);
   if (!id) return notFound();
 
+  const before = await prisma.servico.findUnique({
+    where: { id },
+    select: { id: true, dataAgendamento: true, statusAtual: true },
+  });
+  if (!before) return notFound();
+
   const body = await request.json();
   const data: Record<string, unknown> = {};
   if (body.prazo_estimado !== undefined) data.prazoEstimado = body.prazo_estimado ? new Date(body.prazo_estimado) : null;
@@ -80,6 +87,16 @@ export async function PATCH(
     data.imagens = arr.length > 0 ? JSON.stringify(arr) : null;
   }
 
+  const touchedSchedule =
+    body.data_agendamento !== undefined ||
+    body.descricao !== undefined ||
+    body.categoria_id !== undefined ||
+    body.valor_estimado !== undefined;
+  if (touchedSchedule) {
+    data.googleSyncState = "PENDING_UPDATE";
+    data.googleLastError = null;
+  }
+
   const servico = await prisma.servico.update({
     where: { id },
     data,
@@ -88,6 +105,19 @@ export async function PATCH(
       categoria: { select: { id: true, nome: true } },
     },
   });
+
+  if (touchedSchedule && servico.dataAgendamento) {
+    await enqueueServicoSync(id, "UPSERT", { source: "servicos_patch" });
+    await processAgendaSyncQueue().catch((err) => {
+      console.warn("Falha ao processar sync após patch de serviço:", err);
+    });
+  }
+  if (before.dataAgendamento && !servico.dataAgendamento) {
+    await enqueueServicoSync(id, "DELETE", { source: "servicos_patch_remove_schedule" });
+    await processAgendaSyncQueue().catch((err) => {
+      console.warn("Falha ao processar sync de remoção de agenda:", err);
+    });
+  }
   const imagens = servico.imagens ? (JSON.parse(servico.imagens) as string[]) : null;
   return jsonResponse({ ...servico, imagens });
 }
