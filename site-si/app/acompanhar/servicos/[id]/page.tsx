@@ -55,7 +55,7 @@ export default function AcompanharServicoPage() {
     );
   }
 
-  const sorted = [...servico.timeline].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const sorted = [...servico.timeline].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <main className="min-h-screen bg-gray-50">

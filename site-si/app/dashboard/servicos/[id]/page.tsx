@@ -196,7 +196,7 @@ export default function ServicoDetailPage() {
   const timeline = [
     ...servico.statusHist.map((h) => ({ type: "status" as const, ...h })),
     ...servico.notas.map((n) => ({ type: "nota" as const, ...n })),
-  ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const canChangeStatus = servico.statusAtual !== "CONCLUIDO" && servico.statusAtual !== "CANCELADO";
   const imageUrls = (servico.imagens ?? []).filter((url) => isImageFileName(url));
