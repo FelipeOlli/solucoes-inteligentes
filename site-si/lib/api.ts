@@ -3,6 +3,17 @@ const getToken = () => {
   return localStorage.getItem("si_token");
 };
 
+/** Prefixa NEXT_PUBLIC_BASE_PATH para fetch de `/api/...` e para src/href de arquivos em `/uploads/...`. */
+export function withBasePath(path: string): string {
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const base =
+    typeof window !== "undefined" && process.env.NEXT_PUBLIC_BASE_PATH
+      ? process.env.NEXT_PUBLIC_BASE_PATH.replace(/\/$/, "")
+      : "";
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
+}
+
 export async function api<T>(
   path: string,
   options: Omit<RequestInit, "body"> & { body?: Record<string, unknown> } = {}
@@ -15,8 +26,7 @@ export async function api<T>(
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const base = (typeof window !== "undefined" && process.env.NEXT_PUBLIC_BASE_PATH) ? process.env.NEXT_PUBLIC_BASE_PATH.replace(/\/$/, "") : "";
-  const url = path.startsWith("http") ? path : `${base}/api${path}`;
+  const url = path.startsWith("http") ? path : withBasePath(`/api${path.startsWith("/") ? path : `/${path}`}`);
   const res = await fetch(url, {
     ...rest,
     method,

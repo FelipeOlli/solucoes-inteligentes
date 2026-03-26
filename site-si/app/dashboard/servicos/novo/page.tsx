@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { api } from "@/lib/api";
+import { api, withBasePath } from "@/lib/api";
 
 type Cliente = { id: string; nome: string; email: string; telefone: string };
 type Categoria = { id: string; nome: string };
@@ -75,7 +75,7 @@ export default function NovoServicoPage() {
     const formData = new FormData();
     files.forEach((f) => formData.append("file", f));
     const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
-    await fetch(`/api/servicos/${servicoId}/upload`, {
+    await fetch(withBasePath(`/api/servicos/${servicoId}/upload`), {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: formData,

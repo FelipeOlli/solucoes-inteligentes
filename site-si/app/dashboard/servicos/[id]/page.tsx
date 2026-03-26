@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { api } from "@/lib/api";
+import { api, withBasePath } from "@/lib/api";
 import { STATUS_LIST } from "@/lib/status";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -18,8 +18,9 @@ const STATUS_LABEL: Record<string, string> = {
 
 const IMAGE_FILE_RE = /\.(avif|bmp|gif|heic|heif|jpe?g|png|svg|webp)$/i;
 
-function isImageFileName(name: string): boolean {
-  return IMAGE_FILE_RE.test(name);
+function isImageFileName(urlOrName: string): boolean {
+  const pathOnly = urlOrName.split("?")[0];
+  return IMAGE_FILE_RE.test(pathOnly);
 }
 
 function getStatusBadgeClass(status: string): string {
@@ -60,6 +61,7 @@ export default function ServicoDetailPage() {
   const [notaVisivel, setNotaVisivel] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [uploadingImg, setUploadingImg] = useState(false);
+  const [removingUrl, setRemovingUrl] = useState<string | null>(null);
   const [draggingFotos, setDraggingFotos] = useState(false);
   const [draggingOrcamento, setDraggingOrcamento] = useState(false);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -154,13 +156,32 @@ export default function ServicoDetailPage() {
     const formData = new FormData();
     files.forEach((f) => formData.append("file", f));
     const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
-    const res = await fetch(`/api/servicos/${id}/upload`, {
+    const res = await fetch(withBasePath(`/api/servicos/${id}/upload`), {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: formData,
     });
     setUploadingImg(false);
     if (res.ok) load();
+  }
+
+  async function removeAttachment(urlToRemove: string) {
+    if (!servico || removingUrl) return;
+    setRemovingUrl(urlToRemove);
+    setError("");
+    const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
+    const res = await fetch(
+      withBasePath(`/api/servicos/${id}/upload?url=${encodeURIComponent(urlToRemove)}`),
+      { method: "DELETE", headers: token ? { Authorization: `Bearer ${token}` } : {} }
+    );
+    setRemovingUrl(null);
+    if (res.status === 401) router.push("/login");
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setError(typeof (j as { message?: string }).message === "string" ? (j as { message: string }).message : "Não foi possível remover o arquivo.");
+      return;
+    }
+    load();
   }
 
   async function handleUploadFotosInput(e: React.ChangeEvent<HTMLInputElement>) {
@@ -330,11 +351,26 @@ export default function ServicoDetailPage() {
             <h2 className="font-heading font-bold text-theme-primary mb-2">Fotos / imagens</h2>
             {imageUrls.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
-                {imageUrls.map((url) => (
-                  <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="block">
-                    <img src={url} alt="" className="w-20 h-20 object-cover rounded border" />
-                  </a>
-                ))}
+                {imageUrls.map((url) => {
+                  const href = withBasePath(url);
+                  return (
+                    <div key={url} className="relative group shrink-0">
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="block">
+                        <img src={href} alt="" className="w-20 h-20 object-cover rounded border border-theme" />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(url)}
+                        disabled={removingUrl === url}
+                        className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold shadow hover:opacity-90 disabled:opacity-50"
+                        title="Remover imagem"
+                        aria-label="Remover imagem"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
             <div
@@ -369,15 +405,23 @@ export default function ServicoDetailPage() {
                 {anexoUrls.map((url) => {
                   const filename = decodeURIComponent(url.split("/").pop() || "arquivo");
                   return (
-                    <li key={url}>
+                    <li key={url} className="flex flex-wrap items-center gap-2">
                       <a
-                        href={url}
+                        href={withBasePath(url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-white underline break-all"
                       >
                         {filename}
                       </a>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(url)}
+                        disabled={removingUrl === url}
+                        className="text-xs text-red-400 hover:underline disabled:opacity-50"
+                      >
+                        Remover
+                      </button>
                     </li>
                   );
                 })}
