@@ -11,7 +11,11 @@ type Cliente = {
   nomeContato?: string | null;
   email: string;
   telefone: string;
-  endereco?: string | null;
+  logradouro?: string | null;
+  bairro?: string | null;
+  cidade?: string | null;
+  uf?: string | null;
+  cep?: string | null;
   observacoes?: string | null;
 };
 
@@ -21,7 +25,18 @@ export default function ClientesPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ nome: "", nomeContato: "", email: "", telefone: "", endereco: "", observacoes: "" });
+  const [form, setForm] = useState({
+    nome: "",
+    nomeContato: "",
+    email: "",
+    telefone: "",
+    logradouro: "",
+    bairro: "",
+    cidade: "",
+    uf: "",
+    cep: "",
+    observacoes: "",
+  });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -48,7 +63,18 @@ export default function ClientesPage() {
     setSaving(true);
     const { data, error: err, status } = await api<Cliente>("/clientes", {
       method: "POST",
-      body: { nome: form.nome.trim(), nomeContato: form.nomeContato.trim() || undefined, email: form.email.trim(), telefone: form.telefone.trim(), endereco: form.endereco.trim() || undefined, observacoes: form.observacoes.trim() || undefined },
+      body: {
+        nome: form.nome.trim(),
+        nomeContato: form.nomeContato.trim() || undefined,
+        email: form.email.trim(),
+        telefone: form.telefone.trim(),
+        logradouro: form.logradouro.trim() || undefined,
+        bairro: form.bairro.trim() || undefined,
+        cidade: form.cidade.trim() || undefined,
+        uf: form.uf.trim() || undefined,
+        cep: form.cep.trim() || undefined,
+        observacoes: form.observacoes.trim() || undefined,
+      },
     });
     setSaving(false);
     if (status === 401) {
@@ -60,7 +86,18 @@ export default function ClientesPage() {
       return;
     }
     setModal(false);
-    setForm({ nome: "", nomeContato: "", email: "", telefone: "", endereco: "", observacoes: "" });
+    setForm({
+      nome: "",
+      nomeContato: "",
+      email: "",
+      telefone: "",
+      logradouro: "",
+      bairro: "",
+      cidade: "",
+      uf: "",
+      cep: "",
+      observacoes: "",
+    });
     load();
   }
 
@@ -70,7 +107,7 @@ export default function ClientesPage() {
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
         <input
           type="search"
-          placeholder="Buscar por cliente, e-mail ou telefone..."
+          placeholder="Buscar por nome, e-mail, telefone, cidade, CEP..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
           className="px-4 py-2 border rounded-lg font-body w-full sm:flex-1 sm:max-w-md bg-theme-card border-theme text-theme"
@@ -96,6 +133,7 @@ export default function ClientesPage() {
                 <th className="text-left p-3 font-heading text-theme-primary">Nome do Contato</th>
                 <th className="text-left p-3 font-heading text-theme-primary">E-mail</th>
                 <th className="text-left p-3 font-heading text-theme-primary">Telefone</th>
+                <th className="text-left p-3 font-heading text-theme-primary">Cidade / UF</th>
                 <th className="text-left p-3 font-heading text-theme-primary">Observação</th>
               </tr>
             </thead>
@@ -106,6 +144,9 @@ export default function ClientesPage() {
                   <td className="p-3">{c.nomeContato ?? "—"}</td>
                   <td className="p-3">{c.email}</td>
                   <td className="p-3">{c.telefone}</td>
+                  <td className="p-3 text-theme-muted">
+                    {c.cidade || c.uf ? [c.cidade, c.uf].filter(Boolean).join(" / ") : "—"}
+                  </td>
                   <td className="p-3 max-w-xs truncate" title={c.observacoes ?? undefined}>{c.observacoes ?? "—"}</td>
                 </tr>
               ))}
@@ -116,7 +157,7 @@ export default function ClientesPage() {
 
       {modal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-10 p-4">
-          <div className="bg-theme-card border border-theme rounded-lg max-w-md w-full p-5 sm:p-6 text-theme">
+          <div className="bg-theme-card border border-theme rounded-lg max-w-lg w-full p-5 sm:p-6 text-theme max-h-[90vh] overflow-y-auto">
             <h2 className="font-heading text-xl font-bold text-theme-primary mb-4">Novo cliente</h2>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
@@ -157,13 +198,54 @@ export default function ClientesPage() {
                   className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">Endereço (opcional)</label>
-                <input
-                  value={form.endereco}
-                  onChange={(e) => setForm((f) => ({ ...f, endereco: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                />
+              <div className="pt-2 border-t border-theme">
+                <p className="text-sm font-medium text-theme-primary mb-3">Endereço (opcional)</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-theme-muted mb-1">Logradouro</label>
+                    <input
+                      value={form.logradouro}
+                      onChange={(e) => setForm((f) => ({ ...f, logradouro: e.target.value }))}
+                      className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                      placeholder="Rua, número, complemento…"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-theme-muted mb-1">Bairro</label>
+                    <input
+                      value={form.bairro}
+                      onChange={(e) => setForm((f) => ({ ...f, bairro: e.target.value }))}
+                      className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-theme-muted mb-1">Cidade</label>
+                    <input
+                      value={form.cidade}
+                      onChange={(e) => setForm((f) => ({ ...f, cidade: e.target.value }))}
+                      className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-theme-muted mb-1">UF</label>
+                    <input
+                      value={form.uf}
+                      onChange={(e) => setForm((f) => ({ ...f, uf: e.target.value.toUpperCase().slice(0, 2) }))}
+                      className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme uppercase"
+                      maxLength={2}
+                      placeholder="SP"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-theme-muted mb-1">CEP</label>
+                    <input
+                      value={form.cep}
+                      onChange={(e) => setForm((f) => ({ ...f, cep: e.target.value }))}
+                      className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                      placeholder="00000-000"
+                    />
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-theme-muted mb-1">Observação (opcional)</label>

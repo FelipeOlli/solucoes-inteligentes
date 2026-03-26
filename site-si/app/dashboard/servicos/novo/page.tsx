@@ -13,7 +13,18 @@ export default function NovoServicoPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [clienteId, setClienteId] = useState("");
-  const [novoCliente, setNovoCliente] = useState({ nome: "", nomeContato: "", email: "", telefone: "", endereco: "", observacoes: "" });
+  const [novoCliente, setNovoCliente] = useState({
+    nome: "",
+    nomeContato: "",
+    email: "",
+    telefone: "",
+    logradouro: "",
+    bairro: "",
+    cidade: "",
+    uf: "",
+    cep: "",
+    observacoes: "",
+  });
   const [usarNovoCliente, setUsarNovoCliente] = useState(false);
   const [categoriaId, setCategoriaId] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -88,7 +99,11 @@ export default function NovoServicoPage() {
         nomeContato: novoCliente.nomeContato.trim() || undefined,
         email: novoCliente.email.trim(),
         telefone: novoCliente.telefone.trim(),
-        endereco: novoCliente.endereco.trim() || undefined,
+        logradouro: novoCliente.logradouro.trim() || undefined,
+        bairro: novoCliente.bairro.trim() || undefined,
+        cidade: novoCliente.cidade.trim() || undefined,
+        uf: novoCliente.uf.trim() || undefined,
+        cep: novoCliente.cep.trim() || undefined,
         observacoes: novoCliente.observacoes.trim() || undefined,
       };
     } else {
@@ -178,11 +193,37 @@ export default function NovoServicoPage() {
               onChange={(e) => setNovoCliente((f) => ({ ...f, email: e.target.value }))}
               className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
             />
+            <p className="text-xs font-medium text-theme-muted sm:col-span-2 -mb-1">Endereço (opcional)</p>
             <input
-              placeholder="Endereço (opcional)"
-              value={novoCliente.endereco}
-              onChange={(e) => setNovoCliente((f) => ({ ...f, endereco: e.target.value }))}
+              placeholder="Logradouro"
+              value={novoCliente.logradouro}
+              onChange={(e) => setNovoCliente((f) => ({ ...f, logradouro: e.target.value }))}
               className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
+            />
+            <input
+              placeholder="Bairro"
+              value={novoCliente.bairro}
+              onChange={(e) => setNovoCliente((f) => ({ ...f, bairro: e.target.value }))}
+              className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+            />
+            <input
+              placeholder="Cidade"
+              value={novoCliente.cidade}
+              onChange={(e) => setNovoCliente((f) => ({ ...f, cidade: e.target.value }))}
+              className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+            />
+            <input
+              placeholder="UF"
+              value={novoCliente.uf}
+              onChange={(e) => setNovoCliente((f) => ({ ...f, uf: e.target.value.toUpperCase().slice(0, 2) }))}
+              className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme uppercase"
+              maxLength={2}
+            />
+            <input
+              placeholder="CEP"
+              value={novoCliente.cep}
+              onChange={(e) => setNovoCliente((f) => ({ ...f, cep: e.target.value }))}
+              className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
             />
             <textarea
               placeholder="Observação (opcional)"

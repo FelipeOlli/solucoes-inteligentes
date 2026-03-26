@@ -4,6 +4,7 @@ import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { gerarCodigoServico } from "@/lib/codigo-servico";
 import { jsonResponse, unauthorized, forbidden, badRequest, conflict, errorResponse } from "@/lib/api-response";
 import { enqueueServicoSync, processAgendaSyncQueue } from "@/lib/agenda-sync";
+import { parseClienteAddressFromBody } from "@/lib/cliente-address";
 
 export async function GET(request: NextRequest) {
   const auth = await getAuthFromRequest(request);
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
       const nomeContato = c.nomeContato != null ? String(c.nomeContato).trim() || null : null;
       const email = String(c.email || "").trim().toLowerCase();
       const telefone = String(c.telefone || "").trim();
-      const endereco = c.endereco != null ? String(c.endereco).trim() || null : null;
+      const addr = parseClienteAddressFromBody(c as Record<string, unknown>);
       const observacoes = c.observacoes != null ? String(c.observacoes).trim() || null : null;
       if (!nome || !email || !telefone) {
         return badRequest("Cliente novo exige cliente (nome), e-mail e telefone.");
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
         if (existingTel) clienteId = existingTel.id;
         else {
           const novo = await prisma.cliente.create({
-            data: { nome, nomeContato, email, telefone, endereco, observacoes },
+            data: { nome, nomeContato, email, telefone, ...addr, observacoes },
           });
           clienteId = novo.id;
         }

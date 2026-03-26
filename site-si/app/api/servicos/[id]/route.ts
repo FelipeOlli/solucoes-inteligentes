@@ -24,7 +24,19 @@ export async function GET(
   const servico = await prisma.servico.findUnique({
     where: { id },
     include: {
-      cliente: { select: { id: true, nome: true, email: true, telefone: true, endereco: true } },
+      cliente: {
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          telefone: true,
+          logradouro: true,
+          bairro: true,
+          cidade: true,
+          uf: true,
+          cep: true,
+        },
+      },
       categoria: { select: { id: true, nome: true } },
       statusHist: { orderBy: { createdAt: "asc" } },
       notas: { orderBy: { createdAt: "asc" } },
