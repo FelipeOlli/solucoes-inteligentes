@@ -82,7 +82,9 @@ export default function AcompanharServicoPage() {
             {STATUS_LABEL[servico.statusAtual]}
           </span>
         </div>
-        {servico.descricao && <p className="text-body text-gray-700 mb-6">{servico.descricao}</p>}
+        {servico.descricao && (
+          <p className="text-body text-gray-700 mb-6 whitespace-pre-wrap break-words">{servico.descricao}</p>
+        )}
         <h3 className="font-heading font-bold text-primary mb-3">Linha do tempo</h3>
         <ul className="space-y-3">
           {sorted.map((item) => (

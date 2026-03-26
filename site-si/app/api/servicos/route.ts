@@ -136,6 +136,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    await prisma.nota.create({
+      data: {
+        servicoId: servico.id,
+        conteudo: descricao,
+        visivelCliente: false,
+        idAutor: auth.userId,
+      },
+    });
+
     if (servico.dataAgendamento) {
       await enqueueServicoSync(servico.id, "UPSERT", { source: "servicos_post" });
       await processAgendaSyncQueue().catch((err) => {
