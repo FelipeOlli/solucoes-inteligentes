@@ -71,6 +71,7 @@ export default function ServicoDetailPage() {
   const [editFormaPagamento, setEditFormaPagamento] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   const [error, setError] = useState("");
+  const [statusError, setStatusError] = useState("");
 
   function load() {
     api<ServicoDetail>(`/servicos/${id}`).then(({ data, status }) => {
@@ -114,15 +115,15 @@ export default function ServicoDetailPage() {
 
   async function handleStatus(e: React.FormEvent) {
     e.preventDefault();
-    if (!novoStatus) return;
-    setError("");
-    const { status } = await api(`/servicos/${id}/status`, { method: "PATCH", body: { status_novo: novoStatus } });
+    if (!novoStatus || novoStatus === servico?.statusAtual) return;
+    setStatusError("");
+    const { status, error: err } = await api(`/servicos/${id}/status`, { method: "PATCH", body: { status_novo: novoStatus } });
     if (status === 401) router.push("/login");
     if (status === 200) {
-      setNovoStatus("");
+      setStatusError("");
       load();
     } else {
-      setError("Transição não permitida.");
+      setStatusError(err?.message ?? "Não foi possível atualizar o status.");
     }
   }
 
@@ -236,7 +237,6 @@ export default function ServicoDetailPage() {
     ...servico.notas.map((n) => ({ type: "nota" as const, ...n })),
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  const canChangeStatus = servico.statusAtual !== "CONCLUIDO" && servico.statusAtual !== "CANCELADO";
   const imageUrls = (servico.imagens ?? []).filter((url) => isImageFileName(url));
   const anexoUrls = (servico.imagens ?? []).filter((url) => !isImageFileName(url));
 
@@ -296,20 +296,25 @@ export default function ServicoDetailPage() {
         </div>
 
         <div className="space-y-4">
-          {canChangeStatus && (
-            <form onSubmit={handleStatus} className="bg-theme-card p-4 rounded-lg border border-theme">
-              <h2 className="font-heading font-bold text-theme-primary mb-2">Alterar status</h2>
-              <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
-                <select value={novoStatus} onChange={(e) => setNovoStatus(e.target.value)} className="px-4 py-2 border rounded-lg flex-1 min-w-[140px] bg-theme-card border-theme text-theme">
-                  <option value="">Novo status...</option>
-                  {STATUS_LIST.map((s) => (
-                    <option key={s} value={s}>{STATUS_LABEL[s]}</option>
-                  ))}
-                </select>
-                <button type="submit" disabled={!novoStatus} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">Atualizar</button>
-              </div>
-            </form>
-          )}
+          <form onSubmit={handleStatus} className="bg-theme-card p-4 rounded-lg border border-theme">
+            <h2 className="font-heading font-bold text-theme-primary mb-2">Alterar status</h2>
+            <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+              <select value={novoStatus} onChange={(e) => setNovoStatus(e.target.value)} className="px-4 py-2 border rounded-lg flex-1 min-w-[140px] bg-theme-card border-theme text-theme">
+                <option value="">Novo status...</option>
+                {STATUS_LIST.map((s) => (
+                  <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                disabled={!novoStatus || novoStatus === servico.statusAtual}
+                className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto"
+              >
+                Atualizar
+              </button>
+            </div>
+            {statusError && <p className="text-red-600 text-sm mt-2">{statusError}</p>}
+          </form>
 
           <form onSubmit={handleSalvarDados} className="bg-theme-card p-4 rounded-lg border border-theme">
             <h2 className="font-heading font-bold text-theme-primary mb-2">Dados do serviço</h2>

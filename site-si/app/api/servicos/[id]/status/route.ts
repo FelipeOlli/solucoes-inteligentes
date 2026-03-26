@@ -31,6 +31,10 @@ export async function PATCH(
   const servico = await prisma.servico.findUnique({ where: { id } });
   if (!servico) return notFound();
 
+  if (servico.statusAtual === statusNovo) {
+    return badRequest("O serviço já está neste status.");
+  }
+
   if (!isTransitionAllowed(servico.statusAtual, statusNovo)) {
     return badRequest(`Transição de ${servico.statusAtual} para ${statusNovo} não permitida.`);
   }
