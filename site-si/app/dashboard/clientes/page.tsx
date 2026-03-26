@@ -2,8 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { api } from "@/lib/api";
+
+const emptyForm = {
+  nome: "",
+  nomeContato: "",
+  email: "",
+  telefone: "",
+  logradouro: "",
+  bairro: "",
+  cidade: "",
+  uf: "",
+  cep: "",
+  observacoes: "",
+};
 
 type Cliente = {
   id: string;
@@ -25,18 +37,8 @@ export default function ClientesPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({
-    nome: "",
-    nomeContato: "",
-    email: "",
-    telefone: "",
-    logradouro: "",
-    bairro: "",
-    cidade: "",
-    uf: "",
-    cep: "",
-    observacoes: "",
-  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -57,25 +59,57 @@ export default function ClientesPage() {
     load();
   }, [q]);
 
-  async function handleCreate(e: React.FormEvent) {
+  function openCreateModal() {
+    setEditingId(null);
+    setForm({ ...emptyForm });
+    setError("");
+    setModal(true);
+  }
+
+  function openEditModal(c: Cliente) {
+    setEditingId(c.id);
+    setForm({
+      nome: c.nome,
+      nomeContato: c.nomeContato ?? "",
+      email: c.email,
+      telefone: c.telefone,
+      logradouro: c.logradouro ?? "",
+      bairro: c.bairro ?? "",
+      cidade: c.cidade ?? "",
+      uf: c.uf ?? "",
+      cep: c.cep ?? "",
+      observacoes: c.observacoes ?? "",
+    });
+    setError("");
+    setModal(true);
+  }
+
+  function closeModal() {
+    setModal(false);
+    setEditingId(null);
+    setForm({ ...emptyForm });
+    setError("");
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setSaving(true);
-    const { data, error: err, status } = await api<Cliente>("/clientes", {
-      method: "POST",
-      body: {
-        nome: form.nome.trim(),
-        nomeContato: form.nomeContato.trim() || undefined,
-        email: form.email.trim(),
-        telefone: form.telefone.trim(),
-        logradouro: form.logradouro.trim() || undefined,
-        bairro: form.bairro.trim() || undefined,
-        cidade: form.cidade.trim() || undefined,
-        uf: form.uf.trim() || undefined,
-        cep: form.cep.trim() || undefined,
-        observacoes: form.observacoes.trim() || undefined,
-      },
-    });
+    const body = {
+      nome: form.nome.trim(),
+      nomeContato: form.nomeContato.trim() || undefined,
+      email: form.email.trim(),
+      telefone: form.telefone.trim(),
+      logradouro: form.logradouro.trim() || undefined,
+      bairro: form.bairro.trim() || undefined,
+      cidade: form.cidade.trim() || undefined,
+      uf: form.uf.trim() || undefined,
+      cep: form.cep.trim() || undefined,
+      observacoes: form.observacoes.trim() || undefined,
+    };
+    const { data, error: err, status } = editingId
+      ? await api<Cliente>(`/clientes/${editingId}`, { method: "PATCH", body })
+      : await api<Cliente>("/clientes", { method: "POST", body });
     setSaving(false);
     if (status === 401) {
       router.push("/login");
@@ -85,20 +119,10 @@ export default function ClientesPage() {
       setError(err.message);
       return;
     }
-    setModal(false);
-    setForm({
-      nome: "",
-      nomeContato: "",
-      email: "",
-      telefone: "",
-      logradouro: "",
-      bairro: "",
-      cidade: "",
-      uf: "",
-      cep: "",
-      observacoes: "",
-    });
-    load();
+    if (data) {
+      closeModal();
+      load();
+    }
   }
 
   return (
@@ -114,7 +138,7 @@ export default function ClientesPage() {
         />
         <button
           type="button"
-          onClick={() => setModal(true)}
+          onClick={openCreateModal}
           className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:opacity-90 w-full sm:w-auto"
         >
           Novo cliente
@@ -135,6 +159,7 @@ export default function ClientesPage() {
                 <th className="text-left p-3 font-heading text-theme-primary">Telefone</th>
                 <th className="text-left p-3 font-heading text-theme-primary">Cidade / UF</th>
                 <th className="text-left p-3 font-heading text-theme-primary">Observação</th>
+                <th className="text-right p-3 font-heading text-theme-primary w-px whitespace-nowrap">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -148,6 +173,15 @@ export default function ClientesPage() {
                     {c.cidade || c.uf ? [c.cidade, c.uf].filter(Boolean).join(" / ") : "—"}
                   </td>
                   <td className="p-3 max-w-xs truncate" title={c.observacoes ?? undefined}>{c.observacoes ?? "—"}</td>
+                  <td className="p-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(c)}
+                      className="px-3 py-1.5 text-sm rounded-lg border border-theme bg-theme-card hover:opacity-90 text-theme"
+                    >
+                      Editar
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -158,8 +192,10 @@ export default function ClientesPage() {
       {modal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-10 p-4">
           <div className="bg-theme-card border border-theme rounded-lg max-w-lg w-full p-5 sm:p-6 text-theme max-h-[90vh] overflow-y-auto">
-            <h2 className="font-heading text-xl font-bold text-theme-primary mb-4">Novo cliente</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
+            <h2 className="font-heading text-xl font-bold text-theme-primary mb-4">
+              {editingId ? "Editar cliente" : "Novo cliente"}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-theme-muted mb-1">Cliente</label>
                 <input
@@ -258,11 +294,11 @@ export default function ClientesPage() {
               </div>
               {error && <p className="text-red-600 text-sm">{error}</p>}
               <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
-                <button type="button" onClick={() => setModal(false)} className="px-4 py-2 border border-theme rounded-lg text-theme">
+                <button type="button" onClick={closeModal} className="px-4 py-2 border border-theme rounded-lg text-theme">
                   Cancelar
                 </button>
                 <button type="submit" disabled={saving} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50">
-                  {saving ? "Salvando…" : "Salvar"}
+                  {saving ? "Salvando…" : editingId ? "Atualizar" : "Salvar"}
                 </button>
               </div>
             </form>
