@@ -63,6 +63,10 @@ function dayKey(d: Date): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function isToday(d: Date) {
+  return dayKey(d) === dayKey(new Date());
+}
+
 function buildMonthGrid(base: Date): Date[] {
   const start = new Date(base.getFullYear(), base.getMonth(), 1);
   const firstWeekday = start.getDay();
@@ -342,7 +346,9 @@ export default function AgendaPage() {
             )}
 
             {viewMode === "day" && (
-              <div className="rounded-lg border border-theme p-3 min-h-[240px]">
+              <div
+                className={`rounded-lg border border-theme p-3 min-h-[240px] ${isToday(cursor) ? "ring-2 ring-amber-500 ring-inset" : ""}`}
+              >
                 <div className="text-xs mb-3 font-medium text-theme-muted">
                   {cursor.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" })}
                 </div>
@@ -386,7 +392,7 @@ export default function AgendaPage() {
                         await moveEvent(eventId, day);
                         setDraggingEventId(null);
                       }}
-                      className="min-h-[220px] rounded-lg border border-theme p-2"
+                      className={`min-h-[220px] rounded-lg border border-theme p-2 ${isToday(day) ? "ring-2 ring-amber-500 ring-inset" : ""}`}
                     >
                       <div className="text-xs mb-2 font-medium">
                         {day.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
@@ -437,7 +443,7 @@ export default function AgendaPage() {
                         await moveEvent(eventId, day);
                         setDraggingEventId(null);
                       }}
-                      className={`min-h-[120px] rounded-lg border p-2 ${isCurrentMonth ? "border-theme" : "border-theme opacity-50"}`}
+                      className={`min-h-[120px] rounded-lg border p-2 ${isCurrentMonth ? "border-theme" : "border-theme opacity-50"} ${isToday(day) ? "ring-2 ring-amber-500 ring-inset" : ""}`}
                     >
                       <div className="text-xs mb-2 font-medium">{day.getDate()}</div>
                       <div className="space-y-1">
