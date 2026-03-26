@@ -19,6 +19,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 type TimelineItem =
   | { type: "status"; id: string; statusAnterior: string | null; statusNovo: string; createdAt: string }
+  | { type: "descricao"; id: string; conteudo: string; createdAt: string }
   | { type: "nota"; id: string; conteudo: string; createdAt: string };
 
 type ServicoCliente = {
@@ -82,9 +83,6 @@ export default function AcompanharServicoPage() {
             {STATUS_LABEL[servico.statusAtual]}
           </span>
         </div>
-        {servico.descricao && (
-          <p className="text-body text-gray-700 mb-6 whitespace-pre-wrap break-words">{servico.descricao}</p>
-        )}
         <h3 className="font-heading font-bold text-primary mb-3">Linha do tempo</h3>
         <ul className="space-y-3">
           {sorted.map((item) => (
@@ -96,6 +94,11 @@ export default function AcompanharServicoPage() {
                     ? `Status: ${STATUS_LABEL[item.statusAnterior]} → ${STATUS_LABEL[item.statusNovo]}`
                     : `Abertura: ${STATUS_LABEL[item.statusNovo]}`}
                 </p>
+              ) : item.type === "descricao" ? (
+                <>
+                  <p className="text-xs font-medium text-gray-600 mb-1">Descrição do serviço</p>
+                  <p className="whitespace-pre-wrap break-words">{item.conteudo}</p>
+                </>
               ) : (
                 <p className="whitespace-pre-wrap break-words">{item.conteudo}</p>
               )}

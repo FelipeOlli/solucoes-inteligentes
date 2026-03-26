@@ -21,7 +21,20 @@ export async function GET(
   });
   if (!servico) return notFound();
 
+  const descricaoLinha =
+    servico.descricao.trim() !== ""
+      ? [
+          {
+            type: "descricao" as const,
+            id: `${servico.id}-descricao`,
+            conteudo: servico.descricao,
+            createdAt: servico.dataAbertura,
+          },
+        ]
+      : [];
+
   const timeline = [
+    ...descricaoLinha,
     ...servico.statusHist.map((h) => ({
       type: "status" as const,
       id: h.id,

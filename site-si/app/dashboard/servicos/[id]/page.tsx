@@ -219,7 +219,19 @@ export default function ServicoDetailPage() {
   if (loading) return <p className="text-body">Carregando…</p>;
   if (!servico) return <p className="text-body">Serviço não encontrado.</p>;
 
+  const descricaoLinha =
+    servico.descricao.trim() !== ""
+      ? [
+          {
+            type: "descricao" as const,
+            id: `${servico.id}-descricao`,
+            conteudo: servico.descricao,
+            createdAt: servico.dataAbertura,
+          },
+        ]
+      : [];
   const timeline = [
+    ...descricaoLinha,
     ...servico.statusHist.map((h) => ({ type: "status" as const, ...h })),
     ...servico.notas.map((n) => ({ type: "nota" as const, ...n })),
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -262,6 +274,12 @@ export default function ServicoDetailPage() {
                         ? `Status: ${STATUS_LABEL[(item as { statusAnterior: string }).statusAnterior]} → ${STATUS_LABEL[(item as { statusNovo: string }).statusNovo]}`
                         : `Abertura: ${STATUS_LABEL[(item as { statusNovo: string }).statusNovo]}`}
                     </p>
+                  </>
+                ) : item.type === "descricao" ? (
+                  <>
+                    <span className="text-theme-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
+                    <p className="text-xs font-medium text-theme-muted mb-1">Descrição do serviço</p>
+                    <p className="whitespace-pre-wrap break-words">{(item as { conteudo: string }).conteudo}</p>
                   </>
                 ) : (
                   <>
