@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { formatDuracaoAbertaDesde } from "@/lib/duration-pt-br";
 
 type Servico = {
   id: string;
@@ -34,6 +35,12 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [q, setQ] = useState("");
+  const [nowTick, setNowTick] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTick(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -104,6 +111,11 @@ export default function DashboardPage() {
               </div>
               <p className="text-sm text-theme-muted mt-1 break-words">
                 {s.categoria?.nome ?? s.tipoServico ?? "—"} – {new Date(s.dataAbertura).toLocaleDateString("pt-BR")}
+                {s.statusAtual !== "CONCLUIDO" && s.statusAtual !== "CANCELADO" && (
+                  <span className="ml-2 text-secondary font-medium">
+                    {formatDuracaoAbertaDesde(s.dataAbertura, nowTick)}
+                  </span>
+                )}
                 {s.dataAgendamento && (
                   <span className="ml-2 text-white">Agendado: {new Date(s.dataAgendamento).toLocaleDateString("pt-BR")}</span>
                 )}
