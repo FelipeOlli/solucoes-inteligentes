@@ -266,7 +266,7 @@ export default function ServicoDetailPage() {
                 ) : (
                   <>
                     <span className="text-theme-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
-                    <p>{(item as { conteudo: string }).conteudo}</p>
+                    <p className="whitespace-pre-wrap break-words">{(item as { conteudo: string }).conteudo}</p>
                     {(item as { visivelCliente: boolean }).visivelCliente && (
                       <span className="text-xs text-secondary">(visível ao cliente)</span>
                     )}

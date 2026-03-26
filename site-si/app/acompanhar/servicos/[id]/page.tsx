@@ -95,7 +95,7 @@ export default function AcompanharServicoPage() {
                     : `Abertura: ${STATUS_LABEL[item.statusNovo]}`}
                 </p>
               ) : (
-                <p>{item.conteudo}</p>
+                <p className="whitespace-pre-wrap break-words">{item.conteudo}</p>
               )}
             </li>
           ))}
