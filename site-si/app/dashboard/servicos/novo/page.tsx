@@ -298,7 +298,7 @@ export default function NovoServicoPage() {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-theme-muted mb-1">Anexar orçamento (opcional)</label>
+          <label className="block text-sm font-medium text-theme-muted mb-1">Anexar Documentos (opcional)</label>
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -323,7 +323,7 @@ export default function NovoServicoPage() {
             />
             <p className="text-xs text-theme-muted mt-2">Arraste e solte arquivos aqui ou clique em Escolher arquivos.</p>
             {orcamentoFiles.length > 0 && (
-              <p className="text-xs text-theme-muted mt-1">{orcamentoFiles.length} arquivo(s) de orçamento selecionado(s).</p>
+              <p className="text-xs text-theme-muted mt-1">{orcamentoFiles.length} arquivo(s) selecionado(s).</p>
             )}
           </div>
         </div>

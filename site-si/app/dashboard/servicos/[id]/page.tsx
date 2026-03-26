@@ -417,7 +417,7 @@ export default function ServicoDetailPage() {
           </div>
 
           <div className="bg-theme-card p-4 rounded-lg border border-theme">
-            <h2 className="font-heading font-bold text-theme-primary mb-2">Anexar orçamento</h2>
+            <h2 className="font-heading font-bold text-theme-primary mb-2">Anexar Documentos</h2>
             {anexoUrls.length > 0 && (
               <ul className="mb-3 space-y-1 text-sm">
                 {anexoUrls.map((url) => {
@@ -455,7 +455,7 @@ export default function ServicoDetailPage() {
               className={`rounded-lg border border-dashed p-3 transition ${draggingOrcamento ? "border-primary bg-primary/10" : "border-theme"}`}
             >
               <label className="block">
-                <span className="sr-only">Anexar orçamento</span>
+                <span className="sr-only">Anexar Documentos</span>
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,image/*"
@@ -465,7 +465,7 @@ export default function ServicoDetailPage() {
                   className="w-full text-sm text-theme-muted file:mr-3 file:rounded-md file:border-0 file:px-4 file:py-2 file:bg-primary file:text-white file:font-medium hover:file:opacity-90"
                 />
               </label>
-              <p className="text-xs text-theme-muted mt-2">Arraste e solte arquivos de orçamento aqui ou clique em Escolher arquivos.</p>
+              <p className="text-xs text-theme-muted mt-2">Arraste e solte arquivos aqui ou clique em Escolher arquivos.</p>
             </div>
             {uploadingImg && <p className="text-sm text-theme-muted mt-1">Enviando…</p>}
           </div>
