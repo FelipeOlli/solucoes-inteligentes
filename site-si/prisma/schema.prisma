@@ -22,6 +22,36 @@ enum GoogleSyncState {
   ERROR
 }
 
+enum TipoObrigacaoContabil {
+  DEFIS
+  PGDAS
+  RAIS_ESOCIAL
+  ALVARA
+  CERTIFICADO_DIGITAL
+  OUTRO
+}
+
+enum PeriodicidadeObrigacao {
+  MENSAL
+  ANUAL
+  UNICA
+}
+
+enum StatusObrigacaoContabil {
+  PENDENTE
+  EM_DIA
+  VENCENDO
+  VENCIDO
+  CONCLUIDO
+}
+
+enum CategoriaDocumentoContabil {
+  BOLETO
+  COMPROVANTE
+  CERTIFICADO
+  OUTRO
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -29,6 +59,8 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   passwordResets PasswordResetToken[]
+  comentariosContabeis ComentarioContabil[]
+  documentosContabeis DocumentoContabil[]
 }
 
 model PasswordResetToken {
@@ -163,4 +195,54 @@ model Nota {
   visivelCliente  Boolean
   idAutor         String
   createdAt       DateTime @default(now())
+}
+
+model ObrigacaoContabil {
+  id                String                  @id @default(cuid())
+  nome              String
+  tipo              TipoObrigacaoContabil
+  periodicidade     PeriodicidadeObrigacao
+  proximoVencimento DateTime
+  status            StatusObrigacaoContabil @default(PENDENTE)
+  observacao        String?
+  ativo             Boolean                 @default(true)
+  calendarioEventId String?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  documentos        DocumentoContabil[]
+  comentarios       ComentarioContabil[]
+
+  @@index([proximoVencimento])
+  @@index([status, proximoVencimento])
+}
+
+model DocumentoContabil {
+  id            String                    @id @default(cuid())
+  obrigacaoId   String
+  obrigacao     ObrigacaoContabil         @relation(fields: [obrigacaoId], references: [id], onDelete: Cascade)
+  categoria     CategoriaDocumentoContabil
+  nomeOriginal  String
+  arquivoUrl    String
+  mimeType      String?
+  tamanhoBytes  Int?
+  competenciaRef String?
+  dataDocumento DateTime?
+  createdAt     DateTime                  @default(now())
+  uploadedBy    String
+  uploader      User                      @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
+
+  @@index([obrigacaoId, createdAt])
+  @@index([categoria, createdAt])
+}
+
+model ComentarioContabil {
+  id          String           @id @default(cuid())
+  obrigacaoId String
+  obrigacao   ObrigacaoContabil @relation(fields: [obrigacaoId], references: [id], onDelete: Cascade)
+  conteudo    String
+  createdAt   DateTime         @default(now())
+  autorId     String
+  autor       User             @relation(fields: [autorId], references: [id], onDelete: Restrict)
+
+  @@index([obrigacaoId, createdAt])
 }

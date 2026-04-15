@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { GoogleCalendarIntegration, Servico } from "@prisma/client";
+import type { GoogleCalendarIntegration, ObrigacaoContabil, Servico } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -44,6 +44,10 @@ function asUtcISOString(d: Date | null | undefined): string | null {
 
 function buildServicoSummary(servico: Pick<Servico, "codigo" | "descricao">): string {
   return `${servico.codigo} - ${servico.descricao.slice(0, 60)}`;
+}
+
+function buildObrigacaoSummary(obrigacao: Pick<ObrigacaoContabil, "nome" | "tipo">): string {
+  return `Contabilidade: ${obrigacao.nome} (${obrigacao.tipo})`;
 }
 
 export function createGoogleOAuthState(): string {
@@ -208,6 +212,47 @@ export async function upsertGoogleEventForServico(servico: Servico): Promise<{
     etag: event.etag ?? null,
     updatedAt: event.updated ? new Date(event.updated) : null,
   };
+}
+
+export async function upsertGoogleEventForObrigacao(
+  obrigacao: Pick<ObrigacaoContabil, "id" | "nome" | "tipo" | "proximoVencimento" | "calendarioEventId">,
+): Promise<{ eventId: string }> {
+  const { integration, accessToken } = await getValidGoogleAccessToken();
+  const start = new Date(obrigacao.proximoVencimento);
+  start.setHours(9, 0, 0, 0);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+  const eventBody: GoogleEvent = {
+    summary: buildObrigacaoSummary(obrigacao),
+    description: `Obrigação contábil ${obrigacao.tipo}\nVencimento: ${obrigacao.proximoVencimento.toLocaleDateString("pt-BR")}`,
+    start: { dateTime: asUtcISOString(start) || undefined, timeZone: "America/Sao_Paulo" },
+    end: { dateTime: asUtcISOString(end) || undefined, timeZone: "America/Sao_Paulo" },
+    extendedProperties: {
+      private: { obrigacaoContabilId: obrigacao.id, tipo: obrigacao.tipo },
+    },
+  };
+
+  let event: GoogleEvent;
+  if (obrigacao.calendarioEventId) {
+    event = await googleRequest<GoogleEvent>(
+      "PATCH",
+      `/calendars/${encodeURIComponent(integration.calendarId)}/events/${encodeURIComponent(obrigacao.calendarioEventId)}`,
+      accessToken,
+      undefined,
+      eventBody
+    );
+  } else {
+    event = await googleRequest<GoogleEvent>(
+      "POST",
+      `/calendars/${encodeURIComponent(integration.calendarId)}/events`,
+      accessToken,
+      undefined,
+      eventBody
+    );
+  }
+
+  if (!event.id) throw new Error("Google retornou evento sem id.");
+  return { eventId: event.id };
 }
 
 export async function deleteGoogleEvent(eventId: string): Promise<void> {

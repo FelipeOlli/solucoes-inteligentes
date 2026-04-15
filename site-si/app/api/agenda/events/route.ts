@@ -43,11 +43,48 @@ export async function GET(request: NextRequest) {
       title: `${s.codigo} - ${s.cliente.nome}`,
       descricao: s.descricao,
       statusAtual: s.statusAtual,
-      start: s.dataAgendamento?.toISOString(),
+      start: (s.dataAgendamento as Date).toISOString(),
       end: new Date((s.dataAgendamento as Date).getTime() + 60 * 60 * 1000).toISOString(),
       categoria: s.categoria?.nome ?? null,
+      entityType: "servico" as const,
+      href: `/dashboard/servicos/${s.id}`,
     }));
 
-  return jsonResponse(events);
+  const obrigacoes = await prisma.obrigacaoContabil.findMany({
+    where: {
+      ativo: true,
+      proximoVencimento: {
+        gte: from,
+        lt: to,
+      },
+    },
+    orderBy: { proximoVencimento: "asc" },
+    select: {
+      id: true,
+      nome: true,
+      tipo: true,
+      status: true,
+      proximoVencimento: true,
+    },
+  });
+
+  const obrigacoesEvents = obrigacoes.map((o) => {
+    const start = new Date(o.proximoVencimento);
+    start.setHours(9, 0, 0, 0);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    return {
+      id: `contab-${o.id}`,
+      title: `${o.nome} (${o.tipo})`,
+      descricao: `Obrigação contábil - ${o.status}`,
+      statusAtual: o.status,
+      start: start.toISOString(),
+      end: end.toISOString(),
+      categoria: "Contabilidade",
+      entityType: "contabilidade" as const,
+      href: `/dashboard/contabilidade?obrigacaoId=${o.id}`,
+    };
+  });
+
+  return jsonResponse([...events, ...obrigacoesEvents].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()));
 }
 

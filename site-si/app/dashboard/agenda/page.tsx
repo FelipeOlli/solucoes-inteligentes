@@ -15,6 +15,8 @@ type AgendaEvent = {
   start: string;
   end: string;
   categoria: string | null;
+  entityType: "servico" | "contabilidade";
+  href: string;
 };
 
 type GoogleStatus = {
@@ -149,6 +151,7 @@ export default function AgendaPage() {
   async function moveEvent(eventId: string, targetDay: Date) {
     const current = events.find((e) => e.id === eventId);
     if (!current) return;
+    if (current.entityType !== "servico") return;
     const original = new Date(current.start);
     const moved = new Date(targetDay);
     moved.setHours(original.getHours(), original.getMinutes(), 0, 0);
@@ -363,7 +366,7 @@ export default function AgendaPage() {
                         style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-cta-text)" }}
                         title={`${ev.title} (${new Date(ev.start).toLocaleString("pt-BR")})`}
                       >
-                        <Link href={`/dashboard/servicos/${ev.id}`} className="block">
+                        <Link href={ev.href} className="block">
                           <div className="font-medium truncate">{ev.title}</div>
                           <div className="opacity-90">
                             {new Date(ev.start).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
@@ -401,7 +404,7 @@ export default function AgendaPage() {
                         {weekEvents.map((ev) => (
                           <div
                             key={ev.id}
-                            draggable
+                            draggable={ev.entityType === "servico"}
                             onDragStart={(e) => {
                               e.dataTransfer.setData("text/event-id", ev.id);
                               setDraggingEventId(ev.id);
@@ -411,7 +414,7 @@ export default function AgendaPage() {
                             style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-cta-text)" }}
                             title={`${ev.title} (${new Date(ev.start).toLocaleString("pt-BR")})`}
                           >
-                            <Link href={`/dashboard/servicos/${ev.id}`} className="block">
+                        <Link href={ev.href} className="block">
                               <div className="font-medium truncate">{ev.title}</div>
                               <div className="opacity-90">
                                 {new Date(ev.start).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
@@ -450,7 +453,7 @@ export default function AgendaPage() {
                         {monthEvents.map((ev) => (
                           <div
                             key={ev.id}
-                            draggable
+                            draggable={ev.entityType === "servico"}
                             onDragStart={(e) => {
                               e.dataTransfer.setData("text/event-id", ev.id);
                               setDraggingEventId(ev.id);
@@ -460,7 +463,7 @@ export default function AgendaPage() {
                             style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-cta-text)" }}
                             title={`${ev.title} (${new Date(ev.start).toLocaleString("pt-BR")})`}
                           >
-                            <Link href={`/dashboard/servicos/${ev.id}`} className="block">
+                            <Link href={ev.href} className="block">
                               <div className="font-medium truncate">{ev.title}</div>
                               <div className="opacity-90">
                                 {new Date(ev.start).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
