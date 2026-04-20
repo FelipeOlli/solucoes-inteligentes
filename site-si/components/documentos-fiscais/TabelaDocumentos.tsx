@@ -107,7 +107,11 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
   function abrirPopover(e: React.MouseEvent<HTMLButtonElement>, id: string) {
     if (popoverAberto === id) { setPopoverAberto(null); return; }
     const rect = e.currentTarget.getBoundingClientRect();
-    setPopoverPos({ top: rect.bottom + 6, left: rect.right - 208 });
+    const popW = 208;
+    const margin = 8;
+    const left = Math.min(rect.right - popW, window.innerWidth - popW - margin);
+    const top = rect.bottom + 6;
+    setPopoverPos({ top, left: Math.max(margin, left) });
     setPopoverAberto(id);
   }
 
