@@ -81,7 +81,7 @@ async function main() {
   console.log("Obrigações contábeis iniciais verificadas/criadas.");
 
   // EmpresaFiscal padrão
-  const cnpjPadrao = "00.000.000/0001-00";
+  const cnpjPadrao = "20.273.228/0001-62";
   const empresaExistente = await prisma.empresaFiscal.findUnique({ where: { cnpj: cnpjPadrao } });
   if (!empresaExistente) {
     await prisma.empresaFiscal.create({
