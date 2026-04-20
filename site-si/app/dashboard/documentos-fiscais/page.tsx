@@ -105,8 +105,8 @@ export default function DocumentosFiscaisPage() {
     loadDados();
   }
 
-  async function handleReprocessar(id: string) {
-    const { status } = await api(`/documentos-fiscais/${id}/reprocessar`, { method: "POST" });
+  async function handleReprocessar(id: string, modo: "SEMI_AUTO" | "IA") {
+    const { status } = await api(`/documentos-fiscais/${id}/reprocessar`, { method: "POST", body: { modo } });
     if (status === 401) { router.push("/login"); return; }
     if (status === 200) {
       const { data } = await api<DocumentoDetalhe>(`/documentos-fiscais/${id}`);
@@ -172,6 +172,7 @@ export default function DocumentosFiscaisPage() {
                   documentos={documentos}
                   onSelecionar={handleSelecionar}
                   onExcluir={handleExcluir}
+                  onReprocessar={handleReprocessar}
                 />
               )}
 

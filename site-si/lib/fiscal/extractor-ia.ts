@@ -40,13 +40,19 @@ Formato de saída:
   "confidence": número entre 0 e 1 indicando sua confiança na extração
 }`;
 
+function extrairJson(conteudo: string): string {
+  // Tenta extrair JSON de bloco markdown ```json ... ``` se o modelo ignorar a instrução
+  const match = conteudo.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (match) return match[1].trim();
+  return conteudo.trim();
+}
+
 export async function extrairComIA(texto: string): Promise<DadosExtradosIA> {
-  // Limita o texto para não extrapolar tokens desnecessariamente
-  const textoLimitado = texto.slice(0, 8000);
+  const textoLimitado = texto.slice(0, 12000);
 
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 512,
+    max_tokens: 1024,
     messages: [
       {
         role: "user",
@@ -56,15 +62,29 @@ export async function extrairComIA(texto: string): Promise<DadosExtradosIA> {
     system: PROMPT_SISTEMA,
   });
 
+  // Se o modelo foi cortado por max_tokens, o JSON está incompleto — não tenta parsear
+  if (msg.stop_reason === "max_tokens") {
+    return {
+      tipo: "OUTROS",
+      cnpj: null,
+      razaoSocial: null,
+      competencia: null,
+      vencimento: null,
+      valorTotal: null,
+      numeroDocumento: null,
+      observacoes: "Resposta cortada por limite de tokens.",
+      confidence: 0,
+    };
+  }
+
   const conteudo = msg.content[0].type === "text" ? msg.content[0].text : "";
 
   try {
-    const dados = JSON.parse(conteudo) as DadosExtradosIA;
-    // Garante que confidence está entre 0 e 1
+    const jsonStr = extrairJson(conteudo);
+    const dados = JSON.parse(jsonStr) as DadosExtradosIA;
     dados.confidence = Math.min(1, Math.max(0, dados.confidence ?? 0.8));
     return dados;
   } catch {
-    // Se o modelo retornou algo inesperado
     return {
       tipo: "OUTROS",
       cnpj: null,

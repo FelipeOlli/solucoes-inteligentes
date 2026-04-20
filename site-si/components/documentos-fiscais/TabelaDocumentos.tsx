@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { TipoDocumentoFiscal, StatusProcessamentoFiscal } from "@prisma/client";
 
 export type DocumentoRow = {
@@ -85,9 +86,12 @@ type Props = {
   documentos: DocumentoRow[];
   onSelecionar: (doc: DocumentoRow) => void;
   onExcluir: (id: string) => void;
+  onReprocessar: (id: string, modo: "SEMI_AUTO" | "IA") => void;
 };
 
-export function TabelaDocumentos({ documentos, onSelecionar, onExcluir }: Props) {
+export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReprocessar }: Props) {
+  const [popoverAberto, setPopoverAberto] = useState<string | null>(null);
+
   if (documentos.length === 0) {
     return (
       <div className="bg-theme-card border border-theme rounded-lg p-8 text-center text-theme-muted text-sm">
@@ -151,6 +155,43 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir }: Props)
                         <polyline points="9 9 10 9"/>
                       </svg>
                     </a>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        className="text-theme-muted hover:opacity-70 transition-opacity"
+                        onClick={() => setPopoverAberto(popoverAberto === doc.id ? null : doc.id)}
+                        title="Reprocessar"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="1 4 1 10 7 10"/>
+                          <path d="M3.51 15a9 9 0 1 0 .49-3.1"/>
+                        </svg>
+                      </button>
+                      {popoverAberto === doc.id && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setPopoverAberto(null)} />
+                          <div className="absolute bottom-full mb-2 right-0 z-20 bg-theme-card border border-theme rounded-lg shadow-lg p-3 w-52 space-y-2">
+                            <p className="text-xs text-theme-muted font-medium">Escolha o modo:</p>
+                            <button
+                              type="button"
+                              className="w-full text-left px-3 py-2 rounded border border-theme text-xs hover:border-primary/50 hover:text-theme transition-colors"
+                              onClick={() => { setPopoverAberto(null); onReprocessar(doc.id, "SEMI_AUTO"); }}
+                            >
+                              <span className="font-medium block">Semiautomático</span>
+                              <span className="text-theme-muted">Regex — rápido, sem custo</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="w-full text-left px-3 py-2 rounded border border-theme text-xs hover:border-primary/50 hover:text-theme transition-colors"
+                              onClick={() => { setPopoverAberto(null); onReprocessar(doc.id, "IA"); }}
+                            >
+                              <span className="font-medium block">Com IA</span>
+                              <span className="text-theme-muted">Claude Sonnet — mais preciso</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                     <button
                       type="button"
                       className="text-red-600 hover:opacity-70 transition-opacity"

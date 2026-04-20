@@ -65,7 +65,7 @@ type Props = {
   documento: DocumentoDetalhe | null;
   onClose: () => void;
   onExcluir: (id: string) => void;
-  onReprocessar: (id: string) => void;
+  onReprocessar: (id: string, modo: "SEMI_AUTO" | "IA") => void;
   onAtualizado: (doc: DocumentoDetalhe) => void;
 };
 
@@ -73,6 +73,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
   const [editando, setEditando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
+  const [modoReprocessar, setModoReprocessar] = useState(false);
   const [form, setForm] = useState<{
     tipoDocumento: TipoDocumentoFiscal;
     competencia: string;
@@ -326,18 +327,44 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
               </svg>
               Editar
             </button>
-            <button
-              type="button"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-theme text-xs text-theme-muted hover:text-theme transition-colors"
-              onClick={() => onReprocessar(documento.id)}
-              title="Reprocessar"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="1 4 1 10 7 10"/>
-                <path d="M3.51 15a9 9 0 1 0 .49-3.1"/>
-              </svg>
-              Reprocessar
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-theme text-xs text-theme-muted hover:text-theme transition-colors"
+                onClick={() => setModoReprocessar((o) => !o)}
+                title="Reprocessar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="1 4 1 10 7 10"/>
+                  <path d="M3.51 15a9 9 0 1 0 .49-3.1"/>
+                </svg>
+                Reprocessar
+              </button>
+              {modoReprocessar && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setModoReprocessar(false)} />
+                  <div className="absolute bottom-full mb-2 left-0 z-20 bg-theme-card border border-theme rounded-lg shadow-lg p-3 w-52 space-y-2">
+                    <p className="text-xs text-theme-muted font-medium">Escolha o modo:</p>
+                    <button
+                      type="button"
+                      className="w-full text-left px-3 py-2 rounded border border-theme text-xs hover:border-primary/50 hover:text-theme transition-colors"
+                      onClick={() => { setModoReprocessar(false); onReprocessar(documento.id, "SEMI_AUTO"); }}
+                    >
+                      <span className="font-medium block">Semiautomático</span>
+                      <span className="text-theme-muted">Regex — rápido, sem custo</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full text-left px-3 py-2 rounded border border-theme text-xs hover:border-primary/50 hover:text-theme transition-colors"
+                      onClick={() => { setModoReprocessar(false); onReprocessar(documento.id, "IA"); }}
+                    >
+                      <span className="font-medium block">Com IA</span>
+                      <span className="text-theme-muted">Claude Sonnet — mais preciso</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
             <button
               type="button"
               className="flex items-center p-1.5 rounded border border-red-500/40 text-red-500 hover:border-red-500 hover:text-red-600 transition-colors ml-auto"
