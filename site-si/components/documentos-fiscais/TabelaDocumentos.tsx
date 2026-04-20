@@ -104,13 +104,26 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
     return () => document.removeEventListener("keydown", handleKey);
   }, []);
 
+  useEffect(() => {
+    if (!popoverAberto) return;
+    function handleOutside(e: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setPopoverAberto(null);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [popoverAberto]);
+
   function abrirPopover(e: React.MouseEvent<HTMLButtonElement>, id: string) {
     if (popoverAberto === id) { setPopoverAberto(null); return; }
     const rect = e.currentTarget.getBoundingClientRect();
     const popW = 208;
+    const popH = 120;
     const margin = 8;
     const left = Math.min(rect.right - popW, window.innerWidth - popW - margin);
-    const top = rect.bottom + 6;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const top = spaceBelow >= popH + 6 ? rect.bottom + 6 : rect.top - popH - 6;
     setPopoverPos({ top, left: Math.max(margin, left) });
     setPopoverAberto(id);
   }
@@ -125,9 +138,6 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
 
   return (
     <>
-      {popoverAberto && (
-        <div className="fixed inset-0 z-40" onClick={() => setPopoverAberto(null)} />
-      )}
       {popoverAberto && (
         <div
           ref={popoverRef}
