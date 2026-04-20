@@ -170,7 +170,7 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
                       {popoverAberto === doc.id && (
                         <>
                           <div className="fixed inset-0 z-10" onClick={() => setPopoverAberto(null)} />
-                          <div className="absolute bottom-full mb-2 right-0 z-20 bg-theme-card border border-theme rounded-lg shadow-lg p-3 w-52 space-y-2">
+                          <div className="absolute top-full mt-2 right-0 z-20 bg-theme-card border border-theme rounded-lg shadow-lg p-3 w-52 space-y-2">
                             <p className="text-xs text-theme-muted font-medium">Escolha o modo:</p>
                             <button
                               type="button"
