@@ -121,7 +121,7 @@ export default function DocumentosFiscaisPage() {
   const totalPages = Math.ceil(total / pageSize);
 
   return (
-    <div className="space-y-4 p-4 md:p-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -154,7 +154,7 @@ export default function DocumentosFiscaisPage() {
             />
           )}
 
-          <div className="grid md:grid-cols-[200px,1fr] gap-4">
+          <div className="grid md:grid-cols-[180px,1fr] gap-4 items-start">
             <SidebarTipos
               contadores={contadores}
               tipoAtivo={tipoAtivo}
