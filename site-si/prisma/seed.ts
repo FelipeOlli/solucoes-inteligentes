@@ -79,6 +79,23 @@ async function main() {
     }
   }
   console.log("Obrigações contábeis iniciais verificadas/criadas.");
+
+  // EmpresaFiscal padrão
+  const cnpjPadrao = "00.000.000/0001-00";
+  const empresaExistente = await prisma.empresaFiscal.findUnique({ where: { cnpj: cnpjPadrao } });
+  if (!empresaExistente) {
+    await prisma.empresaFiscal.create({
+      data: {
+        cnpj: cnpjPadrao,
+        razaoSocial: "Soluções Inteligentes",
+        regime: "SIMPLES_NACIONAL",
+        porte: "ME",
+      },
+    });
+    console.log("EmpresaFiscal padrão criada.");
+  } else {
+    console.log("EmpresaFiscal já existe.");
+  }
 }
 
 main()
