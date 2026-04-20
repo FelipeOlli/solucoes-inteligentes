@@ -163,6 +163,20 @@ export default function ContabilidadePage() {
     return true;
   }
 
+  async function handleExcluir() {
+    if (!selected) return;
+    if (!confirm(`Excluir a obrigação "${selected.nome}"? Esta ação não poderá ser desfeita.`)) return;
+    setError("");
+    const { status } = await api(`/contabilidade/obrigacoes/${selected.id}`, { method: "DELETE" });
+    if (status === 401) { router.push("/login"); return; }
+    if (status === 200) {
+      setSelectedId(null);
+      load();
+    } else {
+      setError("Não foi possível excluir a obrigação.");
+    }
+  }
+
   async function addComentario() {
     if (!selected || !comentario.trim()) return;
     const res = await api(`/contabilidade/obrigacoes/${selected.id}/comentarios`, {
@@ -389,6 +403,13 @@ export default function ContabilidadePage() {
                     onClick={syncCalendario}
                   >
                     Vincular ao calendário
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 py-2 rounded border border-red-500 text-red-600"
+                    onClick={handleExcluir}
+                  >
+                    Excluir
                   </button>
                 </div>
               </div>

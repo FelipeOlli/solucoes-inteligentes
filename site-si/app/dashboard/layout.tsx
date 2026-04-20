@@ -121,9 +121,9 @@ export default function DashboardLayout({
                   Orçamento
                 </Link>
                 <Link
-                  href="/dashboard/contabilidade"
-                  className={navLinkClass(pathname === "/dashboard/contabilidade")}
-                  style={{ color: pathname === "/dashboard/contabilidade" ? "var(--color-navbar-text)" : "inherit" }}
+                  href="/dashboard/documentos-fiscais"
+                  className={navLinkClass(pathname === "/dashboard/documentos-fiscais")}
+                  style={{ color: pathname === "/dashboard/documentos-fiscais" ? "var(--color-navbar-text)" : "inherit" }}
                 >
                   Contabilidade
                 </Link>
@@ -273,9 +273,9 @@ export default function DashboardLayout({
                 Orçamento
               </Link>
               <Link
-                href="/dashboard/contabilidade"
-                className={navLinkClass(pathname === "/dashboard/contabilidade")}
-                style={{ color: pathname === "/dashboard/contabilidade" ? "var(--color-navbar-text)" : "inherit" }}
+                href="/dashboard/documentos-fiscais"
+                className={navLinkClass(pathname === "/dashboard/documentos-fiscais")}
+                style={{ color: pathname === "/dashboard/documentos-fiscais" ? "var(--color-navbar-text)" : "inherit" }}
                 onClick={() => setMobileNavOpen(false)}
               >
                 Contabilidade

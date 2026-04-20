@@ -246,3 +246,125 @@ model ComentarioContabil {
 
   @@index([obrigacaoId, createdAt])
 }
+
+// ─── Módulo Documentos Fiscais ───────────────────────────────────────────────
+
+enum TipoDocumentoFiscal {
+  DAS
+  DARF_MAED
+  PGDAS_D_RECIBO
+  DEFIS_RECIBO
+  NOTIFICACAO_MAED
+  RELATORIO_SITUACAO
+  OUTROS
+}
+
+enum StatusProcessamentoFiscal {
+  PENDENTE
+  PROCESSANDO
+  PROCESSADO
+  PROCESSADO_COM_AVISOS
+  ERRO
+  MANUAL
+}
+
+enum RegimeTributario {
+  SIMPLES_NACIONAL
+  LUCRO_PRESUMIDO
+  LUCRO_REAL
+  MEI
+}
+
+enum PorteEmpresa {
+  MEI
+  ME
+  EPP
+}
+
+enum TipoObrigacaoFiscal {
+  PGDAS_D
+  DAS
+  DEFIS
+  MAED
+}
+
+enum NaturezaObrigacao {
+  DECLARACAO
+  PAGAMENTO
+  MULTA
+}
+
+enum StatusObrigacaoFiscal {
+  PENDENTE
+  ATRASADA
+  CUMPRIDA
+  CUMPRIDA_ATRASO
+  CANCELADA
+}
+
+model EmpresaFiscal {
+  id          String           @id @default(cuid())
+  cnpj        String           @unique
+  razaoSocial String
+  regime      RegimeTributario @default(SIMPLES_NACIONAL)
+  porte       PorteEmpresa     @default(ME)
+  ativo       Boolean          @default(true)
+  documentos  DocumentoFiscal[]
+  obrigacoes  ObrigacaoFiscal[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([cnpj])
+}
+
+model DocumentoFiscal {
+  id                  String                    @id @default(cuid())
+  empresaFiscalId     String
+  empresaFiscal       EmpresaFiscal             @relation(fields: [empresaFiscalId], references: [id], onDelete: Cascade)
+  tipoDocumento       TipoDocumentoFiscal
+  nomeArquivo         String
+  arquivoUrl          String
+  tamanhoBytes        Int
+  hashArquivo         String
+  statusProcessamento StatusProcessamentoFiscal @default(PENDENTE)
+  erroProcessamento   String?
+  textoExtraido       String?                   @db.Text
+  dadosExtraidos      Json?
+  competencia         DateTime?
+  vencimento          DateTime?
+  valorTotal          Decimal?                  @db.Decimal(12, 2)
+  numeroDocumento     String?
+  obrigacaoId         String?                   @unique
+  obrigacao           ObrigacaoFiscal?          @relation(fields: [obrigacaoId], references: [id])
+  ativo               Boolean                   @default(true)
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  @@index([empresaFiscalId, tipoDocumento])
+  @@index([competencia])
+  @@index([hashArquivo])
+}
+
+model ObrigacaoFiscal {
+  id              String                @id @default(cuid())
+  empresaFiscalId String
+  empresaFiscal   EmpresaFiscal         @relation(fields: [empresaFiscalId], references: [id], onDelete: Cascade)
+  tipo            TipoObrigacaoFiscal
+  natureza        NaturezaObrigacao
+  competencia     DateTime
+  vencimento      DateTime
+  status          StatusObrigacaoFiscal @default(PENDENTE)
+  dataCumprimento DateTime?
+  valorTotal      Decimal?              @db.Decimal(12, 2)
+  observacoes     String?
+  obrigacaoPaiId  String?
+  obrigacaoPai    ObrigacaoFiscal?      @relation("ObrigacaoRelFiscal", fields: [obrigacaoPaiId], references: [id])
+  filhas          ObrigacaoFiscal[]     @relation("ObrigacaoRelFiscal")
+  documento       DocumentoFiscal?
+  ativo           Boolean               @default(true)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([empresaFiscalId, vencimento])
+  @@index([status])
+}

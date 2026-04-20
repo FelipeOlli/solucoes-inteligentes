@@ -14,13 +14,16 @@
     "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
     "@prisma/client": "^5.22.0",
+    "@types/pdf-parse": "^1.1.5",
     "bcryptjs": "^2.4.3",
     "framer-motion": "^11.11.17",
     "jose": "^5.9.6",
     "lucide-react": "^0.454.0",
     "nanoid": "^5.0.9",
     "next": "^16.1.6",
+    "pdf-parse": "^1.1.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "resend": "^6.9.4"
