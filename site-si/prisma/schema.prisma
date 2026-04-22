@@ -302,19 +302,58 @@ enum StatusObrigacaoFiscal {
   CANCELADA
 }
 
+enum CategoriaDocumentoEmpresa {
+  CONTRATO_SOCIAL
+  CERTIFICADO_DIGITAL
+}
+
 model EmpresaFiscal {
-  id          String           @id @default(cuid())
-  cnpj        String           @unique
-  razaoSocial String
-  regime      RegimeTributario @default(SIMPLES_NACIONAL)
-  porte       PorteEmpresa     @default(ME)
-  ativo       Boolean          @default(true)
-  documentos  DocumentoFiscal[]
-  obrigacoes  ObrigacaoFiscal[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id                  String           @id @default(cuid())
+  cnpj                String           @unique
+  razaoSocial         String
+  regime              RegimeTributario @default(SIMPLES_NACIONAL)
+  porte               PorteEmpresa     @default(ME)
+  ativo               Boolean          @default(true)
+  // Identificação complementar
+  inscricaoEstadual   String?
+  inscricaoMunicipal  String?
+  cnae                String?
+  cnaeDescricao       String?
+  endereco            String?
+  telefone            String?
+  email               String?
+  regimeApuracao      String?
+  // Tributação (JSON flexível)
+  tributacaoNacional  Json?
+  tributacaoMunicipal Json?
+  tributacaoFederal   Json?
+  // Relações
+  documentos          DocumentoFiscal[]
+  obrigacoes          ObrigacaoFiscal[]
+  documentosEmpresa   DocumentoEmpresa[]
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
 
   @@index([cnpj])
+}
+
+model DocumentoEmpresa {
+  id                  String                    @id @default(cuid())
+  empresaFiscalId     String
+  empresaFiscal       EmpresaFiscal             @relation(fields: [empresaFiscalId], references: [id], onDelete: Cascade)
+  categoria           CategoriaDocumentoEmpresa
+  nome                String
+  descricao           String?
+  arquivoUrl          String?
+  nomeArquivo         String?
+  tamanhoBytes        Int?
+  dataValidade        DateTime?
+  obrigacaoContabilId String?                   // Lembrete gerado na agenda
+  ativo               Boolean                   @default(true)
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  @@index([empresaFiscalId, categoria])
 }
 
 model DocumentoFiscal {

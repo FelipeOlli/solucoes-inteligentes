@@ -10,8 +10,19 @@ import { BuscaGlobal } from "@/components/documentos-fiscais/BuscaGlobal";
 import { TabelaDocumentos, DocumentoRow } from "@/components/documentos-fiscais/TabelaDocumentos";
 import { DocumentoDrawer, DocumentoDetalhe } from "@/components/documentos-fiscais/DocumentoDrawer";
 import { UploadDialog } from "@/components/documentos-fiscais/UploadDialog";
+import { PerfilEmpresa } from "@/components/documentos-fiscais/PerfilEmpresa";
 
-type Empresa = { id: string; cnpj: string; razaoSocial: string };
+type Empresa = {
+  id: string; cnpj: string; razaoSocial: string;
+  regime: string; porte: string;
+  inscricaoEstadual: string | null; inscricaoMunicipal: string | null;
+  cnae: string | null; cnaeDescricao: string | null;
+  endereco: string | null; telefone: string | null; email: string | null;
+  regimeApuracao: string | null;
+  tributacaoNacional: Record<string, string> | null;
+  tributacaoMunicipal: Record<string, string> | null;
+  tributacaoFederal: Record<string, string> | null;
+};
 type Contador = { tipo: TipoDocumentoFiscal; count: number };
 type Kpis = {
   total: number;
@@ -22,6 +33,7 @@ type Kpis = {
 
 export default function DocumentosFiscaisPage() {
   const router = useRouter();
+  const [aba, setAba] = useState<"docs" | "perfil">("docs");
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [tipoAtivo, setTipoAtivo] = useState<TipoDocumentoFiscal | "TODOS">("TODOS");
   const [busca, setBusca] = useState("");
@@ -125,12 +137,12 @@ export default function DocumentosFiscaisPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-theme-primary">Documentos Fiscais</h1>
+          <h1 className="font-heading text-2xl font-bold text-theme-primary">Contabilidade</h1>
           {empresa && (
             <p className="text-sm text-theme-muted font-mono">{empresa.cnpj} — {empresa.razaoSocial}</p>
           )}
         </div>
-        {empresa && (
+        {empresa && aba === "docs" && (
           <button
             type="button"
             className="px-4 py-2 rounded bg-primary text-white text-sm"
@@ -141,7 +153,29 @@ export default function DocumentosFiscaisPage() {
         )}
       </div>
 
+      {/* Abas */}
       {empresa && (
+        <div className="flex gap-1 border-b border-theme">
+          {(["docs", "perfil"] as const).map((a) => (
+            <button
+              key={a}
+              type="button"
+              onClick={() => setAba(a)}
+              className={`px-4 py-2 text-sm transition-colors border-b-2 -mb-px ${
+                aba === a
+                  ? "border-primary text-theme-primary font-medium"
+                  : "border-transparent text-theme-muted hover:text-theme"
+              }`}
+            >
+              {a === "docs" ? "Documentos Fiscais" : "Perfil da Empresa"}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {empresa && aba === "perfil" && <PerfilEmpresa empresa={empresa} />}
+
+      {empresa && aba === "docs" && (
         <>
           <BuscaGlobal onBusca={handleBusca} />
 
