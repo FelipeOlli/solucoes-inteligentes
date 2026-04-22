@@ -45,6 +45,7 @@ export async function POST(request: NextRequest, { params }: Params) {
   const nome = String(formData.get("nome") || "").trim();
   const descricao = String(formData.get("descricao") || "").trim() || null;
   const dataValidadeRaw = String(formData.get("dataValidade") || "").trim();
+  const senha = String(formData.get("senha") || "").trim() || null;
 
   if (!file || !(file instanceof File)) return badRequest("file é obrigatório.");
   if (!CATS_VALIDAS.includes(categoriaRaw as CategoriaDocumentoEmpresa))
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       nomeArquivo: file.name,
       tamanhoBytes,
       dataValidade: dataValidade ?? undefined,
+      senha: senha ?? undefined,
       obrigacaoContabilId,
     },
   });

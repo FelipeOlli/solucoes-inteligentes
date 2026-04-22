@@ -348,6 +348,7 @@ model DocumentoEmpresa {
   nomeArquivo         String?
   tamanhoBytes        Int?
   dataValidade        DateTime?
+  senha               String?                   // Senha do certificado digital (PFX)
   obrigacaoContabilId String?                   // Lembrete gerado na agenda
   ativo               Boolean                   @default(true)
   createdAt           DateTime                  @default(now())

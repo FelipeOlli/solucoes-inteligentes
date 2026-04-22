@@ -31,6 +31,7 @@ type DocEmpresa = {
   nomeArquivo: string | null;
   tamanhoBytes: number | null;
   dataValidade: string | null;
+  senha: string | null;
   createdAt: string;
 };
 
@@ -59,10 +60,12 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
   const [uploadCategoria, setUploadCategoria] = useState<DocEmpresa["categoria"]>("CONTRATO_SOCIAL");
   const [uploadNome, setUploadNome] = useState("");
   const [uploadValidade, setUploadValidade] = useState("");
+  const [uploadSenha, setUploadSenha] = useState("");
   const [uploadArquivo, setUploadArquivo] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
+  const [senhasVisiveis, setSenhasVisiveis] = useState<Record<string, boolean>>({});
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function carregarDocs() {
@@ -103,6 +106,7 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
     fd.append("categoria", uploadCategoria);
     fd.append("nome", uploadNome.trim());
     if (uploadValidade) fd.append("dataValidade", uploadValidade);
+    if (uploadSenha.trim()) fd.append("senha", uploadSenha.trim());
     const res = await fetch(`/api/empresas-fiscais/${empresa.id}/documentos`, {
       method: "POST",
       body: fd,
@@ -112,7 +116,7 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
     if (res.ok) {
       const body = await res.json() as DocEmpresa & { lembreteAgendado?: boolean };
       setDocs((d) => [body, ...d]);
-      setUploadNome(""); setUploadValidade(""); setUploadArquivo(null);
+      setUploadNome(""); setUploadValidade(""); setUploadSenha(""); setUploadArquivo(null);
       if (inputRef.current) inputRef.current.value = "";
       if (body.lembreteAgendado) {
         const dataStr = uploadValidade
@@ -253,6 +257,14 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
               <input type="date" value={uploadValidade} onChange={(e) => setUploadValidade(e.target.value)}
                 className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm" />
             </div>
+            {uploadCategoria === "CERTIFICADO_DIGITAL" && (
+              <div>
+                <p className="text-xs text-theme-muted mb-1">Senha do certificado</p>
+                <input type="password" value={uploadSenha} onChange={(e) => setUploadSenha(e.target.value)}
+                  placeholder="Senha do arquivo .pfx"
+                  className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm" />
+              </div>
+            )}
             <div>
               <p className="text-xs text-theme-muted mb-1">Arquivo (PDF, JPG, PNG, PFX)</p>
               <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.pfx,.p12"
@@ -285,11 +297,35 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
                     </span>
                     <span className="text-sm font-medium truncate">{doc.nome}</span>
                   </div>
-                  <div className="flex gap-3 mt-1 text-xs text-theme-muted">
+                  <div className="flex gap-3 mt-1 text-xs text-theme-muted flex-wrap">
                     {doc.nomeArquivo && <span>{doc.nomeArquivo}</span>}
                     {doc.tamanhoBytes && <span>{(doc.tamanhoBytes / 1024).toFixed(1)} KB</span>}
                     {doc.dataValidade && (
                       <span>Validade: {new Date(doc.dataValidade).toLocaleDateString("pt-BR")}</span>
+                    )}
+                    {doc.senha && (
+                      <span className="flex items-center gap-1">
+                        Senha:&nbsp;
+                        <span className="font-mono">
+                          {senhasVisiveis[doc.id] ? doc.senha : "••••••••"}
+                        </span>
+                        <button type="button"
+                          onClick={() => setSenhasVisiveis((v) => ({ ...v, [doc.id]: !v[doc.id] }))}
+                          className="hover:opacity-70 transition-opacity ml-0.5">
+                          {senhasVisiveis[doc.id] ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                              <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                              <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                          )}
+                        </button>
+                      </span>
                     )}
                   </div>
                 </div>
