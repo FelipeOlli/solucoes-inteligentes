@@ -28,13 +28,13 @@ const TIPO_LABEL: Record<TipoDocumentoFiscal, string> = {
 };
 
 const TIPO_COLOR: Record<TipoDocumentoFiscal, string> = {
-  DAS: "bg-green-600 text-white",
-  DARF_MAED: "bg-red-600 text-white",
-  PGDAS_D_RECIBO: "bg-blue-600 text-white",
-  DEFIS_RECIBO: "bg-purple-600 text-white",
-  NOTIFICACAO_MAED: "bg-amber-600 text-white",
-  RELATORIO_SITUACAO: "bg-theme-muted/40 text-white",
-  OUTROS: "bg-theme-muted/40 text-white",
+  DAS:                "border border-theme text-theme-muted",
+  DARF_MAED:          "border border-theme text-theme-muted",
+  PGDAS_D_RECIBO:     "border border-theme text-theme-muted",
+  DEFIS_RECIBO:       "border border-theme text-theme-muted",
+  NOTIFICACAO_MAED:   "border border-theme text-theme-muted",
+  RELATORIO_SITUACAO: "border border-theme text-theme-muted",
+  OUTROS:             "border border-theme text-theme-muted",
 };
 
 const STATUS_LABEL: Record<StatusProcessamentoFiscal, string> = {
