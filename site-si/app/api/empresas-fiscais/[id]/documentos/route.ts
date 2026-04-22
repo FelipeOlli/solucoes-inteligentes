@@ -10,7 +10,7 @@ type Params = { params: Promise<{ id: string }> };
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 const CATS_VALIDAS: CategoriaDocumentoEmpresa[] = ["CONTRATO_SOCIAL", "CERTIFICADO_DIGITAL"];
-const EXTS_VALIDAS = ["pdf", "jpg", "jpeg", "png", "webp"];
+const EXTS_VALIDAS = ["pdf", "jpg", "jpeg", "png", "webp", "pfx", "p12"];
 const DIAS_ANTECEDENCIA = 5;
 
 export async function GET(_req: NextRequest, { params }: Params) {

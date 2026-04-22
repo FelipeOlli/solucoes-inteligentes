@@ -254,8 +254,8 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
                 className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm" />
             </div>
             <div>
-              <p className="text-xs text-theme-muted mb-1">Arquivo (PDF, JPG, PNG)</p>
-              <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp"
+              <p className="text-xs text-theme-muted mb-1">Arquivo (PDF, JPG, PNG, PFX)</p>
+              <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.pfx,.p12"
                 onChange={(e) => setUploadArquivo(e.target.files?.[0] ?? null)}
                 className="w-full text-sm text-theme-muted" />
             </div>
