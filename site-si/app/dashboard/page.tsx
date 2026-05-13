@@ -86,7 +86,14 @@ export default function DashboardPage() {
         <p className="text-body text-theme-muted">Nenhum serviço encontrado.</p>
       ) : (
         <div className="grid gap-4">
-          {servicos.map((s) => (
+          {[...servicos]
+            .sort((a, b) => {
+              const aFinalizado = a.statusAtual === "CONCLUIDO" || a.statusAtual === "CANCELADO";
+              const bFinalizado = b.statusAtual === "CONCLUIDO" || b.statusAtual === "CANCELADO";
+              if (aFinalizado !== bFinalizado) return aFinalizado ? 1 : -1;
+              return new Date(b.dataAbertura).getTime() - new Date(a.dataAbertura).getTime();
+            })
+            .map((s) => (
             <Link
               key={s.id}
               href={`/dashboard/servicos/${s.id}`}
@@ -124,7 +131,7 @@ export default function DashboardPage() {
                 )}
               </p>
             </Link>
-          ))}
+            ))}
         </div>
       )}
     </div>
