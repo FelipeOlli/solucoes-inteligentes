@@ -30,12 +30,14 @@ function getStatusBadgeClass(status: string): string {
 }
 
 type Categoria = { id: string; nome: string };
+type Tecnico = { id: string; nome: string };
 
 type ServicoDetail = {
   id: string;
   codigo: string;
   tipoServico: string | null;
   categoria: Categoria | null;
+  tecnico: Tecnico | null;
   descricao: string;
   statusAtual: string;
   dataAbertura: string;
@@ -65,10 +67,12 @@ export default function ServicoDetailPage() {
   const [draggingFotos, setDraggingFotos] = useState(false);
   const [draggingOrcamento, setDraggingOrcamento] = useState(false);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
   const [editDataAgendamento, setEditDataAgendamento] = useState("");
   const [editValor, setEditValor] = useState("");
   const [editCategoriaId, setEditCategoriaId] = useState("");
   const [editFormaPagamento, setEditFormaPagamento] = useState("");
+  const [editTecnicoId, setEditTecnicoId] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   const [error, setError] = useState("");
   const [statusError, setStatusError] = useState("");
@@ -91,22 +95,25 @@ export default function ServicoDetailPage() {
     setEditValor(servico.valorEstimado != null ? String(servico.valorEstimado) : "");
     setEditCategoriaId(servico.categoria?.id ?? "");
     setEditFormaPagamento(servico.formaPagamento ?? "");
+    setEditTecnicoId(servico.tecnico?.id ?? "");
     setNovoStatus(servico.statusAtual);
   }, [servico?.id, servico?.dataAgendamento, servico?.valorEstimado, servico?.categoria?.id, servico?.statusAtual, servico?.formaPagamento]);
 
   useEffect(() => {
     api<Categoria[]>("/categorias").then(({ data }) => data && setCategorias(data));
+    api<Tecnico[]>("/tecnicos").then(({ data }) => data && setTecnicos(data));
   }, []);
 
   async function handleSalvarDados(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setSavingEdit(true);
-    const body: { data_agendamento?: string | null; valor_estimado?: number | null; categoria_id?: string | null; forma_pagamento?: string | null } = {};
+    const body: { data_agendamento?: string | null; valor_estimado?: number | null; categoria_id?: string | null; forma_pagamento?: string | null; tecnico_id?: string | null } = {};
     body.data_agendamento = editDataAgendamento ? new Date(editDataAgendamento).toISOString() : null;
     body.valor_estimado = editValor.trim() ? Number(editValor.trim().replace(",", ".")) || null : null;
     body.categoria_id = editCategoriaId || null;
     body.forma_pagamento = editFormaPagamento || null;
+    body.tecnico_id = editTecnicoId || null;
     const { status } = await api(`/servicos/${id}`, { method: "PATCH", body });
     setSavingEdit(false);
     if (status === 401) router.push("/login");
@@ -347,6 +354,19 @@ export default function ServicoDetailPage() {
                 <option value="PIX">PIX</option>
                 <option value="CREDITO">Crédito</option>
                 <option value="DEBITO">Débito</option>
+              </select>
+            </div>
+            <div className="space-y-2 mb-3">
+              <label className="block text-sm font-medium text-theme-muted">Técnico responsável</label>
+              <select
+                value={editTecnicoId}
+                onChange={(e) => setEditTecnicoId(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+              >
+                <option value="">— Sem técnico —</option>
+                {tecnicos.map((t) => (
+                  <option key={t.id} value={t.id}>{t.nome}</option>
+                ))}
               </select>
             </div>
             <button type="submit" disabled={savingEdit} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">Salvar</button>

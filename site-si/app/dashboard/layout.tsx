@@ -114,6 +114,13 @@ export default function DashboardLayout({
                   Usuários
                 </Link>
                 <Link
+                  href="/dashboard/tecnicos"
+                  className={navLinkClass(pathname === "/dashboard/tecnicos")}
+                  style={{ color: pathname === "/dashboard/tecnicos" ? "var(--color-navbar-text)" : "inherit" }}
+                >
+                  Técnicos
+                </Link>
+                <Link
                   href="/dashboard/orcamento"
                   className={navLinkClass(pathname === "/dashboard/orcamento")}
                   style={{ color: pathname === "/dashboard/orcamento" ? "var(--color-navbar-text)" : "inherit" }}
@@ -263,6 +270,14 @@ export default function DashboardLayout({
                 onClick={() => setMobileNavOpen(false)}
               >
                 Usuários
+              </Link>
+              <Link
+                href="/dashboard/tecnicos"
+                className={navLinkClass(pathname === "/dashboard/tecnicos")}
+                style={{ color: pathname === "/dashboard/tecnicos" ? "var(--color-navbar-text)" : "inherit" }}
+                onClick={() => setMobileNavOpen(false)}
+              >
+                Técnicos
               </Link>
               <Link
                 href="/dashboard/orcamento"

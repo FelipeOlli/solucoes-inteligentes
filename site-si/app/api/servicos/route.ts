@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
     include: {
       cliente: { select: { id: true, nome: true, email: true, telefone: true } },
       categoria: { select: { id: true, nome: true } },
+      tecnico: { select: { id: true, nome: true } },
     },
   });
   return jsonResponse(servicos);
@@ -104,11 +105,14 @@ export async function POST(request: NextRequest) {
 
     const formaPagamento = (body.forma_pagamento ?? body.formaPagamento ?? "").trim() || null;
 
+    const tecnicoId = body.tecnico_id ? String(body.tecnico_id).trim() || null : null;
+
     const servico = await prisma.servico.create({
       data: {
         codigo,
         clienteId,
         categoriaId,
+        tecnicoId,
         descricao,
         statusAtual: "ABERTO",
         dataAbertura,
@@ -124,6 +128,7 @@ export async function POST(request: NextRequest) {
       include: {
         cliente: { select: { id: true, nome: true, email: true, telefone: true } },
         categoria: { select: { id: true, nome: true } },
+        tecnico: { select: { id: true, nome: true } },
       },
     });
 

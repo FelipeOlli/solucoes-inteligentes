@@ -109,6 +109,18 @@ model CategoriaServico {
   servicos  Servico[]
 }
 
+model Tecnico {
+  id        String    @id @default(cuid())
+  nome      String
+  endereco  String?
+  telefone  String?
+  email     String?
+  ativo     Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  servicos  Servico[]
+}
+
 model Servico {
   id                  String              @id @default(cuid())
   codigo              String              @unique
@@ -116,6 +128,8 @@ model Servico {
   cliente             Cliente             @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   categoriaId         String?
   categoria           CategoriaServico?   @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  tecnicoId           String?
+  tecnico             Tecnico?            @relation(fields: [tecnicoId], references: [id], onDelete: SetNull)
   tipoServico         String?
   descricao           String
   statusAtual         String              @default("ABERTO")

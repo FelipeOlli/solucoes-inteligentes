@@ -6,12 +6,15 @@ import { api, withBasePath } from "@/lib/api";
 
 type Cliente = { id: string; nome: string; email: string; telefone: string };
 type Categoria = { id: string; nome: string };
+type Tecnico = { id: string; nome: string };
 
 export default function NovoServicoPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
+  const [tecnicoId, setTecnicoId] = useState("");
   const [clienteId, setClienteId] = useState("");
   const [novoCliente, setNovoCliente] = useState({
     nome: "",
@@ -45,6 +48,7 @@ export default function NovoServicoPage() {
       setClientes(data || []);
     });
     api<Categoria[]>("/categorias").then(({ data }) => setCategorias(data || []));
+    api<Tecnico[]>("/tecnicos").then(({ data }) => setTecnicos(data || []));
   }, [router]);
 
   useEffect(() => {
@@ -92,6 +96,7 @@ export default function NovoServicoPage() {
       data_agendamento: dataAgendamento ? new Date(dataAgendamento).toISOString() : null,
       valor_estimado: valorEstimado ? Number(valorEstimado.trim().replace(",", ".")) || null : null,
       forma_pagamento: formaPagamento || null,
+      tecnico_id: tecnicoId || null,
     };
     if (usarNovoCliente) {
       body.cliente = {
@@ -240,6 +245,15 @@ export default function NovoServicoPage() {
             <option value="">Selecione...</option>
             {categorias.map((cat) => (
               <option key={cat.id} value={cat.id}>{cat.nome}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-theme-muted mb-1">Técnico responsável (opcional)</label>
+          <select value={tecnicoId} onChange={(e) => setTecnicoId(e.target.value)} className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme">
+            <option value="">— Sem técnico —</option>
+            {tecnicos.map((t) => (
+              <option key={t.id} value={t.id}>{t.nome}</option>
             ))}
           </select>
         </div>

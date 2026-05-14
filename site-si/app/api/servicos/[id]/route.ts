@@ -38,6 +38,7 @@ export async function GET(
         },
       },
       categoria: { select: { id: true, nome: true } },
+      tecnico: { select: { id: true, nome: true } },
       statusHist: { orderBy: { createdAt: "asc" } },
       notas: { orderBy: { createdAt: "asc" } },
     },
@@ -94,6 +95,7 @@ export async function PATCH(
     const fp = String(body.forma_pagamento ?? body.formaPagamento ?? "").trim().toUpperCase();
     data.formaPagamento = fp || null;
   }
+  if (body.tecnico_id !== undefined) data.tecnicoId = body.tecnico_id ? String(body.tecnico_id).trim() : null;
   if (body.imagens !== undefined) {
     const arr = Array.isArray(body.imagens) ? body.imagens.map((u: unknown) => String(u)) : [];
     data.imagens = arr.length > 0 ? JSON.stringify(arr) : null;
@@ -115,6 +117,7 @@ export async function PATCH(
     include: {
       cliente: { select: { id: true, nome: true, email: true, telefone: true } },
       categoria: { select: { id: true, nome: true } },
+      tecnico: { select: { id: true, nome: true } },
     },
   });
 
