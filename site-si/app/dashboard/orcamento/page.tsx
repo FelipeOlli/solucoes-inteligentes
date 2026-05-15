@@ -4,7 +4,21 @@ import { useState } from "react";
 import Link from "next/link";
 
 const FIXO = 50;
-const COEF = 1 - 0.1291; // 0.8709
+
+type MetodoPagamento = "maquininha" | "tap" | "link" | "avista";
+
+const TAXAS: Record<Exclude<MetodoPagamento, "avista">, number[]> = {
+  maquininha: [3.99, 8.99, 9.99, 11.99, 13.49, 15.49, 16.99, 17.99, 18.99, 19.99, 19.99, 19.99],
+  tap:        [3.99, 8.99, 9.99, 11.99, 13.49, 15.49, 16.99, 17.99, 18.99, 19.99, 19.99, 19.99],
+  link:       [5.90, 10.90, 11.90, 12.90, 13.99, 14.59, 16.59, 17.59, 17.90, 20.90, 21.99, 22.90],
+};
+
+const METODOS: { id: MetodoPagamento; label: string; maxParcelas: number }[] = [
+  { id: "avista",     label: "À vista (Pix / Dinheiro)",  maxParcelas: 1  },
+  { id: "maquininha", label: "Maquininha (D+1)",          maxParcelas: 12 },
+  { id: "tap",        label: "Tap to Pay (D+1)",          maxParcelas: 12 },
+  { id: "link",       label: "Link de pagamento (D+2)",   maxParcelas: 12 },
+];
 
 function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -14,15 +28,31 @@ export default function OrcamentoPage() {
   const [valorServico, setValorServico] = useState("");
   const [valorMaterial, setValorMaterial] = useState("");
   const [lucro, setLucro] = useState("");
+  const [metodo, setMetodo] = useState<MetodoPagamento>("maquininha");
+  const [parcelas, setParcelas] = useState(1);
 
   const vS = Number(valorServico.replace(/,/g, ".")) || 0;
   const vM = Number(valorMaterial.replace(/,/g, ".")) || 0;
-  const A1 = vS + vM; // Base: serviço + material
-  const lucroEstimado = A1 * 0.3; // sugestão de lucro
+  const A1 = vS + vM;
+  const lucroEstimado = A1 * 0.3;
   const lucroAplicado = lucro.trim() !== "" ? (Number(lucro.replace(/,/g, ".")) || 0) : lucroEstimado;
   const liquidoDesejado = A1 + lucroAplicado;
-  const resultado = liquidoDesejado >= 0 ? (liquidoDesejado + FIXO) / COEF : 0;
+
+  const taxaPct = metodo === "avista" ? 0 : TAXAS[metodo][parcelas - 1];
+  const coef = 1 - taxaPct / 100;
+  // taxa do cartão incide só sobre o líquido desejado; R$ 50 é custo fixo adicionado por fora
+  const resultado = liquidoDesejado >= 0 ? liquidoDesejado / coef + FIXO : 0;
+  const valorParcela = resultado / parcelas;
+
   const exibirResultado = valorServico !== "" || valorMaterial !== "";
+
+  const metodoAtual = METODOS.find((m) => m.id === metodo)!;
+
+  function handleMetodoChange(novoMetodo: MetodoPagamento) {
+    setMetodo(novoMetodo);
+    const max = METODOS.find((m) => m.id === novoMetodo)!.maxParcelas;
+    if (parcelas > max) setParcelas(1);
+  }
 
   return (
     <div className="text-theme">
@@ -64,6 +94,35 @@ export default function OrcamentoPage() {
               className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Forma de pagamento</label>
+            <select
+              value={metodo}
+              onChange={(e) => handleMetodoChange(e.target.value as MetodoPagamento)}
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+            >
+              {METODOS.map((m) => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {metodoAtual.maxParcelas > 1 && (
+            <div>
+              <label className="block text-sm font-medium text-theme-muted mb-1">Parcelas</label>
+              <select
+                value={parcelas}
+                onChange={(e) => setParcelas(Number(e.target.value))}
+                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+              >
+                {Array.from({ length: metodoAtual.maxParcelas }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>{n}×</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-theme-muted mb-1">Valor final do serviço (R$)</label>
             <input
@@ -76,7 +135,19 @@ export default function OrcamentoPage() {
           </div>
         </div>
 
-        {exibirResultado && <p className="mt-4 text-xs text-theme-muted">Cálculo atualizado automaticamente.</p>}
+        {exibirResultado && (
+          <div className="mt-3 space-y-1 text-xs text-theme-muted">
+            <p>
+              Taxa aplicada: <span className="font-medium">{taxaPct.toFixed(2).replace(".", ",")}%</span>
+              {metodo !== "avista" && ` (${metodoAtual.label})`}
+            </p>
+            {parcelas > 1 && (
+              <p>
+                Parcela: <span className="font-medium">{formatBRL(valorParcela)}</span> × {parcelas}
+              </p>
+            )}
+          </div>
+        )}
 
         {exibirResultado && (
           <div className="mt-4">
