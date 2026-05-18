@@ -8,6 +8,7 @@ type Categoria = { id: string; nome: string };
 export default function CategoriasPage() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busca, setBusca] = useState("");
   const [novoNome, setNovoNome] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [editNome, setEditNome] = useState("");
@@ -90,6 +91,10 @@ export default function CategoriasPage() {
 
   if (loading) return <p className="text-body">Carregando…</p>;
 
+  const categoriasFiltradas = categorias.filter((c) =>
+    c.nome.toLowerCase().includes(busca.toLowerCase())
+  );
+
   return (
     <div>
       <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-4">Categorias de serviço</h1>
@@ -112,6 +117,16 @@ export default function CategoriasPage() {
 
       {loadError && <p className="text-red-600 mb-4">{loadError} <button type="button" onClick={() => { setLoading(true); load(); }} className="underline ml-1">Recarregar</button></p>}
 
+      <div className="mb-4 max-w-md">
+        <input
+          type="text"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Buscar categoria…"
+          className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+        />
+      </div>
+
       <div className="bg-theme-card rounded-lg border border-theme overflow-hidden overflow-x-auto">
         <table className="w-full text-left text-theme">
           <thead className="border-b border-theme" style={{ backgroundColor: "var(--color-navbar)" }}>
@@ -121,12 +136,14 @@ export default function CategoriasPage() {
             </tr>
           </thead>
           <tbody>
-            {categorias.length === 0 && !loading ? (
+            {categoriasFiltradas.length === 0 ? (
               <tr>
-                <td colSpan={2} className="px-4 py-6 text-theme-muted text-center">Nenhuma categoria cadastrada.</td>
+                <td colSpan={2} className="px-4 py-6 text-theme-muted text-center">
+                  {busca ? "Nenhuma categoria encontrada." : "Nenhuma categoria cadastrada."}
+                </td>
               </tr>
             ) : (
-              categorias.map((c) => (
+              categoriasFiltradas.map((c) => (
                 <tr key={c.id} className="border-b border-theme last:border-b-0">
                   <td className="px-4 py-3">
                     {editId === c.id ? (
