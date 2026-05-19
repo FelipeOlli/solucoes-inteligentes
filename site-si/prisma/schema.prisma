@@ -427,6 +427,24 @@ model DocumentoFiscal {
   @@index([hashArquivo])
 }
 
+// ─── Módulo Afiliado ─────────────────────────────────────────────────────────
+
+model ProdutoAfiliado {
+  id          String   @id @default(cuid())
+  marketplace String   // "ML" | "MAGALU"
+  externalId  String
+  titulo      String
+  imagemUrl   String?
+  preco       Decimal? @db.Decimal(10, 2)
+  urlOriginal String
+  urlAfiliado String
+  favorito    Boolean  @default(false)
+  criadoEm   DateTime @default(now())
+
+  @@unique([marketplace, externalId])
+  @@index([titulo])
+}
+
 model ObrigacaoFiscal {
   id              String                @id @default(cuid())
   empresaFiscalId String
