@@ -2,6 +2,35 @@ import type { ProdutoBusca } from "./types";
 
 const ML_API = "https://api.mercadolibre.com";
 
+let cachedToken: string | null = null;
+let tokenExpiresAt = 0;
+
+async function getMLAccessToken(): Promise<string> {
+  const now = Date.now();
+  if (cachedToken && tokenExpiresAt - now > 10 * 60 * 1000) return cachedToken;
+
+  const clientId = process.env.ML_CLIENT_ID;
+  const clientSecret = process.env.ML_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error("ML_CLIENT_ID e ML_CLIENT_SECRET não configurados.");
+
+  const res = await fetch(`${ML_API}/oauth/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+    body: new URLSearchParams({ grant_type: "client_credentials", client_id: clientId, client_secret: clientSecret }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`ML OAuth falhou (${res.status}): ${body}`);
+  }
+
+  const json = await res.json();
+  cachedToken = json.access_token;
+  tokenExpiresAt = now + (json.expires_in ?? 21600) * 1000;
+  return cachedToken!;
+}
+
 function aplicarTagML(url: string): string {
   const tag = process.env.ML_AFFILIATE_TAG;
   if (!tag) return url;
@@ -25,11 +54,20 @@ type MLItem = {
 };
 
 export async function buscarML(termo: string): Promise<ProdutoBusca[]> {
+  const token = await getMLAccessToken();
   const url = `${ML_API}/sites/MLB/search?q=${encodeURIComponent(termo)}&limit=20`;
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`ML API ${res.status}`);
-  const json = await res.json();
 
+  const res = await fetch(url, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`ML search falhou (${res.status}): ${body}`);
+  }
+
+  const json = await res.json();
   return (json.results ?? []).map((item: MLItem): ProdutoBusca => {
     const urlOriginal = item.permalink;
     return {
