@@ -25,6 +25,7 @@ type GoogleEvent = {
   start?: { dateTime?: string; date?: string; timeZone?: string };
   end?: { dateTime?: string; date?: string; timeZone?: string };
   extendedProperties?: { private?: Record<string, string> };
+  attendees?: Array<{ email: string }>;
 };
 
 function getGoogleEnv() {
@@ -186,6 +187,7 @@ export async function upsertGoogleEventForServico(servico: Servico): Promise<{
     extendedProperties: {
       private: { servicoId: servico.id, codigo: servico.codigo },
     },
+    ...(servico.convidadoEmail ? { attendees: [{ email: servico.convidadoEmail }] } : {}),
   };
 
   let event: GoogleEvent;

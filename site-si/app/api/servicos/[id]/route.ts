@@ -41,6 +41,7 @@ export async function GET(
       tecnico: { select: { id: true, nome: true } },
       statusHist: { orderBy: { createdAt: "asc" } },
       notas: { orderBy: { createdAt: "asc" } },
+      campoHist: { orderBy: { createdAt: "asc" } },
     },
   });
   if (!servico) return notFound();
@@ -63,6 +64,13 @@ export async function GET(
       idAutor: n.idAutor,
       createdAt: n.createdAt,
     })),
+    campoHist: servico.campoHist.map((c) => ({
+      id: c.id,
+      campo: c.campo,
+      valorAnterior: c.valorAnterior,
+      valorNovo: c.valorNovo,
+      createdAt: c.createdAt,
+    })),
   });
 }
 
@@ -78,7 +86,21 @@ export async function PATCH(
 
   const before = await prisma.servico.findUnique({
     where: { id },
-    select: { id: true, dataAgendamento: true, statusAtual: true },
+    select: {
+      id: true,
+      dataAgendamento: true,
+      statusAtual: true,
+      valorEstimado: true,
+      categoriaId: true,
+      formaPagamento: true,
+      tecnicoId: true,
+      convidadoEmail: true,
+      googleEventId: true,
+      googleEtag: true,
+      googleUpdatedAt: true,
+      categoria: { select: { nome: true } },
+      tecnico: { select: { nome: true } },
+    },
   });
   if (!before) return notFound();
 
@@ -100,15 +122,43 @@ export async function PATCH(
     const arr = Array.isArray(body.imagens) ? body.imagens.map((u: unknown) => String(u)) : [];
     data.imagens = arr.length > 0 ? JSON.stringify(arr) : null;
   }
+  if (body.convidado_email !== undefined) {
+    data.convidadoEmail = body.convidado_email ? String(body.convidado_email).trim() : null;
+  }
 
-  const touchedSchedule =
-    body.data_agendamento !== undefined ||
-    body.descricao !== undefined ||
-    body.categoria_id !== undefined ||
-    body.valor_estimado !== undefined;
-  if (touchedSchedule) {
-    data.googleSyncState = "PENDING_UPDATE";
+  // Detect reagendamento: old date exists AND new date is different and non-null
+  const novaData = data.dataAgendamento as Date | null | undefined;
+  const reagendamento =
+    body.data_agendamento !== undefined &&
+    before.dataAgendamento != null &&
+    novaData != null &&
+    new Date(before.dataAgendamento).getTime() !== novaData.getTime();
+
+  if (reagendamento) {
+    // Archive current Google event before clearing (old event stays in Google)
+    await prisma.servicoEventoHist.create({
+      data: {
+        servicoId: id,
+        googleEventId: before.googleEventId ?? null,
+        dataAgendamento: before.dataAgendamento!,
+        convidadoEmail: before.convidadoEmail ?? null,
+      },
+    });
+    data.googleEventId = null;
+    data.googleEtag = null;
+    data.googleUpdatedAt = null;
+    data.googleSyncState = "PENDING_CREATE";
     data.googleLastError = null;
+  } else {
+    const touchedSchedule =
+      body.data_agendamento !== undefined ||
+      body.descricao !== undefined ||
+      body.categoria_id !== undefined ||
+      body.valor_estimado !== undefined;
+    if (touchedSchedule) {
+      data.googleSyncState = "PENDING_UPDATE";
+      data.googleLastError = null;
+    }
   }
 
   const servico = await prisma.servico.update({
@@ -121,7 +171,49 @@ export async function PATCH(
     },
   });
 
-  if (touchedSchedule && servico.dataAgendamento) {
+  // Build CampoHist entries for changed fields
+  const historicoEntries: { campo: string; valorAnterior: string | null; valorNovo: string | null }[] = [];
+
+  if (body.data_agendamento !== undefined) {
+    const ant = before.dataAgendamento?.toISOString() ?? null;
+    const nov = servico.dataAgendamento?.toISOString() ?? null;
+    if (ant !== nov) historicoEntries.push({ campo: "dataAgendamento", valorAnterior: ant, valorNovo: nov });
+  }
+  if (body.valor_estimado !== undefined) {
+    const ant = before.valorEstimado != null ? String(before.valorEstimado) : null;
+    const nov = servico.valorEstimado != null ? String(servico.valorEstimado) : null;
+    if (ant !== nov) historicoEntries.push({ campo: "valor", valorAnterior: ant, valorNovo: nov });
+  }
+  if (body.categoria_id !== undefined && (before.categoriaId ?? null) !== (servico.categoriaId ?? null)) {
+    historicoEntries.push({ campo: "categoria", valorAnterior: before.categoria?.nome ?? null, valorNovo: servico.categoria?.nome ?? null });
+  }
+  if ((body.forma_pagamento !== undefined || body.formaPagamento !== undefined)) {
+    const ant = (before.formaPagamento as string | null) ?? null;
+    const nov = (servico.formaPagamento as string | null) ?? null;
+    if (ant !== nov) historicoEntries.push({ campo: "formaPagamento", valorAnterior: ant, valorNovo: nov });
+  }
+  if (body.tecnico_id !== undefined && (before.tecnicoId ?? null) !== (servico.tecnicoId ?? null)) {
+    historicoEntries.push({ campo: "tecnico", valorAnterior: before.tecnico?.nome ?? null, valorNovo: servico.tecnico?.nome ?? null });
+  }
+  if (body.convidado_email !== undefined) {
+    const ant = before.convidadoEmail ?? null;
+    const nov = servico.convidadoEmail ?? null;
+    if (ant !== nov) historicoEntries.push({ campo: "convidado", valorAnterior: ant, valorNovo: nov });
+  }
+
+  if (historicoEntries.length > 0) {
+    await prisma.campoHist.createMany({
+      data: historicoEntries.map((h) => ({
+        servicoId: id,
+        campo: h.campo,
+        valorAnterior: h.valorAnterior,
+        valorNovo: h.valorNovo,
+        idAutor: (auth as { userId: string }).userId ?? null,
+      })),
+    });
+  }
+
+  if (servico.dataAgendamento) {
     await enqueueServicoSync(id, "UPSERT", { source: "servicos_patch" });
     await processAgendaSyncQueue().catch((err) => {
       console.warn("Falha ao processar sync após patch de serviço:", err);

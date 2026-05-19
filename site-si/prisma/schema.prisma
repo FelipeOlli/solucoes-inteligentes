@@ -142,6 +142,7 @@ model Servico {
   contatoPreferencial String?
   imagens             String?
   formaPagamento      FormaPagamento?
+  convidadoEmail      String?
   googleEventId       String?             @unique
   googleEtag          String?
   googleUpdatedAt     DateTime?
@@ -152,6 +153,8 @@ model Servico {
   statusHist          StatusHist[]
   notas               Nota[]
   agendaSyncJobs      AgendaSyncQueue[]
+  campoHist           CampoHist[]
+  eventoHist          ServicoEventoHist[]
 }
 
 model GoogleCalendarIntegration {
@@ -209,6 +212,31 @@ model Nota {
   visivelCliente  Boolean
   idAutor         String
   createdAt       DateTime @default(now())
+}
+
+model CampoHist {
+  id            String   @id @default(cuid())
+  servicoId     String
+  servico       Servico  @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  campo         String
+  valorAnterior String?
+  valorNovo     String?
+  idAutor       String?
+  createdAt     DateTime @default(now())
+
+  @@index([servicoId, createdAt])
+}
+
+model ServicoEventoHist {
+  id              String   @id @default(cuid())
+  servicoId       String
+  servico         Servico  @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  googleEventId   String?
+  dataAgendamento DateTime
+  convidadoEmail  String?
+  arquivadoEm     DateTime @default(now())
+
+  @@index([servicoId, arquivadoEm])
 }
 
 model ObrigacaoContabil {

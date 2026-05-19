@@ -16,6 +16,13 @@ const STATUS_LABEL: Record<string, string> = {
   CANCELADO: "Cancelado",
 };
 
+const FORMA_PAGAMENTO_LABEL: Record<string, string> = {
+  DINHEIRO: "Dinheiro",
+  PIX: "PIX",
+  CREDITO: "Crédito",
+  DEBITO: "Débito",
+};
+
 const IMAGE_FILE_RE = /\.(avif|bmp|gif|heic|heif|jpe?g|png|svg|webp)$/i;
 
 function isImageFileName(urlOrName: string): boolean {
@@ -29,8 +36,49 @@ function getStatusBadgeClass(status: string): string {
   return "bg-secondary/20 text-white";
 }
 
+function formatCampoHist(campo: string, anterior: string | null, novo: string | null): string {
+  const label: Record<string, string> = {
+    dataAgendamento: "Data de agendamento",
+    valor: "Valor estimado",
+    categoria: "Categoria",
+    formaPagamento: "Forma de pagamento",
+    tecnico: "Técnico responsável",
+    convidado: "Convidado",
+  };
+  const l = label[campo] ?? campo;
+
+  if (campo === "dataAgendamento") {
+    const fmtDate = (v: string | null) => v ? new Date(v).toLocaleString("pt-BR") : "—";
+    if (!anterior) return `${l} definida: ${fmtDate(novo)}`;
+    if (!novo) return `${l} removida (era ${fmtDate(anterior)})`;
+    return `${l}: ${fmtDate(anterior)} → ${fmtDate(novo)}`;
+  }
+  if (campo === "valor") {
+    const fmtVal = (v: string | null) => v != null ? `R$ ${Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—";
+    if (!anterior) return `${l} definido: ${fmtVal(novo)}`;
+    if (!novo) return `${l} removido`;
+    return `${l}: ${fmtVal(anterior)} → ${fmtVal(novo)}`;
+  }
+  if (campo === "formaPagamento") {
+    const fmt = (v: string | null) => v ? (FORMA_PAGAMENTO_LABEL[v] ?? v) : "—";
+    if (!anterior) return `${l} definida: ${fmt(novo)}`;
+    if (!novo) return `${l} removida`;
+    return `${l}: ${fmt(anterior)} → ${fmt(novo)}`;
+  }
+  if (campo === "convidado") {
+    if (!anterior) return `Convidado adicionado: ${novo}`;
+    if (!novo) return "Convidado removido";
+    return `Convidado alterado: ${anterior} → ${novo}`;
+  }
+  // categoria, tecnico
+  if (!anterior) return `${l} definido: ${novo ?? "—"}`;
+  if (!novo) return `${l} removido`;
+  return `${l}: ${anterior} → ${novo}`;
+}
+
 type Categoria = { id: string; nome: string };
-type Tecnico = { id: string; nome: string };
+type Tecnico = { id: string; nome: string; email?: string | null };
+type CampoHistItem = { id: string; campo: string; valorAnterior: string | null; valorNovo: string | null; createdAt: string };
 
 type ServicoDetail = {
   id: string;
@@ -47,9 +95,20 @@ type ServicoDetail = {
   valorEstimado?: number | null;
   imagens?: string[] | null;
   formaPagamento?: string | null;
+  convidadoEmail?: string | null;
   cliente: { nome: string; email: string; telefone: string };
   statusHist: { id: string; statusAnterior: string | null; statusNovo: string; idAutor: string; createdAt: string }[];
   notas: { id: string; conteudo: string; visivelCliente: boolean; createdAt: string }[];
+  campoHist: CampoHistItem[];
+};
+
+type PatchBody = {
+  data_agendamento?: string | null;
+  valor_estimado?: number | null;
+  categoria_id?: string | null;
+  forma_pagamento?: string | null;
+  tecnico_id?: string | null;
+  convidado_email?: string | null;
 };
 
 export default function ServicoDetailPage() {
@@ -76,6 +135,13 @@ export default function ServicoDetailPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [error, setError] = useState("");
   const [statusError, setStatusError] = useState("");
+
+  // Modal convidado
+  const [showModalConvidado, setShowModalConvidado] = useState(false);
+  const [pendingBody, setPendingBody] = useState<PatchBody | null>(null);
+  const [convidadoTipo, setConvidadoTipo] = useState<"sem" | "tecnico" | "outro">("sem");
+  const [convidadoTecnicoEmail, setConvidadoTecnicoEmail] = useState("");
+  const [convidadoOutroEmail, setConvidadoOutroEmail] = useState("");
 
   function load() {
     api<ServicoDetail>(`/servicos/${id}`).then(({ data, status }) => {
@@ -104,20 +170,54 @@ export default function ServicoDetailPage() {
     api<Tecnico[]>("/tecnicos").then(({ data }) => data && setTecnicos(data));
   }, []);
 
-  async function handleSalvarDados(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
+  async function executarSalvar(body: PatchBody) {
     setSavingEdit(true);
-    const body: { data_agendamento?: string | null; valor_estimado?: number | null; categoria_id?: string | null; forma_pagamento?: string | null; tecnico_id?: string | null } = {};
-    body.data_agendamento = editDataAgendamento ? new Date(editDataAgendamento).toISOString() : null;
-    body.valor_estimado = editValor.trim() ? Number(editValor.trim().replace(",", ".")) || null : null;
-    body.categoria_id = editCategoriaId || null;
-    body.forma_pagamento = editFormaPagamento || null;
-    body.tecnico_id = editTecnicoId || null;
     const { status } = await api(`/servicos/${id}`, { method: "PATCH", body });
     setSavingEdit(false);
     if (status === 401) router.push("/login");
     if (status === 200) load();
+  }
+
+  function buildBody(): PatchBody {
+    return {
+      data_agendamento: editDataAgendamento ? new Date(editDataAgendamento).toISOString() : null,
+      valor_estimado: editValor.trim() ? Number(editValor.trim().replace(",", ".")) || null : null,
+      categoria_id: editCategoriaId || null,
+      forma_pagamento: editFormaPagamento || null,
+      tecnico_id: editTecnicoId || null,
+    };
+  }
+
+  async function handleSalvarDados(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+
+    const originalData = servico?.dataAgendamento
+      ? new Date(servico.dataAgendamento).toISOString().slice(0, 16)
+      : "";
+    const dataMudou = editDataAgendamento !== "" && editDataAgendamento !== originalData;
+
+    if (dataMudou) {
+      // Reset modal state and open
+      setConvidadoTipo("sem");
+      setConvidadoTecnicoEmail("");
+      setConvidadoOutroEmail("");
+      setPendingBody(buildBody());
+      setShowModalConvidado(true);
+      return;
+    }
+
+    await executarSalvar(buildBody());
+  }
+
+  async function handleConfirmarConvidado() {
+    if (!pendingBody) return;
+    let email: string | null = null;
+    if (convidadoTipo === "tecnico") email = convidadoTecnicoEmail || null;
+    else if (convidadoTipo === "outro") email = convidadoOutroEmail.trim() || null;
+    setShowModalConvidado(false);
+    await executarSalvar({ ...pendingBody, convidado_email: email });
+    setPendingBody(null);
   }
 
   async function handleStatus(e: React.FormEvent) {
@@ -242,13 +342,89 @@ export default function ServicoDetailPage() {
     ...descricaoLinha,
     ...servico.statusHist.map((h) => ({ type: "status" as const, ...h })),
     ...servico.notas.map((n) => ({ type: "nota" as const, ...n })),
+    ...(servico.campoHist ?? []).map((c) => ({ type: "campo" as const, ...c })),
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const imageUrls = (servico.imagens ?? []).filter((url) => isImageFileName(url));
   const anexoUrls = (servico.imagens ?? []).filter((url) => !isImageFileName(url));
+  const tecnicosComEmail = tecnicos.filter((t) => t.email);
 
   return (
     <div className="text-theme">
+      {/* Modal de convidado */}
+      {showModalConvidado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-theme-card rounded-lg border border-theme p-6 w-full max-w-md shadow-xl">
+            <h2 className="font-heading font-bold text-theme-primary text-lg mb-1">Convidado para o agendamento</h2>
+            <p className="text-sm text-theme-muted mb-4">Haverá algum convidado neste agendamento? O convidado receberá um convite pelo Google Calendar.</p>
+
+            <div className="space-y-3 mb-5">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="convidado" value="sem" checked={convidadoTipo === "sem"} onChange={() => setConvidadoTipo("sem")} />
+                <span className="text-sm">Sem convidado</span>
+              </label>
+
+              {tecnicosComEmail.length > 0 && (
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input type="radio" name="convidado" value="tecnico" checked={convidadoTipo === "tecnico"} onChange={() => setConvidadoTipo("tecnico")} className="mt-1" />
+                  <div className="flex-1">
+                    <span className="text-sm">Técnico cadastrado</span>
+                    {convidadoTipo === "tecnico" && (
+                      <select
+                        value={convidadoTecnicoEmail}
+                        onChange={(e) => setConvidadoTecnicoEmail(e.target.value)}
+                        className="mt-2 w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm"
+                        autoFocus
+                      >
+                        <option value="">Selecionar técnico…</option>
+                        {tecnicosComEmail.map((t) => (
+                          <option key={t.id} value={t.email!}>{t.nome} ({t.email})</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </label>
+              )}
+
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input type="radio" name="convidado" value="outro" checked={convidadoTipo === "outro"} onChange={() => setConvidadoTipo("outro")} className="mt-1" />
+                <div className="flex-1">
+                  <span className="text-sm">Outro email</span>
+                  {convidadoTipo === "outro" && (
+                    <input
+                      type="email"
+                      value={convidadoOutroEmail}
+                      onChange={(e) => setConvidadoOutroEmail(e.target.value)}
+                      placeholder="email@exemplo.com"
+                      className="mt-2 w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm"
+                      autoFocus
+                    />
+                  )}
+                </div>
+              </label>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => { setShowModalConvidado(false); setPendingBody(null); }}
+                className="px-4 py-2 border border-theme rounded-lg text-sm text-theme-muted hover:opacity-80"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmarConvidado}
+                disabled={savingEdit || (convidadoTipo === "tecnico" && !convidadoTecnicoEmail) || (convidadoTipo === "outro" && !convidadoOutroEmail.trim())}
+                className="px-4 py-2 bg-primary text-white rounded-lg text-sm disabled:opacity-50"
+              >
+                {savingEdit ? "Salvando…" : "Confirmar e salvar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
         <div className="min-w-0">
           <h1 className="font-heading text-2xl font-bold text-theme-primary">{servico.codigo}</h1>
@@ -287,6 +463,15 @@ export default function ServicoDetailPage() {
                     <span className="text-theme-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
                     <p className="text-xs font-medium text-theme-muted mb-1">Descrição do serviço</p>
                     <p className="whitespace-pre-wrap break-words">{(item as { conteudo: string }).conteudo}</p>
+                  </>
+                ) : item.type === "campo" ? (
+                  <>
+                    <span className="text-theme-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
+                    <p>{formatCampoHist(
+                      (item as CampoHistItem).campo,
+                      (item as CampoHistItem).valorAnterior,
+                      (item as CampoHistItem).valorNovo
+                    )}</p>
                   </>
                 ) : (
                   <>
