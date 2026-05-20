@@ -61,13 +61,35 @@ export async function POST(request: NextRequest, { params }: Params) {
     });
   } catch { /* não bloqueia o upload */ }
 
-  // IA confirmou → promove para PAGO; caso contrário mantém lógica anterior
-  const statusPagamento =
-    comprovanteValidacaoIA?.status === "CONFERE"
-      ? "PAGO"
-      : doc.statusPagamento === "PENDENTE" && doc.dataPagamento
-      ? "PAGO"
-      : doc.statusPagamento;
+  // IA confirmou → promove para PAGO e preenche data/valor automaticamente
+  const iaConfere = comprovanteValidacaoIA?.status === "CONFERE";
+  const statusPagamento = iaConfere
+    ? "PAGO"
+    : doc.statusPagamento === "PENDENTE" && doc.dataPagamento
+    ? "PAGO"
+    : doc.statusPagamento;
+
+  // Extrai data de pagamento do resultado da IA (campo "Data de pagamento", encontrado em dd/MM/yyyy)
+  let dataPagamentoAuto: Date | undefined;
+  if (iaConfere && !doc.dataPagamento) {
+    const itemData = comprovanteValidacaoIA?.itens?.find(
+      (i) => i.campo === "Data de pagamento" || i.campo === "Data"
+    );
+    if (itemData?.encontrado) {
+      const parts = itemData.encontrado.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      if (parts) {
+        const parsed = new Date(`${parts[3]}-${parts[2]}-${parts[1]}`);
+        if (!isNaN(parsed.getTime())) dataPagamentoAuto = parsed;
+      }
+    }
+    if (!dataPagamentoAuto) dataPagamentoAuto = new Date(); // fallback: hoje
+  }
+
+  // Usa valorTotal do documento como valorPago quando não preenchido
+  const valorPagoAuto =
+    iaConfere && !doc.valorPago && doc.valorTotal
+      ? Number(doc.valorTotal)
+      : undefined;
 
   const atualizado = await prisma.documentoFiscal.update({
     where: { id },
@@ -77,6 +99,8 @@ export async function POST(request: NextRequest, { params }: Params) {
       comprovanteTamanhoBytes: tamanhoBytes,
       comprovanteHash: hash,
       statusPagamento,
+      ...(dataPagamentoAuto ? { dataPagamento: dataPagamentoAuto } : {}),
+      ...(valorPagoAuto !== undefined ? { valorPago: valorPagoAuto } : {}),
       comprovanteValidacaoIA: comprovanteValidacaoIA ?? undefined,
     },
   });
