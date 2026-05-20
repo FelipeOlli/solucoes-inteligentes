@@ -17,9 +17,26 @@ type Produto = {
 
 type ProdutoSalvo = Produto & { id: string; favorito: boolean; criadoEm: string };
 
+type MLItem = {
+  id: string | number;
+  title: string;
+  price: number | null;
+  thumbnail: string | null;
+  permalink: string;
+};
+
 function formatPreco(p: number | null): string {
   if (p == null) return "—";
   return p.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function aplicarTagML(url: string, tag: string, tool: string): string {
+  try {
+    const u = new URL(url);
+    if (tag) u.searchParams.set("matt_word", tag);
+    if (tool) u.searchParams.set("matt_tool", tool);
+    return u.toString();
+  } catch { return url; }
 }
 
 const EXTERNOS = [
@@ -31,11 +48,9 @@ const EXTERNOS = [
 export default function AfiliadoPage() {
   const searchParams = useSearchParams();
   const [mlConectado, setMlConectado] = useState<boolean | null>(null);
-  const [mlDiag, setMlDiag] = useState<Record<string, unknown> | null>(null);
   const [mlMsg, setMlMsg] = useState("");
 
   const [busca, setBusca] = useState("");
-  const [termo, setTermo] = useState("");
   const [resultados, setResultados] = useState<Produto[]>([]);
   const [buscando, setBuscando] = useState(false);
   const [erroBusca, setErroBusca] = useState("");
@@ -47,9 +62,8 @@ export default function AfiliadoPage() {
   const [abaAtiva, setAbaAtiva] = useState<"busca" | "favoritos">("busca");
 
   async function checkMLStatus() {
-    const { data } = await api<Record<string, unknown>>("/integrations/ml/status");
-    setMlConectado((data?.connected as boolean) ?? false);
-    if (data?.connected) setMlDiag(data);
+    const { data } = await api<{ connected: boolean }>("/integrations/ml/status");
+    setMlConectado(data?.connected ?? false);
   }
 
   async function loadFavoritos() {
@@ -62,13 +76,9 @@ export default function AfiliadoPage() {
   useEffect(() => {
     checkMLStatus();
     loadFavoritos();
-
     const ml = searchParams.get("ml");
     if (ml === "connected") setMlMsg("✓ Mercado Livre autorizado com sucesso!");
-    else if (ml === "error") {
-      const reason = searchParams.get("reason") ?? "erro desconhecido";
-      setMlMsg(`Erro ao autorizar ML: ${reason}`);
-    }
+    else if (ml === "error") setMlMsg(`Erro ao autorizar ML: ${searchParams.get("reason") ?? "erro desconhecido"}`);
   }, [searchParams]);
 
   async function handleBuscar(e: React.FormEvent) {
@@ -78,30 +88,61 @@ export default function AfiliadoPage() {
     setBuscando(true);
     setErroBusca("");
     setResultados([]);
-    setTermo(q);
 
-    const { data, error, status } = await api<{ produtos: Produto[] }>(`/afiliados/buscar?q=${encodeURIComponent(q)}`);
-    setBuscando(false);
-    if (status === 200 && data) {
-      setResultados(data.produtos);
-      if (data.produtos.length === 0) setErroBusca("Nenhum produto encontrado no Mercado Livre.");
-    } else {
-      setErroBusca(error?.message ?? "Erro ao buscar.");
+    try {
+      // Busca feita do browser (IP brasileiro) para evitar bloqueio de IP do servidor
+      const { data: tokenData, error: tokenErr } = await api<{ token: string; affiliateTag: string; affiliateTool: string }>("/afiliados/ml-token");
+      if (!tokenData?.token) {
+        setErroBusca(tokenErr?.message ?? "Erro ao obter token ML.");
+        setBuscando(false);
+        return;
+      }
+
+      const res = await fetch(
+        `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(q)}&limit=20`,
+        { headers: { Authorization: `Bearer ${tokenData.token}` } }
+      );
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setErroBusca(`ML retornou ${res.status}: ${body.message ?? "erro desconhecido"}`);
+        setBuscando(false);
+        return;
+      }
+
+      const json = await res.json();
+      const mlTag = tokenData.affiliateTag;
+      const mlTool = tokenData.affiliateTool;
+
+      const produtos: Produto[] = (json.results ?? []).map((item: MLItem): Produto => ({
+        marketplace: "ML",
+        externalId: String(item.id),
+        titulo: item.title,
+        imagemUrl: item.thumbnail ? item.thumbnail.replace("http://", "https://") : null,
+        preco: item.price ?? null,
+        urlOriginal: item.permalink,
+        urlAfiliado: aplicarTagML(item.permalink, mlTag, mlTool),
+      }));
+
+      setResultados(produtos);
+      if (produtos.length === 0) setErroBusca("Nenhum produto encontrado.");
+    } catch (e) {
+      setErroBusca(`Erro: ${e instanceof Error ? e.message : String(e)}`);
     }
+
+    setBuscando(false);
   }
 
   async function copiarLink(produto: Produto | ProdutoSalvo) {
-    const key = produto.externalId;
     try {
       await navigator.clipboard.writeText(produto.urlAfiliado);
-      setCopiado(key);
+      setCopiado(produto.externalId);
       setTimeout(() => setCopiado(null), 2000);
     } catch { setCopiado(null); }
   }
 
   async function favoritar(produto: Produto) {
-    const key = produto.externalId;
-    setFavoritando(key);
+    setFavoritando(produto.externalId);
     await api<ProdutoSalvo>("/afiliados/produtos", {
       method: "POST",
       body: {
@@ -170,7 +211,6 @@ export default function AfiliadoPage() {
     <div>
       <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
         <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary">Afiliado</h1>
-        {/* Status e botão de autorização ML */}
         {mlConectado === false && (
           <button type="button"
             onClick={async () => {
@@ -197,12 +237,6 @@ export default function AfiliadoPage() {
           </div>
         )}
       </div>
-
-      {mlDiag && (
-        <div className="mb-4 p-3 rounded-lg border border-theme bg-theme-card text-xs font-mono text-theme-muted whitespace-pre-wrap">
-          {JSON.stringify(mlDiag, null, 2)}
-        </div>
-      )}
 
       {mlMsg && (
         <div className={`mb-4 p-3 rounded-lg border text-sm ${mlMsg.startsWith("✓") ? "border-green-400 bg-green-50 text-green-700" : "border-red-400 bg-red-50 text-red-700"}`}>
@@ -235,9 +269,7 @@ export default function AfiliadoPage() {
           </form>
 
           {mlConectado === false && (
-            <p className="text-sm text-yellow-600 mb-4">
-              Autorize o Mercado Livre acima para ativar a busca.
-            </p>
+            <p className="text-sm text-yellow-600 mb-4">Autorize o Mercado Livre acima para ativar a busca.</p>
           )}
 
           {busca.trim() && (
