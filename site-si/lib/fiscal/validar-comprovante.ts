@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import sharp from "sharp";
 import { parsePdfBuffer } from "./pdf-parser";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -85,7 +86,13 @@ export async function validarComprovante(
       const { text } = await parsePdfBuffer(buffer);
       conteudoComprovante = `Texto do comprovante (PDF):\n${text.slice(0, 8000)}`;
     } else {
-      const mediaType = mimeType as "image/jpeg" | "image/png" | "image/webp";
+      // Redimensiona pra max 1568px (recomendação Anthropic) e recodifica JPEG 85% pra reduzir payload
+      const otimizado = await sharp(buffer)
+        .rotate()
+        .resize({ width: 1568, height: 1568, fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 85 })
+        .toBuffer();
+
       conteudoComprovante = [
         {
           type: "text" as const,
@@ -95,8 +102,8 @@ export async function validarComprovante(
           type: "image" as const,
           source: {
             type: "base64" as const,
-            media_type: mediaType,
-            data: buffer.toString("base64"),
+            media_type: "image/jpeg",
+            data: otimizado.toString("base64"),
           },
         },
       ];
