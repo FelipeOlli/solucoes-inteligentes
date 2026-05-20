@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { TipoDocumentoFiscal } from "@prisma/client";
+import { TipoDocumentoFiscal, StatusPagamentoFiscal } from "@prisma/client";
 import { api } from "@/lib/api";
 import { SidebarTipos } from "@/components/documentos-fiscais/SidebarTipos";
 import { KpiCards } from "@/components/documentos-fiscais/KpiCards";
@@ -39,6 +39,7 @@ export default function DocumentosFiscaisPage() {
   const [aba, setAba] = useState<"docs" | "perfil">("docs");
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [tipoAtivo, setTipoAtivo] = useState<TipoDocumentoFiscal | "TODOS">("TODOS");
+  const [filtroPgto, setFiltroPgto] = useState<StatusPagamentoFiscal | "TODOS">("TODOS");
   const [busca, setBusca] = useState("");
   const [documentos, setDocumentos] = useState<DocumentoRow[]>([]);
   const [contadores, setContadores] = useState<Contador[]>([]);
@@ -64,6 +65,7 @@ export default function DocumentosFiscaisPage() {
     const params = new URLSearchParams({ page: String(page) });
     if (id) params.set("empresaId", id);
     if (tipoAtivo !== "TODOS") params.set("tipo", tipoAtivo);
+    if (filtroPgto !== "TODOS") params.set("statusPagamento", filtroPgto);
     if (busca) params.set("busca", busca);
 
     const [docRes, contRes, kpiRes] = await Promise.all([
@@ -88,7 +90,7 @@ export default function DocumentosFiscaisPage() {
 
   useEffect(() => {
     if (empresa !== null) loadDados();
-  }, [empresa, tipoAtivo, busca, page]);
+  }, [empresa, tipoAtivo, filtroPgto, busca, page]);
 
   const handleBusca = useCallback((q: string) => {
     setBusca(q);
@@ -180,7 +182,23 @@ export default function DocumentosFiscaisPage() {
 
       {empresa && aba === "docs" && (
         <>
-          <BuscaGlobal onBusca={handleBusca} />
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="flex-1 min-w-[200px]">
+              <BuscaGlobal onBusca={handleBusca} />
+            </div>
+            <select
+              value={filtroPgto}
+              onChange={(e) => { setFiltroPgto(e.target.value as StatusPagamentoFiscal | "TODOS"); setPage(1); }}
+              className="px-3 py-2 rounded border border-theme bg-theme-card text-sm text-theme shrink-0"
+            >
+              <option value="TODOS">Todos os pagamentos</option>
+              <option value="PENDENTE">Pendente</option>
+              <option value="PAGO">Pago</option>
+              <option value="ATRASADO">Atrasado</option>
+              <option value="ISENTO">Isento</option>
+              <option value="NAO_APLICAVEL">N/A</option>
+            </select>
+          </div>
 
           {kpis && (
             <KpiCards
