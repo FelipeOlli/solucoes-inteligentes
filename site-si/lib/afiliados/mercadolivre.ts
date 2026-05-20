@@ -5,13 +5,13 @@ const ML_API = "https://api.mercadolibre.com";
 let cachedToken: string | null = null;
 let tokenExpiresAt = 0;
 
-async function getMLAccessToken(): Promise<string> {
-  const now = Date.now();
-  if (cachedToken && tokenExpiresAt - now > 10 * 60 * 1000) return cachedToken;
-
+async function getMLAccessToken(): Promise<string | null> {
   const clientId = process.env.ML_CLIENT_ID;
   const clientSecret = process.env.ML_CLIENT_SECRET;
-  if (!clientId || !clientSecret) throw new Error("ML_CLIENT_ID e ML_CLIENT_SECRET não configurados.");
+  if (!clientId || !clientSecret) return null;
+
+  const now = Date.now();
+  if (cachedToken && tokenExpiresAt - now > 10 * 60 * 1000) return cachedToken;
 
   const res = await fetch(`${ML_API}/oauth/token`, {
     method: "POST",
@@ -22,13 +22,14 @@ async function getMLAccessToken(): Promise<string> {
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`ML OAuth falhou (${res.status}): ${body}`);
+    console.error(`[ML] OAuth falhou (${res.status}):`, body);
+    return null;
   }
 
   const json = await res.json();
   cachedToken = json.access_token;
   tokenExpiresAt = now + (json.expires_in ?? 21600) * 1000;
-  return cachedToken!;
+  return cachedToken;
 }
 
 function aplicarTagML(url: string): string {
@@ -54,20 +55,30 @@ type MLItem = {
 };
 
 export async function buscarML(termo: string): Promise<ProdutoBusca[]> {
-  const token = await getMLAccessToken();
-  const url = `${ML_API}/sites/MLB/search?q=${encodeURIComponent(termo)}&limit=20`;
+  const searchUrl = `${ML_API}/sites/MLB/search?q=${encodeURIComponent(termo)}&limit=20`;
 
-  const res = await fetch(url, {
-    cache: "no-store",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  // Tenta sem token primeiro; se retornar 401, tenta com OAuth
+  async function doSearch(token: string | null): Promise<Response> {
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+    return fetch(searchUrl, { cache: "no-store", headers });
+  }
+
+  let res = await doSearch(null);
+
+  if (res.status === 401 || res.status === 403) {
+    console.log("[ML] busca sem token retornou", res.status, "— tentando com OAuth...");
+    const token = await getMLAccessToken();
+    res = await doSearch(token);
+  }
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`ML search falhou (${res.status}): ${body}`);
+    throw new Error(`ML search (${res.status}): ${body.slice(0, 200)}`);
   }
 
   const json = await res.json();
+  console.log(`[ML] busca "${termo}" → ${json.results?.length ?? 0} resultados`);
+
   return (json.results ?? []).map((item: MLItem): ProdutoBusca => {
     const urlOriginal = item.permalink;
     return {

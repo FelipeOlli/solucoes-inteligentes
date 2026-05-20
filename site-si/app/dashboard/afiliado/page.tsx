@@ -205,7 +205,11 @@ export default function AfiliadoPage() {
             </div>
           )}
 
-          {erroBusca && <p className="text-red-500 text-sm mb-4">{erroBusca}</p>}
+          {erroBusca && (
+            <div className="mb-4 p-3 rounded-lg border border-red-400 bg-red-50 text-red-700 text-sm">
+              {erroBusca}
+            </div>
+          )}
 
           {resultados.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
