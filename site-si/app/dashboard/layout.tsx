@@ -135,13 +135,6 @@ export default function DashboardLayout({
                   Contabilidade
                 </Link>
                 <Link
-                  href="/dashboard/afiliado"
-                  className={navLinkClass(pathname === "/dashboard/afiliado")}
-                  style={{ color: pathname === "/dashboard/afiliado" ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Afiliado
-                </Link>
-                <Link
                   href="/dashboard/servicos/novo"
                   className="font-medium"
                   style={{ color: "var(--color-navbar-text)" }}
@@ -301,14 +294,6 @@ export default function DashboardLayout({
                 onClick={() => setMobileNavOpen(false)}
               >
                 Contabilidade
-              </Link>
-              <Link
-                href="/dashboard/afiliado"
-                className={navLinkClass(pathname === "/dashboard/afiliado")}
-                style={{ color: pathname === "/dashboard/afiliado" ? "var(--color-navbar-text)" : "inherit" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                Afiliado
               </Link>
               <Link
                 href="/dashboard/servicos/novo"

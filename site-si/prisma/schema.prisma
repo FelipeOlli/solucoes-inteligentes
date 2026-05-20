@@ -427,38 +427,6 @@ model DocumentoFiscal {
   @@index([hashArquivo])
 }
 
-// ─── Módulo Afiliado ─────────────────────────────────────────────────────────
-
-model MLIntegration {
-  id           String    @id @default(cuid())
-  provider     String    @default("ml")
-  accessToken  String
-  refreshToken String
-  tokenType    String?
-  scope        String?
-  expiryDate   DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  @@unique([provider])
-}
-
-model ProdutoAfiliado {
-  id          String   @id @default(cuid())
-  marketplace String   // "ML" | "MAGALU"
-  externalId  String
-  titulo      String
-  imagemUrl   String?
-  preco       Decimal? @db.Decimal(10, 2)
-  urlOriginal String
-  urlAfiliado String
-  favorito    Boolean  @default(false)
-  criadoEm   DateTime @default(now())
-
-  @@unique([marketplace, externalId])
-  @@index([titulo])
-}
-
 model ObrigacaoFiscal {
   id              String                @id @default(cuid())
   empresaFiscalId String
