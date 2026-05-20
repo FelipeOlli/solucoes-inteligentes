@@ -5,10 +5,7 @@ import { forbidden, unauthorized } from "@/lib/api-response";
 import { getMLConnectUrl } from "@/lib/afiliados/ml-auth";
 import { randomBytes } from "crypto";
 
-export async function GET(request: NextRequest) {
-  const auth = await getAuthFromRequest(request);
-  if (!auth || !isDono(auth)) return auth ? forbidden() : unauthorized();
-
+async function buildConnectUrl(): Promise<string> {
   const state = randomBytes(16).toString("hex");
   const cookieStore = await cookies();
   cookieStore.set("ml_oauth_state", state, {
@@ -18,6 +15,19 @@ export async function GET(request: NextRequest) {
     maxAge: 600,
     path: "/",
   });
+  return getMLConnectUrl(state);
+}
 
-  return NextResponse.redirect(getMLConnectUrl(state));
+export async function GET(request: NextRequest) {
+  const auth = await getAuthFromRequest(request);
+  if (!auth || !isDono(auth)) return auth ? forbidden() : unauthorized();
+  const url = await buildConnectUrl();
+  return NextResponse.redirect(url);
+}
+
+export async function POST(request: NextRequest) {
+  const auth = await getAuthFromRequest(request);
+  if (!auth || !isDono(auth)) return auth ? forbidden() : unauthorized();
+  const url = await buildConnectUrl();
+  return NextResponse.json({ url });
 }
