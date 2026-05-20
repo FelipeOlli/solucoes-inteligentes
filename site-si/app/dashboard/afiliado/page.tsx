@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import Image from "next/image";
 
@@ -28,16 +29,26 @@ const EXTERNOS = [
 ];
 
 export default function AfiliadoPage() {
+  const searchParams = useSearchParams();
+  const [mlConectado, setMlConectado] = useState<boolean | null>(null);
+  const [mlMsg, setMlMsg] = useState("");
+
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
   const [resultados, setResultados] = useState<Produto[]>([]);
   const [buscando, setBuscando] = useState(false);
   const [erroBusca, setErroBusca] = useState("");
+
   const [favoritos, setFavoritos] = useState<ProdutoSalvo[]>([]);
   const [loadingFav, setLoadingFav] = useState(true);
   const [copiado, setCopiado] = useState<string | null>(null);
   const [favoritando, setFavoritando] = useState<string | null>(null);
   const [abaAtiva, setAbaAtiva] = useState<"busca" | "favoritos">("busca");
+
+  async function checkMLStatus() {
+    const { data } = await api<{ connected: boolean }>("/integrations/ml/status");
+    setMlConectado(data?.connected ?? false);
+  }
 
   async function loadFavoritos() {
     setLoadingFav(true);
@@ -46,7 +57,17 @@ export default function AfiliadoPage() {
     setLoadingFav(false);
   }
 
-  useEffect(() => { loadFavoritos(); }, []);
+  useEffect(() => {
+    checkMLStatus();
+    loadFavoritos();
+
+    const ml = searchParams.get("ml");
+    if (ml === "connected") setMlMsg("✓ Mercado Livre autorizado com sucesso!");
+    else if (ml === "error") {
+      const reason = searchParams.get("reason") ?? "erro desconhecido";
+      setMlMsg(`Erro ao autorizar ML: ${reason}`);
+    }
+  }, [searchParams]);
 
   async function handleBuscar(e: React.FormEvent) {
     e.preventDefault();
@@ -63,11 +84,11 @@ export default function AfiliadoPage() {
       setResultados(data.produtos);
       if (data.produtos.length === 0) setErroBusca("Nenhum produto encontrado no Mercado Livre.");
     } else {
-      setErroBusca(error?.message ?? "Erro ao buscar. Verifique as credenciais ML_CLIENT_ID e ML_CLIENT_SECRET no servidor.");
+      setErroBusca(error?.message ?? "Erro ao buscar.");
     }
   }
 
-  async function copiarLink(produto: Produto) {
+  async function copiarLink(produto: Produto | ProdutoSalvo) {
     const key = produto.externalId;
     try {
       await navigator.clipboard.writeText(produto.urlAfiliado);
@@ -118,32 +139,22 @@ export default function AfiliadoPage() {
           <p className="text-sm text-theme leading-tight line-clamp-2" title={p.titulo}>{p.titulo}</p>
           <p className="text-base font-bold text-theme-primary">{formatPreco(p.preco)}</p>
           <div className="flex gap-1.5 mt-auto pt-1 flex-wrap">
-            <a
-              href={p.urlAfiliado}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 text-center text-xs py-1.5 rounded-lg bg-primary text-white transition min-w-[70px]"
-            >
+            <a href={p.urlAfiliado} target="_blank" rel="noopener noreferrer"
+              className="flex-1 text-center text-xs py-1.5 rounded-lg bg-primary text-white min-w-[70px]">
               Ver produto
             </a>
-            <button
-              type="button"
-              onClick={() => copiarLink(p)}
-              className="text-xs px-2.5 py-1.5 rounded-lg border border-theme transition"
-            >
+            <button type="button" onClick={() => copiarLink(p)}
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-theme">
               {copiado === key ? "✓" : "Copiar"}
             </button>
             {onRemover ? (
-              <button type="button" onClick={onRemover} className="text-xs px-2.5 py-1.5 rounded-lg border border-theme text-red-500 transition">✕</button>
+              <button type="button" onClick={onRemover}
+                className="text-xs px-2.5 py-1.5 rounded-lg border border-theme text-red-500">✕</button>
             ) : (
-              <button
-                type="button"
-                onClick={() => favoritar(p)}
+              <button type="button" onClick={() => favoritar(p as Produto)}
                 disabled={jaFavoritado || favoritando === key}
-                title={jaFavoritado ? "Já nos favoritos" : "Salvar"}
-                className="text-xs px-2.5 py-1.5 rounded-lg border border-theme transition disabled:opacity-40"
-                style={{ color: jaFavoritado ? "var(--color-primary)" : "inherit" }}
-              >
+                className="text-xs px-2.5 py-1.5 rounded-lg border border-theme disabled:opacity-40"
+                style={{ color: jaFavoritado ? "var(--color-primary)" : "inherit" }}>
                 {jaFavoritado ? "★" : "☆"}
               </button>
             )}
@@ -155,17 +166,34 @@ export default function AfiliadoPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-1">Afiliado</h1>
+      <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+        <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary">Afiliado</h1>
+        {/* Status e botão de autorização ML */}
+        {mlConectado === false && (
+          <a href="/api/integrations/ml/connect"
+            className="text-sm px-4 py-2 rounded-lg bg-yellow-400 text-black font-medium">
+            Autorizar Mercado Livre
+          </a>
+        )}
+        {mlConectado === true && (
+          <span className="text-xs px-3 py-1.5 rounded-full bg-green-100 text-green-700 border border-green-300">
+            ✓ ML conectado
+          </span>
+        )}
+      </div>
+
+      {mlMsg && (
+        <div className={`mb-4 p-3 rounded-lg border text-sm ${mlMsg.startsWith("✓") ? "border-green-400 bg-green-50 text-green-700" : "border-red-400 bg-red-50 text-red-700"}`}>
+          {mlMsg}
+        </div>
+      )}
+
       <p className="text-theme-muted text-sm mb-6">Busque no Mercado Livre ou abra a busca nos outros marketplaces.</p>
 
       <div className="flex gap-3 mb-6 border-b border-theme">
         {(["busca", "favoritos"] as const).map((aba) => (
-          <button
-            key={aba}
-            type="button"
-            onClick={() => setAbaAtiva(aba)}
-            className={`pb-2 text-sm font-medium border-b-2 transition-colors -mb-px ${abaAtiva === aba ? "border-primary text-theme-primary" : "border-transparent text-theme-muted"}`}
-          >
+          <button key={aba} type="button" onClick={() => setAbaAtiva(aba)}
+            className={`pb-2 text-sm font-medium border-b-2 transition-colors -mb-px ${abaAtiva === aba ? "border-primary text-theme-primary" : "border-transparent text-theme-muted"}`}>
             {aba === "busca" ? "Buscar produtos" : `Favoritos${favoritos.length > 0 ? ` (${favoritos.length})` : ""}`}
           </button>
         ))}
@@ -174,31 +202,28 @@ export default function AfiliadoPage() {
       {abaAtiva === "busca" && (
         <div>
           <form onSubmit={handleBuscar} className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
+            <input type="text" value={busca} onChange={(e) => setBusca(e.target.value)}
               placeholder="Nome do produto (ex: furadeira, notebook...)"
               className="flex-1 px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-              disabled={buscando}
-            />
-            <button type="submit" disabled={!busca.trim() || buscando} className="px-5 py-2 bg-primary text-white rounded-lg disabled:opacity-50 whitespace-nowrap">
+              disabled={buscando} />
+            <button type="submit" disabled={!busca.trim() || buscando || mlConectado === false}
+              className="px-5 py-2 bg-primary text-white rounded-lg disabled:opacity-50 whitespace-nowrap">
               {buscando ? "Buscando…" : "Buscar no ML"}
             </button>
           </form>
 
-          {/* Botões externos — aparecem assim que o termo é digitado */}
+          {mlConectado === false && (
+            <p className="text-sm text-yellow-600 mb-4">
+              Autorize o Mercado Livre acima para ativar a busca.
+            </p>
+          )}
+
           {busca.trim() && (
             <div className="flex flex-wrap gap-2 mb-6">
               <span className="text-xs text-theme-muted self-center">Buscar também em:</span>
               {EXTERNOS.map(({ label, href, cor }) => (
-                <a
-                  key={label}
-                  href={href(busca.trim())}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`text-xs px-3 py-1.5 rounded-full text-white font-medium ${cor}`}
-                >
+                <a key={label} href={href(busca.trim())} target="_blank" rel="noopener noreferrer"
+                  className={`text-xs px-3 py-1.5 rounded-full text-white font-medium ${cor}`}>
                   {label} ↗
                 </a>
               ))}

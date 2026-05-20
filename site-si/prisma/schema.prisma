@@ -429,6 +429,20 @@ model DocumentoFiscal {
 
 // ─── Módulo Afiliado ─────────────────────────────────────────────────────────
 
+model MLIntegration {
+  id           String    @id @default(cuid())
+  provider     String    @default("ml")
+  accessToken  String
+  refreshToken String
+  tokenType    String?
+  scope        String?
+  expiryDate   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([provider])
+}
+
 model ProdutoAfiliado {
   id          String   @id @default(cuid())
   marketplace String   // "ML" | "MAGALU"
