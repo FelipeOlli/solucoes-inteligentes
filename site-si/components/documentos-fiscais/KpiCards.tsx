@@ -22,7 +22,7 @@ function formatBrl(valor: number): string {
 
 export function KpiCards({ total, pendentes, proximoVencimento, totalGasto12m, pagosCount, atrasadosCount, totalPagoMes }: Props) {
   const proxData = proximoVencimento
-    ? new Date(proximoVencimento.vencimento).toLocaleDateString("pt-BR")
+    ? new Date(proximoVencimento.vencimento).toLocaleDateString("pt-BR", { timeZone: "UTC" })
     : "—";
 
   return (

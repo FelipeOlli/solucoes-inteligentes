@@ -301,7 +301,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
               <div>
                 <p className="text-xs text-theme-muted">Vencimento</p>
                 <p className="text-sm font-mono">
-                  {documento.vencimento ? new Date(documento.vencimento).toLocaleDateString("pt-BR") : "—"}
+                  {documento.vencimento ? new Date(documento.vencimento).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "—"}
                 </p>
               </div>
               <div>
@@ -409,7 +409,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
               <p className="text-xs text-theme-muted">Obrigação vinculada</p>
               <p className="text-sm font-medium">{documento.obrigacao.tipo}</p>
               <p className="text-xs text-theme-muted">
-                Vencimento: {new Date(documento.obrigacao.vencimento).toLocaleDateString("pt-BR")} • {documento.obrigacao.status}
+                Vencimento: {new Date(documento.obrigacao.vencimento).toLocaleDateString("pt-BR", { timeZone: "UTC" })} • {documento.obrigacao.status}
               </p>
               {documento.obrigacao.valorTotal && (
                 <p className="text-sm font-mono">{formatBrl(documento.obrigacao.valorTotal)}</p>
@@ -443,7 +443,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
                 <div>
                   <p className="text-xs text-theme-muted">Data pagamento</p>
                   <p className="text-sm font-mono">
-                    {documento.dataPagamento ? new Date(documento.dataPagamento).toLocaleDateString("pt-BR") : "—"}
+                    {documento.dataPagamento ? new Date(documento.dataPagamento).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "—"}
                   </p>
                 </div>
                 <div>

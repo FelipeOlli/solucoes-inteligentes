@@ -99,7 +99,7 @@ function formatCompetencia(data: string | null): string {
 
 function formatData(data: string | null): string {
   if (!data) return "—";
-  return new Date(data).toLocaleDateString("pt-BR");
+  return new Date(data).toLocaleDateString("pt-BR", { timeZone: "UTC" });
 }
 
 function relativeTime(data: string): string {
