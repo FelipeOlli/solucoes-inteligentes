@@ -197,13 +197,22 @@ export default function AfiliadoPage() {
           </form>
 
           {busca.trim() ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {MARKETPLACES.map(({ label, href, cor }) => (
-                <a key={label} href={href(busca.trim())} target="_blank" rel="noopener noreferrer"
-                  className={`flex items-center justify-center gap-1.5 py-4 rounded-xl text-sm font-semibold text-white shadow ${cor}`}>
-                  {label} ↗
-                </a>
-              ))}
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={() => MARKETPLACES.forEach(({ href }) => window.open(href(busca.trim()), "_blank"))}
+                className="w-full py-3 rounded-xl text-sm font-bold bg-primary text-white shadow"
+              >
+                Abrir todos os 4 marketplaces ↗
+              </button>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {MARKETPLACES.map(({ label, href, cor }) => (
+                  <a key={label} href={href(busca.trim())} target="_blank" rel="noopener noreferrer"
+                    className={`flex items-center justify-center py-3 rounded-xl text-sm font-semibold text-white shadow ${cor}`}>
+                    {label} ↗
+                  </a>
+                ))}
+              </div>
             </div>
           ) : (
             <p className="text-theme-muted text-sm">Digite o nome do produto acima para ver os marketplaces.</p>
