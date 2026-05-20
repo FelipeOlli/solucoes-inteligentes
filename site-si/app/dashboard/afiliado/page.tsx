@@ -170,10 +170,14 @@ export default function AfiliadoPage() {
         <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary">Afiliado</h1>
         {/* Status e botão de autorização ML */}
         {mlConectado === false && (
-          <a href="/api/integrations/ml/connect"
+          <button type="button"
+            onClick={async () => {
+              const { data } = await api<{ url: string }>("/integrations/ml/connect", { method: "POST" });
+              if (data?.url) window.location.href = data.url;
+            }}
             className="text-sm px-4 py-2 rounded-lg bg-yellow-400 text-black font-medium">
             Autorizar Mercado Livre
-          </a>
+          </button>
         )}
         {mlConectado === true && (
           <span className="text-xs px-3 py-1.5 rounded-full bg-green-100 text-green-700 border border-green-300">
