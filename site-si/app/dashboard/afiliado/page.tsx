@@ -31,6 +31,7 @@ const EXTERNOS = [
 export default function AfiliadoPage() {
   const searchParams = useSearchParams();
   const [mlConectado, setMlConectado] = useState<boolean | null>(null);
+  const [mlDiag, setMlDiag] = useState<Record<string, unknown> | null>(null);
   const [mlMsg, setMlMsg] = useState("");
 
   const [busca, setBusca] = useState("");
@@ -46,8 +47,9 @@ export default function AfiliadoPage() {
   const [abaAtiva, setAbaAtiva] = useState<"busca" | "favoritos">("busca");
 
   async function checkMLStatus() {
-    const { data } = await api<{ connected: boolean }>("/integrations/ml/status");
-    setMlConectado(data?.connected ?? false);
+    const { data } = await api<Record<string, unknown>>("/integrations/ml/status");
+    setMlConectado((data?.connected as boolean) ?? false);
+    if (data?.connected) setMlDiag(data);
   }
 
   async function loadFavoritos() {
@@ -185,6 +187,12 @@ export default function AfiliadoPage() {
           </span>
         )}
       </div>
+
+      {mlDiag && (
+        <div className="mb-4 p-3 rounded-lg border border-theme bg-theme-card text-xs font-mono text-theme-muted whitespace-pre-wrap">
+          {JSON.stringify(mlDiag, null, 2)}
+        </div>
+      )}
 
       {mlMsg && (
         <div className={`mb-4 p-3 rounded-lg border text-sm ${mlMsg.startsWith("✓") ? "border-green-400 bg-green-50 text-green-700" : "border-red-400 bg-red-50 text-red-700"}`}>
