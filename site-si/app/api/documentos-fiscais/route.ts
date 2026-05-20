@@ -78,6 +78,7 @@ export async function GET(request: NextRequest) {
         comprovanteUrl: true,
         comprovanteNomeArquivo: true,
         comprovanteTamanhoBytes: true,
+        comprovanteValidacaoIA: true,
         empresaFiscal: { select: { id: true, cnpj: true, razaoSocial: true } },
         obrigacao: { select: { id: true, tipo: true, status: true } },
       },

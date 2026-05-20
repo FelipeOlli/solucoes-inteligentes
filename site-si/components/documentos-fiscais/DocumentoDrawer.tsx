@@ -32,6 +32,12 @@ export type DocumentoDetalhe = {
   comprovanteUrl: string | null;
   comprovanteNomeArquivo: string | null;
   comprovanteTamanhoBytes: number | null;
+  comprovanteValidacaoIA: {
+    status: "CONFERE" | "DIVERGENCIA" | "INCONCLUSIVO";
+    itens: { campo: string; esperado: string | null; encontrado: string | null; ok: boolean }[];
+    resumo: string;
+    processadoEm: string;
+  } | null;
 };
 
 const TIPOS: TipoDocumentoFiscal[] = [
@@ -552,6 +558,40 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
                 </button>
               )}
               {erroPgto && !editandoPgto && <p className="text-xs text-red-600 mt-1">{erroPgto}</p>}
+
+              {/* Validação IA */}
+              {documento.comprovanteValidacaoIA && (() => {
+                const v = documento.comprovanteValidacaoIA!;
+                const badgeCls =
+                  v.status === "CONFERE" ? "bg-green-500/10 text-green-600 border-green-500/30" :
+                  v.status === "DIVERGENCIA" ? "bg-red-500/10 text-red-600 border-red-500/30" :
+                  "bg-gray-500/10 text-theme-muted border-theme/50";
+                const badgeLabel =
+                  v.status === "CONFERE" ? "Confere" :
+                  v.status === "DIVERGENCIA" ? "Divergência" : "Inconclusivo";
+                return (
+                  <div className="mt-2 rounded border border-theme/50 bg-theme/30 p-2 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded border ${badgeCls}`}>{badgeLabel}</span>
+                      <span className="text-xs text-theme-muted">Validação IA</span>
+                    </div>
+                    <ul className="space-y-0.5">
+                      {v.itens.map((item, i) => (
+                        <li key={i} className="flex items-start gap-1.5 text-xs">
+                          <span className={item.ok ? "text-green-600" : "text-red-500"}>{item.ok ? "✓" : "✗"}</span>
+                          <span className="text-theme-muted">{item.campo}:</span>
+                          <span className="font-mono">{item.encontrado ?? "—"}</span>
+                          {!item.ok && item.esperado && (
+                            <span className="text-theme-muted">(esperado: {item.esperado})</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                    {v.resumo && <p className="text-xs text-theme-muted italic">{v.resumo}</p>}
+                  </div>
+                );
+              })()}
+
               <input
                 ref={comprovanteInputRef}
                 type="file"

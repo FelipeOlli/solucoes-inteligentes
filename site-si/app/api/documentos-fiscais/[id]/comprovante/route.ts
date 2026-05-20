@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { badRequest, forbidden, jsonResponse, notFound, unauthorized } from "@/lib/api-response";
 import { saveComprovantePagamento, deleteComprovantePagamento } from "@/lib/storage-fiscal";
+import { validarComprovante } from "@/lib/fiscal/validar-comprovante";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -55,6 +56,16 @@ export async function POST(request: NextRequest, { params }: Params) {
       ? "PAGO"
       : doc.statusPagamento;
 
+  let comprovanteValidacaoIA = null;
+  try {
+    comprovanteValidacaoIA = await validarComprovante(buffer, file.type, {
+      tipo: doc.tipoDocumento,
+      valorTotal: doc.valorTotal,
+      vencimento: doc.vencimento,
+      numeroDocumento: doc.numeroDocumento,
+    });
+  } catch { /* não bloqueia o upload */ }
+
   const atualizado = await prisma.documentoFiscal.update({
     where: { id },
     data: {
@@ -63,6 +74,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       comprovanteTamanhoBytes: tamanhoBytes,
       comprovanteHash: hash,
       statusPagamento,
+      comprovanteValidacaoIA: comprovanteValidacaoIA ?? undefined,
     },
   });
 
