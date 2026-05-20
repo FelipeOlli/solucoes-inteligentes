@@ -18,7 +18,11 @@ export async function GET(request: NextRequest) {
     prisma.documentoFiscal.count({ where }),
 
     prisma.documentoFiscal.count({
-      where: { ...where, statusProcessamento: { in: ["PENDENTE", "PROCESSANDO", "MANUAL"] } },
+      where: {
+        ...where,
+        statusPagamento: "PENDENTE",
+        OR: [{ vencimento: null }, { vencimento: { gte: hoje } }],
+      },
     }),
 
     prisma.obrigacaoFiscal.findFirst({
