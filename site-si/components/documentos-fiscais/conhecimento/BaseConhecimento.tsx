@@ -38,7 +38,7 @@ export function BaseConhecimento() {
     carregar(busca, cat);
   };
 
-  function handleSalvo(artigo: Artigo, recemCriado?: boolean) {
+  function handleSalvo(artigo: Artigo) {
     setArtigos((prev) => {
       const idx = prev.findIndex((a) => a.id === artigo.id);
       if (idx >= 0) {
@@ -49,8 +49,7 @@ export function BaseConhecimento() {
       return [artigo, ...prev];
     });
     setSelecionado(artigo);
-    // Após criação, mantém em edição para que o usuário possa adicionar anexos
-    setDrawerMode(recemCriado ? "edit" : "view");
+    setDrawerMode("view");
   }
 
   function handleExcluido(id: string) {

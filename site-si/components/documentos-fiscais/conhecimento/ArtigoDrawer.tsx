@@ -89,13 +89,13 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
     if (mode === "new") {
       const { data, status } = await api<Artigo>("/contabilidade/conhecimento", { method: "POST", body });
       if (status === 201 && data) {
-        // Faz upload dos arquivos pendentes em sequência
         const uploaded: Anexo[] = [];
         for (const file of pendingFiles) {
           const anexo = await uploadFile(data.id, file);
           if (anexo) uploaded.push(anexo);
         }
         onSalvo({ ...data, anexos: uploaded }, true);
+        onClose();
       } else {
         setErro("Erro ao criar artigo.");
       }
@@ -146,8 +146,10 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
   if (!artigo && mode !== "new") return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4">
-      <div className="w-full max-w-2xl bg-theme-bg border border-theme rounded-xl shadow-2xl flex flex-col max-h-[85vh]">
+    <>
+      <div className="fixed inset-0 z-40 bg-black/60" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 pointer-events-none">
+      <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl flex flex-col max-h-[85vh] pointer-events-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-theme shrink-0">
           <h2 className="font-heading font-bold text-lg text-theme-primary truncate">
@@ -360,6 +362,7 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
