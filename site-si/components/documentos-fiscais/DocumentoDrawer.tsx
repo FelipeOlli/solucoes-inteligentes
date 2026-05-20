@@ -81,7 +81,7 @@ const PGTO_LABEL: Record<StatusPagamentoFiscal, string> = {
   PAGO: "Pago",
   ATRASADO: "Atrasado",
   ISENTO: "Isento",
-  NAO_APLICAVEL: "Não Aplicável",
+  NAO_APLICAVEL: "N/A",
 };
 const PGTO_CLASS: Record<StatusPagamentoFiscal, string> = {
   PENDENTE: "text-amber-600",
