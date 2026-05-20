@@ -412,7 +412,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
               {!editandoPgto && (
                 <button
                   type="button"
-                  className="text-xs text-primary hover:opacity-70 transition-opacity"
+                  className="text-xs text-theme-primary hover:opacity-70 transition-opacity"
                   onClick={abrirEdicaoPgto}
                 >
                   Editar
