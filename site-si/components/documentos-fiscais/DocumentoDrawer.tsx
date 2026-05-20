@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import type { ValidacaoComprovante } from "@/lib/fiscal/validar-comprovante";
 import { TipoDocumentoFiscal, StatusProcessamentoFiscal, StatusObrigacaoFiscal, StatusPagamentoFiscal } from "@prisma/client";
 import { api } from "@/lib/api";
 
@@ -121,6 +122,11 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
   const [erroPgto, setErroPgto] = useState("");
   const [enviandoComprovante, setEnviandoComprovante] = useState(false);
   const comprovanteInputRef = useRef<HTMLInputElement>(null);
+  const [validacaoRecente, setValidacaoRecente] = useState<ValidacaoComprovante | null>(null);
+
+  useEffect(() => {
+    setValidacaoRecente(null);
+  }, [documento?.id]);
 
   function abrirEdicao() {
     if (!documento) return;
@@ -230,6 +236,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
 
     setEnviandoComprovante(false);
     if (res.ok && data) {
+      setValidacaoRecente(data.comprovanteValidacaoIA ?? null);
       onAtualizado(data);
     } else {
       setErroPgto(data?.error ?? "Erro ao enviar comprovante.");
@@ -397,7 +404,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
           )}
 
           {/* Erro de processamento */}
-          {documento.erroProcessamento && (
+          {documento.erroProcessamento && documento.statusProcessamento === "ERRO" && (
             <div className="rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-600">
               {documento.erroProcessamento}
             </div>
@@ -560,8 +567,8 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
               {erroPgto && !editandoPgto && <p className="text-xs text-red-600 mt-1">{erroPgto}</p>}
 
               {/* Validação IA */}
-              {documento.comprovanteValidacaoIA && (() => {
-                const v = documento.comprovanteValidacaoIA!;
+              {validacaoRecente && (() => {
+                const v = validacaoRecente;
                 const badgeCls =
                   v.status === "CONFERE" ? "bg-green-500/10 text-green-600 border-green-500/30" :
                   v.status === "DIVERGENCIA" ? "bg-red-500/10 text-red-600 border-red-500/30" :
