@@ -11,19 +11,22 @@ type Props = {
   pendentes: number;
   proximoVencimento: ProximoVencimento;
   totalGasto12m: number;
+  pagosCount: number;
+  atrasadosCount: number;
+  totalPagoMes: number;
 };
 
 function formatBrl(valor: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor);
 }
 
-export function KpiCards({ total, pendentes, proximoVencimento, totalGasto12m }: Props) {
+export function KpiCards({ total, pendentes, proximoVencimento, totalGasto12m, pagosCount, atrasadosCount, totalPagoMes }: Props) {
   const proxData = proximoVencimento
     ? new Date(proximoVencimento.vencimento).toLocaleDateString("pt-BR")
     : "—";
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
       <div className="bg-theme-card border border-theme rounded-lg p-4">
         <p className="text-sm text-theme-muted">Total de documentos</p>
         <p className="text-2xl font-semibold font-mono text-theme-primary">{total}</p>
@@ -48,6 +51,27 @@ export function KpiCards({ total, pendentes, proximoVencimento, totalGasto12m }:
         <p className="text-sm text-theme-muted">Gasto 12 meses</p>
         <p className="text-2xl font-semibold font-mono text-theme-primary">
           {formatBrl(Number(totalGasto12m))}
+        </p>
+      </div>
+
+      <div className="bg-theme-card border border-theme rounded-lg p-4">
+        <p className="text-sm text-theme-muted">Pagos</p>
+        <p className={`text-2xl font-semibold font-mono ${pagosCount > 0 ? "text-green-500" : "text-theme-primary"}`}>
+          {pagosCount}
+        </p>
+      </div>
+
+      <div className="bg-theme-card border border-theme rounded-lg p-4">
+        <p className="text-sm text-theme-muted">Atrasados</p>
+        <p className={`text-2xl font-semibold font-mono ${atrasadosCount > 0 ? "text-red-500" : "text-green-500"}`}>
+          {atrasadosCount}
+        </p>
+      </div>
+
+      <div className="bg-theme-card border border-theme rounded-lg p-4">
+        <p className="text-sm text-theme-muted">Pago no mês</p>
+        <p className="text-2xl font-semibold font-mono text-green-600">
+          {formatBrl(Number(totalPagoMes))}
         </p>
       </div>
     </div>

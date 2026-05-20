@@ -29,6 +29,9 @@ type Kpis = {
   pendentes: number;
   proximoVencimento: { vencimento: string; tipo: string; valorTotal: number | null } | null;
   totalGasto12m: number;
+  pagosCount: number;
+  atrasadosCount: number;
+  totalPagoMes: number;
 };
 
 export default function DocumentosFiscaisPage() {
@@ -185,6 +188,9 @@ export default function DocumentosFiscaisPage() {
               pendentes={kpis.pendentes}
               proximoVencimento={kpis.proximoVencimento}
               totalGasto12m={Number(kpis.totalGasto12m)}
+              pagosCount={kpis.pagosCount}
+              atrasadosCount={kpis.atrasadosCount}
+              totalPagoMes={Number(kpis.totalPagoMes)}
             />
           )}
 

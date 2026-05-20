@@ -59,3 +59,33 @@ export async function deleteDocumentoFiscal(arquivoUrl: string): Promise<void> {
     // arquivo pode já não existir; ignora
   }
 }
+
+export async function saveComprovantePagamento(
+  empresaId: string,
+  documentoId: string,
+  uuid: string,
+  file: File,
+  ext: string
+): Promise<{ url: string; tamanhoBytes: number }> {
+  const dir = path.join(UPLOAD_DIR, empresaId, "comprovantes");
+  await mkdir(dir, { recursive: true });
+
+  const filename = `${documentoId}_${uuid}.${ext}`;
+  const filepath = path.join(dir, filename);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await writeFile(filepath, buffer);
+
+  return {
+    url: `/uploads/documentos-fiscais/${empresaId}/comprovantes/${filename}`,
+    tamanhoBytes: buffer.length,
+  };
+}
+
+export async function deleteComprovantePagamento(arquivoUrl: string): Promise<void> {
+  try {
+    const filepath = path.join(process.cwd(), "public", arquivoUrl);
+    await unlink(filepath);
+  } catch {
+    // ignora se já não existir
+  }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { TipoDocumentoFiscal, StatusProcessamentoFiscal } from "@prisma/client";
+import { TipoDocumentoFiscal, StatusProcessamentoFiscal, StatusPagamentoFiscal } from "@prisma/client";
 
 export type DocumentoRow = {
   id: string;
@@ -14,6 +14,12 @@ export type DocumentoRow = {
   valorTotal: string | null;
   numeroDocumento: string | null;
   createdAt: string;
+  statusPagamento: StatusPagamentoFiscal;
+  dataPagamento: string | null;
+  valorPago: string | null;
+  comprovanteUrl: string | null;
+  comprovanteNomeArquivo: string | null;
+  comprovanteTamanhoBytes: number | null;
   empresaFiscal: { cnpj: string; razaoSocial: string };
 };
 
@@ -54,6 +60,26 @@ const STATUS_COLOR: Record<StatusProcessamentoFiscal, string> = {
   ERRO: "text-red-500",
   MANUAL: "text-theme-muted",
 };
+
+const PGTO_LABEL: Record<StatusPagamentoFiscal, string> = {
+  PENDENTE: "Pendente",
+  PAGO: "Pago",
+  ATRASADO: "Atrasado",
+  ISENTO: "Isento",
+};
+
+const PGTO_CLASS: Record<StatusPagamentoFiscal, string> = {
+  PENDENTE: "bg-amber-500/10 text-amber-600 border border-amber-500/30",
+  PAGO: "bg-green-500/10 text-green-600 border border-green-500/30",
+  ATRASADO: "bg-red-500/10 text-red-600 border border-red-500/30",
+  ISENTO: "bg-blue-500/10 text-blue-600 border border-blue-500/30",
+};
+
+function statusPagamentoEfetivo(doc: DocumentoRow): StatusPagamentoFiscal {
+  if (doc.statusPagamento !== "PENDENTE") return doc.statusPagamento;
+  if (doc.vencimento && new Date(doc.vencimento) < new Date()) return "ATRASADO";
+  return "PENDENTE";
+}
 
 function formatBrl(valor: string | null): string {
   if (!valor) return "—";
@@ -174,7 +200,8 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
                 <th className="px-4 py-3 font-medium font-mono">Nº Documento</th>
                 <th className="px-4 py-3 font-medium">Vencimento</th>
                 <th className="px-4 py-3 font-medium font-mono">Valor</th>
-                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Status proc.</th>
+                <th className="px-4 py-3 font-medium">Pagamento</th>
                 <th className="px-4 py-3 font-medium">Upload</th>
                 <th className="px-4 py-3 font-medium">Ações</th>
               </tr>
@@ -199,6 +226,20 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
                   <td className="px-4 py-3 font-mono">{formatBrl(doc.valorTotal)}</td>
                   <td className={`px-4 py-3 text-xs font-medium ${STATUS_COLOR[doc.statusProcessamento]}`}>
                     {STATUS_LABEL[doc.statusProcessamento]}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${PGTO_CLASS[statusPagamentoEfetivo(doc)]}`}>
+                        {PGTO_LABEL[statusPagamentoEfetivo(doc)]}
+                      </span>
+                      {doc.comprovanteUrl && (
+                        <span title="Comprovante anexado" className="text-green-500">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                          </svg>
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-xs text-theme-muted">{relativeTime(doc.createdAt)}</td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>

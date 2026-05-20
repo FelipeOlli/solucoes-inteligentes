@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
-import { TipoDocumentoFiscal } from "@prisma/client";
+import { TipoDocumentoFiscal, StatusPagamentoFiscal } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { badRequest, forbidden, jsonResponse, notFound, unauthorized } from "@/lib/api-response";
-import { deleteDocumentoFiscal } from "@/lib/storage-fiscal";
+import { deleteDocumentoFiscal, deleteComprovantePagamento } from "@/lib/storage-fiscal";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -63,6 +63,29 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if (body.statusProcessamento === "MANUAL") {
     data.statusProcessamento = "MANUAL";
   }
+  if (body.statusPagamento != null) {
+    if (!Object.values(StatusPagamentoFiscal).includes(body.statusPagamento))
+      return badRequest("statusPagamento inválido.");
+    data.statusPagamento = body.statusPagamento;
+  }
+  if ("dataPagamento" in body) {
+    if (body.dataPagamento === null) {
+      data.dataPagamento = null;
+    } else {
+      const d = new Date(body.dataPagamento);
+      if (isNaN(d.getTime())) return badRequest("dataPagamento inválida.");
+      data.dataPagamento = d;
+    }
+  }
+  if ("valorPago" in body) {
+    if (body.valorPago === null) {
+      data.valorPago = null;
+    } else {
+      const v = parseFloat(String(body.valorPago));
+      if (isNaN(v)) return badRequest("valorPago inválido.");
+      data.valorPago = v;
+    }
+  }
 
   const atualizado = await prisma.documentoFiscal.update({ where: { id }, data });
   return jsonResponse(atualizado);
@@ -78,6 +101,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
 
   await prisma.documentoFiscal.update({ where: { id }, data: { ativo: false } });
   await deleteDocumentoFiscal(doc.arquivoUrl);
+  if (doc.comprovanteUrl) await deleteComprovantePagamento(doc.comprovanteUrl);
 
   return jsonResponse({ ok: true });
 }

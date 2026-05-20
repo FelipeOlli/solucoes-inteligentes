@@ -349,6 +349,13 @@ enum CategoriaDocumentoEmpresa {
   CERTIFICADO_DIGITAL
 }
 
+enum StatusPagamentoFiscal {
+  PENDENTE
+  PAGO
+  ATRASADO
+  ISENTO
+}
+
 model EmpresaFiscal {
   id                  String           @id @default(cuid())
   cnpj                String           @unique
@@ -416,15 +423,24 @@ model DocumentoFiscal {
   vencimento          DateTime?
   valorTotal          Decimal?                  @db.Decimal(12, 2)
   numeroDocumento     String?
-  obrigacaoId         String?                   @unique
-  obrigacao           ObrigacaoFiscal?          @relation(fields: [obrigacaoId], references: [id])
-  ativo               Boolean                   @default(true)
-  createdAt           DateTime                  @default(now())
-  updatedAt           DateTime                  @updatedAt
+  obrigacaoId              String?                    @unique
+  obrigacao                ObrigacaoFiscal?           @relation(fields: [obrigacaoId], references: [id])
+  // Pagamento
+  statusPagamento          StatusPagamentoFiscal      @default(PENDENTE)
+  dataPagamento            DateTime?
+  valorPago                Decimal?                   @db.Decimal(12, 2)
+  comprovanteUrl           String?
+  comprovanteNomeArquivo   String?
+  comprovanteTamanhoBytes  Int?
+  comprovanteHash          String?
+  ativo                    Boolean                    @default(true)
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
 
   @@index([empresaFiscalId, tipoDocumento])
   @@index([competencia])
   @@index([hashArquivo])
+  @@index([statusPagamento])
 }
 
 model ObrigacaoFiscal {

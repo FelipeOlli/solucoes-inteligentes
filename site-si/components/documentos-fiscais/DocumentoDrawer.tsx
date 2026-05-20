@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { TipoDocumentoFiscal, StatusProcessamentoFiscal, StatusObrigacaoFiscal } from "@prisma/client";
+import { useState, useRef } from "react";
+import { TipoDocumentoFiscal, StatusProcessamentoFiscal, StatusObrigacaoFiscal, StatusPagamentoFiscal } from "@prisma/client";
 import { api } from "@/lib/api";
 
 export type DocumentoDetalhe = {
@@ -26,6 +26,12 @@ export type DocumentoDetalhe = {
     vencimento: string;
     valorTotal: string | null;
   } | null;
+  statusPagamento: StatusPagamentoFiscal;
+  dataPagamento: string | null;
+  valorPago: string | null;
+  comprovanteUrl: string | null;
+  comprovanteNomeArquivo: string | null;
+  comprovanteTamanhoBytes: number | null;
 };
 
 const TIPOS: TipoDocumentoFiscal[] = [
@@ -69,6 +75,20 @@ type Props = {
   onAtualizado: (doc: DocumentoDetalhe) => void;
 };
 
+const PGTO_STATUS: StatusPagamentoFiscal[] = ["PENDENTE", "PAGO", "ATRASADO", "ISENTO"];
+const PGTO_LABEL: Record<StatusPagamentoFiscal, string> = {
+  PENDENTE: "Pendente",
+  PAGO: "Pago",
+  ATRASADO: "Atrasado",
+  ISENTO: "Isento",
+};
+const PGTO_CLASS: Record<StatusPagamentoFiscal, string> = {
+  PENDENTE: "text-amber-600",
+  PAGO: "text-green-600",
+  ATRASADO: "text-red-600",
+  ISENTO: "text-blue-600",
+};
+
 export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, onAtualizado }: Props) {
   const [editando, setEditando] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -81,6 +101,18 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
     valorTotal: string;
     numeroDocumento: string;
   } | null>(null);
+
+  // Pagamento
+  const [pgtoForm, setPgtoForm] = useState<{
+    statusPagamento: StatusPagamentoFiscal;
+    dataPagamento: string;
+    valorPago: string;
+  } | null>(null);
+  const [editandoPgto, setEditandoPgto] = useState(false);
+  const [salvandoPgto, setSalvandoPgto] = useState(false);
+  const [erroPgto, setErroPgto] = useState("");
+  const [enviandoComprovante, setEnviandoComprovante] = useState(false);
+  const comprovanteInputRef = useRef<HTMLInputElement>(null);
 
   function abrirEdicao() {
     if (!documento) return;
@@ -128,6 +160,85 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
       setForm(null);
     } else {
       setErro("Não foi possível salvar as alterações.");
+    }
+  }
+
+  function abrirEdicaoPgto() {
+    if (!documento) return;
+    setPgtoForm({
+      statusPagamento: documento.statusPagamento,
+      dataPagamento: toInputDate(documento.dataPagamento),
+      valorPago: documento.valorPago ? parseFloat(documento.valorPago).toFixed(2) : "",
+    });
+    setErroPgto("");
+    setEditandoPgto(true);
+  }
+
+  function cancelarEdicaoPgto() {
+    setEditandoPgto(false);
+    setPgtoForm(null);
+    setErroPgto("");
+  }
+
+  async function salvarPgto() {
+    if (!documento || !pgtoForm) return;
+    setSalvandoPgto(true);
+    setErroPgto("");
+
+    const body: Record<string, unknown> = { statusPagamento: pgtoForm.statusPagamento };
+    body.dataPagamento = pgtoForm.dataPagamento || null;
+    body.valorPago = pgtoForm.valorPago ? parseFloat(pgtoForm.valorPago.replace(",", ".")) : null;
+
+    const { data, status } = await api<DocumentoDetalhe>(`/documentos-fiscais/${documento.id}`, {
+      method: "PATCH",
+      body,
+    });
+
+    setSalvandoPgto(false);
+    if (status === 200 && data) {
+      onAtualizado(data);
+      setEditandoPgto(false);
+      setPgtoForm(null);
+    } else {
+      setErroPgto("Não foi possível salvar.");
+    }
+  }
+
+  async function anexarComprovante(file: File) {
+    if (!documento) return;
+    setEnviandoComprovante(true);
+    setErroPgto("");
+
+    const form = new FormData();
+    form.append("file", file);
+
+    const res = await fetch(`/api/documentos-fiscais/${documento.id}/comprovante`, {
+      method: "POST",
+      body: form,
+    });
+    const data = await res.json().catch(() => null);
+
+    setEnviandoComprovante(false);
+    if (res.ok && data) {
+      onAtualizado(data);
+    } else {
+      setErroPgto(data?.error ?? "Erro ao enviar comprovante.");
+    }
+  }
+
+  async function removerComprovante() {
+    if (!documento) return;
+    setEnviandoComprovante(true);
+    setErroPgto("");
+
+    const res = await fetch(`/api/documentos-fiscais/${documento.id}/comprovante`, { method: "DELETE" });
+    const data = await res.json().catch(() => null);
+
+    setEnviandoComprovante(false);
+    if (res.ok && data) {
+      onAtualizado(data);
+    } else {
+      setErroPgto("Erro ao remover comprovante.");
     }
   }
 
@@ -291,6 +402,160 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
               )}
             </div>
           )}
+
+          {/* Pagamento */}
+          <div className="rounded border border-theme p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-theme-muted font-medium">Pagamento</p>
+              {!editandoPgto && (
+                <button
+                  type="button"
+                  className="text-xs text-primary hover:opacity-70 transition-opacity"
+                  onClick={abrirEdicaoPgto}
+                >
+                  Editar
+                </button>
+              )}
+            </div>
+
+            {!editandoPgto && (
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-xs text-theme-muted">Status</p>
+                  <p className={`text-sm font-medium ${PGTO_CLASS[documento.statusPagamento]}`}>
+                    {PGTO_LABEL[documento.statusPagamento]}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-theme-muted">Data pagamento</p>
+                  <p className="text-sm font-mono">
+                    {documento.dataPagamento ? new Date(documento.dataPagamento).toLocaleDateString("pt-BR") : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-theme-muted">Valor pago</p>
+                  <p className="text-sm font-mono">{formatBrl(documento.valorPago)}</p>
+                </div>
+              </div>
+            )}
+
+            {editandoPgto && pgtoForm && (
+              <div className="space-y-2">
+                <label className="block text-sm space-y-1">
+                  <span className="text-theme-muted text-xs">Status</span>
+                  <select
+                    value={pgtoForm.statusPagamento}
+                    onChange={(e) => setPgtoForm((f) => f && ({ ...f, statusPagamento: e.target.value as StatusPagamentoFiscal }))}
+                    className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm"
+                  >
+                    {PGTO_STATUS.map((s) => (
+                      <option key={s} value={s}>{PGTO_LABEL[s]}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm space-y-1">
+                  <span className="text-theme-muted text-xs">Data de pagamento</span>
+                  <input
+                    type="date"
+                    value={pgtoForm.dataPagamento}
+                    onChange={(e) => setPgtoForm((f) => f && ({ ...f, dataPagamento: e.target.value }))}
+                    className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm"
+                  />
+                </label>
+                <label className="block text-sm space-y-1">
+                  <span className="text-theme-muted text-xs">Valor pago (R$)</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={pgtoForm.valorPago}
+                    onChange={(e) => setPgtoForm((f) => f && ({ ...f, valorPago: e.target.value }))}
+                    className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm font-mono"
+                    placeholder="0,00"
+                  />
+                </label>
+                {erroPgto && <p className="text-sm text-red-600">{erroPgto}</p>}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={salvarPgto}
+                    disabled={salvandoPgto}
+                    className="px-4 py-2 rounded bg-primary text-white text-sm disabled:opacity-60"
+                  >
+                    {salvandoPgto ? "Salvando..." : "Salvar"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelarEdicaoPgto}
+                    className="px-4 py-2 rounded border border-theme text-sm"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Comprovante */}
+            <div className="pt-1 border-t border-theme/50">
+              <p className="text-xs text-theme-muted mb-2">Comprovante</p>
+              {documento.comprovanteUrl ? (
+                <div className="flex items-center gap-2">
+                  <a
+                    href={documento.comprovanteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 text-xs text-primary truncate hover:opacity-70 transition-opacity"
+                    title={documento.comprovanteNomeArquivo ?? undefined}
+                  >
+                    {documento.comprovanteNomeArquivo ?? "comprovante"}
+                    {documento.comprovanteTamanhoBytes && (
+                      <span className="text-theme-muted ml-1">
+                        ({(documento.comprovanteTamanhoBytes / 1024).toFixed(0)} KB)
+                      </span>
+                    )}
+                  </a>
+                  <button
+                    type="button"
+                    className="text-xs text-theme-muted hover:text-theme transition-colors shrink-0"
+                    onClick={() => comprovanteInputRef.current?.click()}
+                    disabled={enviandoComprovante}
+                    title="Substituir"
+                  >
+                    Trocar
+                  </button>
+                  <button
+                    type="button"
+                    className="text-xs text-red-500 hover:text-red-700 transition-colors shrink-0"
+                    onClick={removerComprovante}
+                    disabled={enviandoComprovante}
+                    title="Remover"
+                  >
+                    Remover
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 text-xs text-primary hover:opacity-70 transition-opacity disabled:opacity-50"
+                  onClick={() => comprovanteInputRef.current?.click()}
+                  disabled={enviandoComprovante}
+                >
+                  {enviandoComprovante ? "Enviando..." : "+ Anexar comprovante"}
+                </button>
+              )}
+              {erroPgto && !editandoPgto && <p className="text-xs text-red-600 mt-1">{erroPgto}</p>}
+              <input
+                ref={comprovanteInputRef}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) { e.target.value = ""; anexarComprovante(file); }
+                }}
+              />
+            </div>
+          </div>
 
           <p className="text-xs text-theme-muted">
             {(documento.tamanhoBytes / 1024).toFixed(1)} KB • {new Date(documento.createdAt).toLocaleDateString("pt-BR")}

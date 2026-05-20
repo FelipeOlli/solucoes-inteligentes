@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
   const empresaId = searchParams.get("empresaId") || undefined;
   const where = { ativo: true, ...(empresaId ? { empresaFiscalId: empresaId } : {}) };
 
-  const [total, pendentes, proximoVencimento, gasto12m] = await Promise.all([
+  const hoje = new Date();
+  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+
+  const [total, pendentes, proximoVencimento, gasto12m, pagosCount, atrasadosCount, totalPagoMes] = await Promise.all([
     prisma.documentoFiscal.count({ where }),
 
     prisma.documentoFiscal.count({
@@ -23,7 +26,7 @@ export async function GET(request: NextRequest) {
         ativo: true,
         status: { in: ["PENDENTE", "ATRASADA"] },
         ...(empresaId ? { empresaFiscalId: empresaId } : {}),
-        vencimento: { gte: new Date() },
+        vencimento: { gte: hoje },
       },
       orderBy: { vencimento: "asc" },
       select: { vencimento: true, tipo: true, valorTotal: true },
@@ -38,6 +41,18 @@ export async function GET(request: NextRequest) {
       },
       _sum: { valorTotal: true },
     }),
+
+    prisma.documentoFiscal.count({ where: { ...where, statusPagamento: "PAGO" } }),
+
+    // Documentos vencidos sem pagamento (derivado, sem persistir)
+    prisma.documentoFiscal.count({
+      where: { ...where, statusPagamento: "PENDENTE", vencimento: { lt: hoje, not: null } },
+    }),
+
+    prisma.documentoFiscal.aggregate({
+      where: { ...where, statusPagamento: "PAGO", dataPagamento: { gte: inicioMes } },
+      _sum: { valorPago: true },
+    }),
   ]);
 
   return jsonResponse({
@@ -45,5 +60,8 @@ export async function GET(request: NextRequest) {
     pendentes,
     proximoVencimento,
     totalGasto12m: gasto12m._sum.valorTotal ?? 0,
+    pagosCount,
+    atrasadosCount,
+    totalPagoMes: totalPagoMes._sum.valorPago ?? 0,
   });
 }

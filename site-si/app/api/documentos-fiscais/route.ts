@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { TipoDocumentoFiscal } from "@prisma/client";
+import { TipoDocumentoFiscal, StatusPagamentoFiscal } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { badRequest, forbidden, jsonResponse, unauthorized } from "@/lib/api-response";
@@ -14,16 +14,21 @@ export async function GET(request: NextRequest) {
   const empresaId = searchParams.get("empresaId") || undefined;
   const tipo = searchParams.get("tipo") || undefined;
   const busca = searchParams.get("busca") || undefined;
+  const statusPagamento = searchParams.get("statusPagamento") || undefined;
   const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
 
   if (tipo && !Object.values(TipoDocumentoFiscal).includes(tipo as TipoDocumentoFiscal)) {
     return badRequest("tipo inválido.");
+  }
+  if (statusPagamento && !Object.values(StatusPagamentoFiscal).includes(statusPagamento as StatusPagamentoFiscal)) {
+    return badRequest("statusPagamento inválido.");
   }
 
   const where = {
     ativo: true,
     ...(empresaId ? { empresaFiscalId: empresaId } : {}),
     ...(tipo ? { tipoDocumento: tipo as TipoDocumentoFiscal } : {}),
+    ...(statusPagamento ? { statusPagamento: statusPagamento as StatusPagamentoFiscal } : {}),
     ...(busca
       ? {
           OR: [
@@ -54,6 +59,12 @@ export async function GET(request: NextRequest) {
         valorTotal: true,
         numeroDocumento: true,
         createdAt: true,
+        statusPagamento: true,
+        dataPagamento: true,
+        valorPago: true,
+        comprovanteUrl: true,
+        comprovanteNomeArquivo: true,
+        comprovanteTamanhoBytes: true,
         empresaFiscal: { select: { id: true, cnpj: true, razaoSocial: true } },
         obrigacao: { select: { id: true, tipo: true, status: true } },
       },
