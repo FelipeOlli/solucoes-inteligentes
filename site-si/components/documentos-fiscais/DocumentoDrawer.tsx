@@ -214,8 +214,10 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
     const form = new FormData();
     form.append("file", file);
 
+    const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
     const res = await fetch(`/api/documentos-fiscais/${documento.id}/comprovante`, {
       method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: form,
     });
     const data = await res.json().catch(() => null);
@@ -233,7 +235,11 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
     setEnviandoComprovante(true);
     setErroPgto("");
 
-    const res = await fetch(`/api/documentos-fiscais/${documento.id}/comprovante`, { method: "DELETE" });
+    const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
+    const res = await fetch(`/api/documentos-fiscais/${documento.id}/comprovante`, {
+      method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     const data = await res.json().catch(() => null);
 
     setEnviandoComprovante(false);
