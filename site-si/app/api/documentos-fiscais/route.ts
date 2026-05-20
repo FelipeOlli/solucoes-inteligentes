@@ -20,15 +20,28 @@ export async function GET(request: NextRequest) {
   if (tipo && !Object.values(TipoDocumentoFiscal).includes(tipo as TipoDocumentoFiscal)) {
     return badRequest("tipo inválido.");
   }
-  if (statusPagamento && !Object.values(StatusPagamentoFiscal).includes(statusPagamento as StatusPagamentoFiscal)) {
+  const FILTROS_VALIDOS = [...Object.values(StatusPagamentoFiscal), "ATRASADO"];
+  if (statusPagamento && !FILTROS_VALIDOS.includes(statusPagamento)) {
     return badRequest("statusPagamento inválido.");
   }
+
+  const hoje = new Date();
+
+  // ATRASADO é derivado: PENDENTE com vencimento no passado
+  // PENDENTE real: PENDENTE sem vencimento ou com vencimento futuro
+  const filtroPagamento = statusPagamento === "ATRASADO"
+    ? { statusPagamento: "PENDENTE" as StatusPagamentoFiscal, vencimento: { lt: hoje } }
+    : statusPagamento === "PENDENTE"
+    ? { statusPagamento: "PENDENTE" as StatusPagamentoFiscal, OR: [{ vencimento: null }, { vencimento: { gte: hoje } }] }
+    : statusPagamento
+    ? { statusPagamento: statusPagamento as StatusPagamentoFiscal }
+    : {};
 
   const where = {
     ativo: true,
     ...(empresaId ? { empresaFiscalId: empresaId } : {}),
     ...(tipo ? { tipoDocumento: tipo as TipoDocumentoFiscal } : {}),
-    ...(statusPagamento ? { statusPagamento: statusPagamento as StatusPagamentoFiscal } : {}),
+    ...filtroPagamento,
     ...(busca
       ? {
           OR: [
