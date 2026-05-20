@@ -10,7 +10,7 @@ type Props = {
   artigo: Artigo | null;
   mode: Mode;
   onClose: () => void;
-  onSalvo: (artigo: Artigo) => void;
+  onSalvo: (artigo: Artigo, recemCriado?: boolean) => void;
   onExcluido: (id: string) => void;
 };
 
@@ -61,7 +61,7 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
 
     if (mode === "new") {
       const { data, status } = await api<Artigo>("/contabilidade/conhecimento", { method: "POST", body });
-      if (status === 201 && data) { onSalvo({ ...data, anexos }); }
+      if (status === 201 && data) { onSalvo({ ...data, anexos }, true); }
       else setErro("Erro ao criar artigo.");
     } else if (artigo) {
       const { data, status } = await api<Artigo>(`/contabilidade/conhecimento/${artigo.id}`, { method: "PATCH", body });
@@ -234,7 +234,7 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
               <input
                 ref={fileRef}
                 type="file"
-                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                accept=".pdf,.html,.htm,.jpg,.jpeg,.png,.webp"
                 className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAnexo(f); e.target.value = ""; }}
               />

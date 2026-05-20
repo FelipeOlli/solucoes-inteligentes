@@ -6,12 +6,13 @@ import { saveAnexoConhecimento } from "@/lib/storage-conhecimento";
 
 type Params = { params: Promise<{ id: string }> };
 
-const ALLOWED_MIME = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+const ALLOWED_MIME = ["application/pdf", "image/jpeg", "image/png", "image/webp", "text/html"];
 const ALLOWED_EXT: Record<string, string> = {
   "application/pdf": "pdf",
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
+  "text/html": "html",
 };
 
 export async function POST(request: NextRequest, { params }: Params) {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   const file = form.get("file");
   if (!(file instanceof File)) return badRequest("Campo 'file' obrigatório.");
-  if (!ALLOWED_MIME.includes(file.type)) return badRequest("Formato inválido. Use PDF, JPG ou PNG.");
+  if (!ALLOWED_MIME.includes(file.type)) return badRequest("Formato inválido. Use PDF, HTML, JPG ou PNG.");
   if (file.size > 20 * 1024 * 1024) return badRequest("Arquivo maior que 20 MB.");
 
   const ext = ALLOWED_EXT[file.type];
