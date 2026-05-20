@@ -6,13 +6,18 @@ import { saveAnexoConhecimento } from "@/lib/storage-conhecimento";
 
 type Params = { params: Promise<{ id: string }> };
 
-const ALLOWED_MIME = ["application/pdf", "image/jpeg", "image/png", "image/webp", "text/html"];
-const ALLOWED_EXT: Record<string, string> = {
+const ALLOWED_MIME: Record<string, string> = {
   "application/pdf": "pdf",
+  "text/html": "html",
+  "text/plain": "txt",
+  "text/csv": "csv",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+  "application/vnd.ms-excel": "xls",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+  "application/msword": "doc",
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
-  "text/html": "html",
 };
 
 export async function POST(request: NextRequest, { params }: Params) {
@@ -28,10 +33,11 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   const file = form.get("file");
   if (!(file instanceof File)) return badRequest("Campo 'file' obrigatório.");
-  if (!ALLOWED_MIME.includes(file.type)) return badRequest("Formato inválido. Use PDF, HTML, JPG ou PNG.");
+
+  const ext = ALLOWED_MIME[file.type];
+  if (!ext) return badRequest("Formato não suportado. Use PDF, HTML, TXT, CSV, XLSX, DOCX, JPG ou PNG.");
   if (file.size > 20 * 1024 * 1024) return badRequest("Arquivo maior que 20 MB.");
 
-  const ext = ALLOWED_EXT[file.type];
   const { url, tamanhoBytes } = await saveAnexoConhecimento(id, file, ext);
 
   const anexo = await prisma.anexoConhecimento.create({

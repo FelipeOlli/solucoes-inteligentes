@@ -20,7 +20,18 @@ function formatBytes(b: number): string {
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function fileIcon(mime: string): string {
+  if (mime.includes("pdf")) return "📄";
+  if (mime.includes("html")) return "🌐";
+  if (mime.includes("word") || mime.includes("msword")) return "📝";
+  if (mime.includes("sheet") || mime.includes("excel")) return "📊";
+  if (mime.includes("csv") || mime.includes("plain")) return "📃";
+  if (mime.startsWith("image/")) return "🖼";
+  return "📎";
+}
+
 const CATEGORIAS = ["DAS", "PGDAS-D", "DARF", "IRPF", "Certificado Digital", "Contrato", "Geral", "Outro"];
+const ACCEPT = ".pdf,.html,.htm,.txt,.csv,.xlsx,.xls,.docx,.doc,.jpg,.jpeg,.png,.webp";
 
 export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onExcluido }: Props) {
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -29,9 +40,10 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
   const [descricao, setDescricao] = useState("");
   const [conteudo, setConteudo] = useState("");
   const [anexos, setAnexos] = useState<Anexo[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [salvando, setSalvando] = useState(false);
-  const [erro, setErro] = useState("");
   const [uploadAndo, setUploadAndo] = useState(false);
+  const [erro, setErro] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -48,9 +60,24 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
       setConteudo("");
       setAnexos([]);
     }
+    setPendingFiles([]);
     setMode(initialMode);
     setErro("");
   }, [artigo?.id, initialMode]);
+
+  async function uploadFile(artigoId: string, file: File): Promise<Anexo | null> {
+    const form = new FormData();
+    form.append("file", file);
+    const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
+    const url = withBasePath(`/api/contabilidade/conhecimento/${artigoId}/anexos`);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    });
+    if (res.status === 201) return res.json();
+    return null;
+  }
 
   async function salvar() {
     if (!titulo.trim()) { setErro("Título obrigatório."); return; }
@@ -61,8 +88,17 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
 
     if (mode === "new") {
       const { data, status } = await api<Artigo>("/contabilidade/conhecimento", { method: "POST", body });
-      if (status === 201 && data) { onSalvo({ ...data, anexos }, true); }
-      else setErro("Erro ao criar artigo.");
+      if (status === 201 && data) {
+        // Faz upload dos arquivos pendentes em sequência
+        const uploaded: Anexo[] = [];
+        for (const file of pendingFiles) {
+          const anexo = await uploadFile(data.id, file);
+          if (anexo) uploaded.push(anexo);
+        }
+        onSalvo({ ...data, anexos: uploaded }, true);
+      } else {
+        setErro("Erro ao criar artigo.");
+      }
     } else if (artigo) {
       const { data, status } = await api<Artigo>(`/contabilidade/conhecimento/${artigo.id}`, { method: "PATCH", body });
       if (status === 200 && data) { onSalvo(data); setMode("view"); }
@@ -78,24 +114,12 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
     else setErro("Erro ao excluir.");
   }
 
-  async function uploadAnexo(file: File) {
+  async function uploadAnexoExistente(file: File) {
     if (!artigo) return;
     setUploadAndo(true);
-    const form = new FormData();
-    form.append("file", file);
-    const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
-    const url = withBasePath(`/api/contabilidade/conhecimento/${artigo.id}/anexos`);
-    const res = await fetch(url, {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: form,
-    });
-    if (res.status === 201) {
-      const data: Anexo = await res.json();
-      setAnexos((prev) => [...prev, data]);
-    } else {
-      setErro("Erro ao enviar anexo.");
-    }
+    const anexo = await uploadFile(artigo.id, file);
+    if (anexo) setAnexos((prev) => [...prev, anexo]);
+    else setErro("Erro ao enviar anexo.");
     setUploadAndo(false);
   }
 
@@ -106,14 +130,24 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
     else setErro("Erro ao remover anexo.");
   }
 
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    if (mode === "new") {
+      setPendingFiles((prev) => [...prev, file]);
+    } else {
+      uploadAnexoExistente(file);
+    }
+  }
+
   const isEditing = mode === "edit" || mode === "new";
 
   if (!artigo && mode !== "new") return null;
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
-      <aside className="fixed right-0 top-0 h-full w-full max-w-2xl bg-theme-bg border-l border-theme z-50 flex flex-col shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4">
+      <div className="w-full max-w-2xl bg-theme-bg border border-theme rounded-xl shadow-2xl flex flex-col max-h-[85vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-theme shrink-0">
           <h2 className="font-heading font-bold text-lg text-theme-primary truncate">
@@ -143,7 +177,7 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           {erro && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{erro}</p>}
 
           {isEditing ? (
@@ -151,6 +185,7 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
               <div className="space-y-1">
                 <label className="text-xs text-theme-muted font-medium">Título *</label>
                 <input
+                  autoFocus
                   className="w-full rounded border border-theme bg-theme-card px-3 py-2 text-sm text-theme focus:outline-none focus:border-primary"
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
@@ -185,11 +220,82 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
                 <label className="text-xs text-theme-muted font-medium">Conteúdo / Passo-a-passo</label>
                 <textarea
                   className="w-full rounded border border-theme bg-theme-card px-3 py-2 text-sm text-theme focus:outline-none focus:border-primary font-mono resize-none"
-                  rows={16}
+                  rows={10}
                   value={conteudo}
                   onChange={(e) => setConteudo(e.target.value)}
                   placeholder={"1. Acesse o PGDAS-D\n2. Selecione a competência\n3. ..."}
                 />
+              </div>
+
+              {/* Anexos */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-theme-muted font-medium uppercase tracking-wide">Anexos</label>
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploadAndo}
+                    className="text-xs px-2 py-1 rounded border border-theme hover:border-primary transition-colors disabled:opacity-50"
+                  >
+                    {uploadAndo ? "Enviando..." : "+ Adicionar arquivo"}
+                  </button>
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept={ACCEPT}
+                  className="hidden"
+                  onChange={onFileChange}
+                />
+                <p className="text-xs text-theme-muted">
+                  PDF, HTML, TXT, CSV, XLSX, XLS, DOCX, DOC, JPG, PNG — até 20 MB
+                </p>
+
+                {/* Arquivos já salvos (no edit) */}
+                {anexos.length > 0 && (
+                  <ul className="space-y-1">
+                    {anexos.map((a) => (
+                      <li key={a.id} className="flex items-center justify-between gap-2 bg-theme-card border border-theme rounded px-3 py-2">
+                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate flex-1">
+                          {fileIcon(a.mimeType)} {a.nomeArquivo}
+                        </a>
+                        <span className="text-xs text-theme-muted shrink-0">{formatBytes(a.tamanhoBytes)}</span>
+                        <button
+                          type="button"
+                          onClick={() => removerAnexo(a)}
+                          className="text-red-400 hover:text-red-600 text-xs shrink-0"
+                        >
+                          ✕
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* Arquivos pendentes (só em new, antes de salvar) */}
+                {pendingFiles.length > 0 && (
+                  <ul className="space-y-1">
+                    {pendingFiles.map((f, i) => (
+                      <li key={i} className="flex items-center justify-between gap-2 bg-theme-card border border-theme rounded px-3 py-2">
+                        <span className="text-sm text-theme truncate flex-1">
+                          {fileIcon(f.type)} {f.name}
+                        </span>
+                        <span className="text-xs text-theme-muted shrink-0">{formatBytes(f.size)}</span>
+                        <button
+                          type="button"
+                          onClick={() => setPendingFiles((prev) => prev.filter((_, j) => j !== i))}
+                          className="text-red-400 hover:text-red-600 text-xs shrink-0"
+                        >
+                          ✕
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {anexos.length === 0 && pendingFiles.length === 0 && (
+                  <p className="text-xs text-theme-muted italic">Nenhum anexo.</p>
+                )}
               </div>
             </>
           ) : (
@@ -212,56 +318,24 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
               ) : (
                 <p className="text-sm text-theme-muted italic">Sem conteúdo.</p>
               )}
-            </>
-          )}
 
-          {/* Anexos — visível no view e edit (não em new antes de salvar) */}
-          {mode !== "new" && artigo && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-theme-muted font-medium uppercase tracking-wide">Anexos</p>
-                {isEditing && (
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    disabled={uploadAndo}
-                    className="text-xs px-2 py-1 rounded border border-theme hover:border-primary transition-colors disabled:opacity-50"
-                  >
-                    {uploadAndo ? "Enviando..." : "+ Adicionar"}
-                  </button>
-                )}
-              </div>
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".pdf,.html,.htm,.jpg,.jpeg,.png,.webp"
-                className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAnexo(f); e.target.value = ""; }}
-              />
-              {anexos.length === 0 ? (
-                <p className="text-xs text-theme-muted italic">Nenhum anexo.</p>
-              ) : (
-                <ul className="space-y-1">
-                  {anexos.map((a) => (
-                    <li key={a.id} className="flex items-center justify-between gap-2 bg-theme-card border border-theme rounded px-3 py-2">
-                      <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate flex-1">
-                        📎 {a.nomeArquivo}
-                      </a>
-                      <span className="text-xs text-theme-muted shrink-0">{formatBytes(a.tamanhoBytes)}</span>
-                      {isEditing && (
-                        <button
-                          type="button"
-                          onClick={() => removerAnexo(a)}
-                          className="text-red-400 hover:text-red-600 text-xs shrink-0"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+              {/* Anexos no modo visualização */}
+              {anexos.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs text-theme-muted font-medium uppercase tracking-wide">Anexos</p>
+                  <ul className="space-y-1">
+                    {anexos.map((a) => (
+                      <li key={a.id} className="flex items-center gap-2 bg-theme-card border border-theme rounded px-3 py-2">
+                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate flex-1">
+                          {fileIcon(a.mimeType)} {a.nomeArquivo}
+                        </a>
+                        <span className="text-xs text-theme-muted shrink-0">{formatBytes(a.tamanhoBytes)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
 
@@ -281,11 +355,11 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
               disabled={salvando}
               className="px-4 py-2 text-sm rounded bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              {salvando ? "Salvando..." : "Salvar"}
+              {salvando ? "Salvando..." : mode === "new" && pendingFiles.length > 0 ? `Salvar + enviar ${pendingFiles.length} arquivo${pendingFiles.length > 1 ? "s" : ""}` : "Salvar"}
             </button>
           </div>
         )}
-      </aside>
-    </>
+      </div>
+    </div>
   );
 }
