@@ -75,18 +75,20 @@ type Props = {
   onAtualizado: (doc: DocumentoDetalhe) => void;
 };
 
-const PGTO_STATUS: StatusPagamentoFiscal[] = ["PENDENTE", "PAGO", "ATRASADO", "ISENTO"];
+const PGTO_STATUS: StatusPagamentoFiscal[] = ["PENDENTE", "PAGO", "ATRASADO", "ISENTO", "NAO_APLICAVEL"];
 const PGTO_LABEL: Record<StatusPagamentoFiscal, string> = {
   PENDENTE: "Pendente",
   PAGO: "Pago",
   ATRASADO: "Atrasado",
   ISENTO: "Isento",
+  NAO_APLICAVEL: "Não Aplicável",
 };
 const PGTO_CLASS: Record<StatusPagamentoFiscal, string> = {
   PENDENTE: "text-amber-600",
   PAGO: "text-green-600",
   ATRASADO: "text-red-600",
   ISENTO: "text-blue-600",
+  NAO_APLICAVEL: "text-theme-muted",
 };
 
 export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, onAtualizado }: Props) {

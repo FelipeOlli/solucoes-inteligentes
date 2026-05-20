@@ -66,6 +66,7 @@ const PGTO_LABEL: Record<StatusPagamentoFiscal, string> = {
   PAGO: "Pago",
   ATRASADO: "Atrasado",
   ISENTO: "Isento",
+  NAO_APLICAVEL: "Não Aplicável",
 };
 
 const PGTO_CLASS: Record<StatusPagamentoFiscal, string> = {
@@ -73,9 +74,11 @@ const PGTO_CLASS: Record<StatusPagamentoFiscal, string> = {
   PAGO: "bg-green-500/10 text-green-600 border border-green-500/30",
   ATRASADO: "bg-red-500/10 text-red-600 border border-red-500/30",
   ISENTO: "bg-blue-500/10 text-blue-600 border border-blue-500/30",
+  NAO_APLICAVEL: "bg-theme-muted/10 text-theme-muted border border-theme",
 };
 
 function statusPagamentoEfetivo(doc: DocumentoRow): StatusPagamentoFiscal {
+  if (doc.statusPagamento === "NAO_APLICAVEL") return "NAO_APLICAVEL";
   if (doc.statusPagamento !== "PENDENTE") return doc.statusPagamento;
   if (doc.vencimento && new Date(doc.vencimento) < new Date()) return "ATRASADO";
   return "PENDENTE";

@@ -354,6 +354,7 @@ enum StatusPagamentoFiscal {
   PAGO
   ATRASADO
   ISENTO
+  NAO_APLICAVEL
 }
 
 model EmpresaFiscal {

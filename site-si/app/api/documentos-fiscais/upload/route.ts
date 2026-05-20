@@ -78,10 +78,20 @@ export async function POST(request: NextRequest) {
     // erro já registrado no banco pelo processarDocumento; continua
   }
 
+  const TIPOS_INFORMATIVOS = ["PGDAS_D_RECIBO", "DEFIS_RECIBO", "RELATORIO_SITUACAO", "NOTIFICACAO_MAED"];
+
   const documentoAtualizado = await prisma.documentoFiscal.findUnique({
     where: { id: documento.id },
     include: { obrigacao: true },
   });
+
+  if (documentoAtualizado && TIPOS_INFORMATIVOS.includes(documentoAtualizado.tipoDocumento)) {
+    await prisma.documentoFiscal.update({
+      where: { id: documento.id },
+      data: { statusPagamento: "NAO_APLICAVEL" },
+    });
+    (documentoAtualizado as typeof documentoAtualizado & { statusPagamento: string }).statusPagamento = "NAO_APLICAVEL";
+  }
 
   return jsonResponse({ documento: documentoAtualizado, resultado }, 201);
 }
