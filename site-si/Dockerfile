@@ -27,4 +27,4 @@ ENV HOSTNAME="0.0.0.0"
 
 # Postgres: aplicar migrações, seed (dono + categorias) e subir (DATABASE_URL no EasyPanel: postgresql://...)
 # Logs de diagnóstico: confirmam se a imagem já está com provider postgresql + migrações presentes
-CMD sh -c "echo '--- prisma/schema.prisma (datasource) ---' && sed -n '1,25p' prisma/schema.prisma && echo '--- migrations ---' && (ls -la prisma/migrations 2>/dev/null || true) && npx prisma migrate deploy && npx tsx prisma/seed.ts && npm start"
+CMD sh -c "echo '--- prisma/schema.prisma (datasource) ---' && sed -n '1,25p' prisma/schema.prisma && echo '--- migrations ---' && (ls -la prisma/migrations 2>/dev/null || true) && sh scripts/fix-migrations.sh && npx prisma migrate deploy && npx tsx prisma/seed.ts && npm start"
