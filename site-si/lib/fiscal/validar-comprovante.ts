@@ -104,7 +104,7 @@ export async function validarComprovante(
 
     const msg = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 1024,
+      max_tokens: 2048,
       system: PROMPT_SISTEMA,
       messages: [
         {
@@ -122,20 +122,39 @@ export async function validarComprovante(
       ],
     });
 
+    if (msg.stop_reason === "max_tokens") {
+      return {
+        status: "INCONCLUSIVO",
+        itens: [],
+        resumo: "Resposta cortada por limite de tokens.",
+        processadoEm: new Date().toISOString(),
+      };
+    }
+
     const texto = msg.content[0].type === "text" ? msg.content[0].text : "";
-    const parsed = JSON.parse(extrairJson(texto)) as ValidacaoComprovante;
-    return {
-      status: parsed.status ?? "INCONCLUSIVO",
-      itens: parsed.itens ?? [],
-      resumo: parsed.resumo ?? "",
-      processadoEm: new Date().toISOString(),
-    };
+    try {
+      const parsed = JSON.parse(extrairJson(texto)) as ValidacaoComprovante;
+      return {
+        status: parsed.status ?? "INCONCLUSIVO",
+        itens: parsed.itens ?? [],
+        resumo: parsed.resumo ?? "",
+        processadoEm: new Date().toISOString(),
+      };
+    } catch {
+      return {
+        status: "INCONCLUSIVO",
+        itens: [],
+        resumo: `Resposta inesperada do modelo: ${texto.slice(0, 200)}`,
+        processadoEm: new Date().toISOString(),
+      };
+    }
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
     console.error("[validarComprovante] erro:", err);
     return {
       status: "INCONCLUSIVO",
       itens: [],
-      resumo: "Não foi possível processar a validação.",
+      resumo: `Erro na validação: ${msg.slice(0, 200)}`,
       processadoEm: new Date().toISOString(),
     };
   }
