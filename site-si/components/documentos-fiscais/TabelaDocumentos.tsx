@@ -203,7 +203,6 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
                 <th className="px-4 py-3 font-medium font-mono">Nº Documento</th>
                 <th className="px-4 py-3 font-medium">Vencimento</th>
                 <th className="px-4 py-3 font-medium font-mono">Valor</th>
-                <th className="px-4 py-3 font-medium">Status proc.</th>
                 <th className="px-4 py-3 font-medium">Pagamento</th>
                 <th className="px-4 py-3 font-medium">Upload</th>
                 <th className="px-4 py-3 font-medium">Ações</th>
@@ -227,9 +226,6 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
                   </td>
                   <td className="px-4 py-3">{formatData(doc.vencimento)}</td>
                   <td className="px-4 py-3 font-mono">{formatBrl(doc.valorTotal)}</td>
-                  <td className={`px-4 py-3 text-xs font-medium ${STATUS_COLOR[doc.statusProcessamento]}`}>
-                    {STATUS_LABEL[doc.statusProcessamento]}
-                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       <span className={`text-xs px-2 py-0.5 rounded font-medium ${PGTO_CLASS[statusPagamentoEfetivo(doc)]}`}>
@@ -247,6 +243,32 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
                   <td className="px-4 py-3 text-xs text-theme-muted">{relativeTime(doc.createdAt)}</td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-2 items-center">
+                      {/* ícone de status de processamento */}
+                      {doc.statusProcessamento === "PROCESSADO" && (
+                        <span title="Processado" className="text-green-500 shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                      )}
+                      {doc.statusProcessamento === "PROCESSADO_COM_AVISOS" && (
+                        <span title="Processado com avisos" className="text-amber-500 shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        </span>
+                      )}
+                      {doc.statusProcessamento === "ERRO" && (
+                        <span title="Erro no processamento" className="text-red-500 shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        </span>
+                      )}
+                      {doc.statusProcessamento === "MANUAL" && (
+                        <span title="Preenchido manualmente" className="text-theme-muted shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </span>
+                      )}
+                      {(doc.statusProcessamento === "PENDENTE" || doc.statusProcessamento === "PROCESSANDO") && (
+                        <span title={STATUS_LABEL[doc.statusProcessamento]} className="text-amber-500 shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </span>
+                      )}
                       <a
                         href={doc.arquivoUrl}
                         target="_blank"

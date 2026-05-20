@@ -20,6 +20,18 @@ function formatBrl(valor: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor);
 }
 
+function KpiCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
+  return (
+    <div className="bg-theme-card border border-theme rounded-lg p-3 min-w-0">
+      <p className="text-xs text-theme-muted leading-tight mb-1">{label}</p>
+      <p className={`text-xl font-bold font-mono truncate leading-tight ${color ?? "text-theme-primary"}`}>
+        {value}
+      </p>
+      {sub && <p className="text-xs text-theme-muted mt-0.5 truncate">{sub}</p>}
+    </div>
+  );
+}
+
 export function KpiCards({ total, pendentes, proximoVencimento, totalGasto12m, pagosCount, atrasadosCount, totalPagoMes }: Props) {
   const proxData = proximoVencimento
     ? new Date(proximoVencimento.vencimento).toLocaleDateString("pt-BR", { timeZone: "UTC" })
@@ -27,53 +39,38 @@ export function KpiCards({ total, pendentes, proximoVencimento, totalGasto12m, p
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
-      <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <p className="text-sm text-theme-muted">Total de documentos</p>
-        <p className="text-2xl font-semibold font-mono text-theme-primary">{total}</p>
-      </div>
-
-      <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <p className="text-sm text-theme-muted">Próximo vencimento</p>
-        <p className="text-2xl font-semibold font-mono text-amber-500">{proxData}</p>
-        {proximoVencimento && (
-          <p className="text-xs text-theme-muted mt-1">{proximoVencimento.tipo}</p>
-        )}
-      </div>
-
-      <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <p className="text-sm text-theme-muted">Pendentes</p>
-        <p className={`text-2xl font-semibold font-mono ${pendentes > 0 ? "text-red-500" : "text-green-500"}`}>
-          {pendentes}
-        </p>
-      </div>
-
-      <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <p className="text-sm text-theme-muted">Gasto 12 meses</p>
-        <p className="text-2xl font-semibold font-mono text-theme-primary">
-          {formatBrl(Number(totalGasto12m))}
-        </p>
-      </div>
-
-      <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <p className="text-sm text-theme-muted">Pagos</p>
-        <p className={`text-2xl font-semibold font-mono ${pagosCount > 0 ? "text-green-500" : "text-theme-primary"}`}>
-          {pagosCount}
-        </p>
-      </div>
-
-      <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <p className="text-sm text-theme-muted">Atrasados</p>
-        <p className={`text-2xl font-semibold font-mono ${atrasadosCount > 0 ? "text-red-500" : "text-green-500"}`}>
-          {atrasadosCount}
-        </p>
-      </div>
-
-      <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <p className="text-sm text-theme-muted">Pago no mês</p>
-        <p className="text-2xl font-semibold font-mono text-green-600">
-          {formatBrl(Number(totalPagoMes))}
-        </p>
-      </div>
+      <KpiCard label="Total" value={String(total)} />
+      <KpiCard
+        label="Próx. vencimento"
+        value={proxData}
+        sub={proximoVencimento?.tipo}
+        color="text-amber-500"
+      />
+      <KpiCard
+        label="Pendentes"
+        value={String(pendentes)}
+        color={pendentes > 0 ? "text-red-500" : "text-green-500"}
+      />
+      <KpiCard
+        label="Gasto 12 meses"
+        value={formatBrl(Number(totalGasto12m))}
+        color="text-theme-primary"
+      />
+      <KpiCard
+        label="Pagos"
+        value={String(pagosCount)}
+        color={pagosCount > 0 ? "text-green-500" : "text-theme-primary"}
+      />
+      <KpiCard
+        label="Atrasados"
+        value={String(atrasadosCount)}
+        color={atrasadosCount > 0 ? "text-red-500" : "text-green-500"}
+      />
+      <KpiCard
+        label="Pago no mês"
+        value={formatBrl(Number(totalPagoMes))}
+        color="text-green-600"
+      />
     </div>
   );
 }
