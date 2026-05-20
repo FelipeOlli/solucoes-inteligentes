@@ -71,59 +71,58 @@ export async function validarComprovante(
   mimeType: string,
   doc: DocInfo
 ): Promise<ValidacaoComprovante> {
-  const contextDoc = [
-    `Tipo: ${doc.tipo}`,
-    `Valor: ${formatBrl(doc.valorTotal) ?? "não informado"}`,
-    `Vencimento: ${formatData(doc.vencimento) ?? "não informado"}`,
-    `Nº Documento: ${doc.numeroDocumento ?? "não informado"}`,
-  ].join("\n");
-
-  let conteudoComprovante: Anthropic.MessageParam["content"];
-
-  if (mimeType === "application/pdf") {
-    const { text } = await parsePdfBuffer(buffer);
-    conteudoComprovante = `Texto do comprovante (PDF):\n${text.slice(0, 8000)}`;
-  } else {
-    const mediaType = mimeType as "image/jpeg" | "image/png" | "image/webp";
-    conteudoComprovante = [
-      {
-        type: "text" as const,
-        text: "Comprovante de pagamento (imagem):",
-      },
-      {
-        type: "image" as const,
-        source: {
-          type: "base64" as const,
-          media_type: mediaType,
-          data: buffer.toString("base64"),
-        },
-      },
-    ];
-  }
-
-  const msg = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    system: PROMPT_SISTEMA,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: `Dados do boleto/guia:\n${contextDoc}\n\n`,
-          },
-          ...(Array.isArray(conteudoComprovante)
-            ? conteudoComprovante
-            : [{ type: "text" as const, text: conteudoComprovante as string }]),
-        ],
-      },
-    ],
-  });
-
-  const texto = msg.content[0].type === "text" ? msg.content[0].text : "";
-
   try {
+    const contextDoc = [
+      `Tipo: ${doc.tipo}`,
+      `Valor: ${formatBrl(doc.valorTotal) ?? "não informado"}`,
+      `Vencimento: ${formatData(doc.vencimento) ?? "não informado"}`,
+      `Nº Documento: ${doc.numeroDocumento ?? "não informado"}`,
+    ].join("\n");
+
+    let conteudoComprovante: Anthropic.MessageParam["content"];
+
+    if (mimeType === "application/pdf") {
+      const { text } = await parsePdfBuffer(buffer);
+      conteudoComprovante = `Texto do comprovante (PDF):\n${text.slice(0, 8000)}`;
+    } else {
+      const mediaType = mimeType as "image/jpeg" | "image/png" | "image/webp";
+      conteudoComprovante = [
+        {
+          type: "text" as const,
+          text: "Comprovante de pagamento (imagem):",
+        },
+        {
+          type: "image" as const,
+          source: {
+            type: "base64" as const,
+            media_type: mediaType,
+            data: buffer.toString("base64"),
+          },
+        },
+      ];
+    }
+
+    const msg = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      system: PROMPT_SISTEMA,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Dados do boleto/guia:\n${contextDoc}\n\n`,
+            },
+            ...(Array.isArray(conteudoComprovante)
+              ? conteudoComprovante
+              : [{ type: "text" as const, text: conteudoComprovante as string }]),
+          ],
+        },
+      ],
+    });
+
+    const texto = msg.content[0].type === "text" ? msg.content[0].text : "";
     const parsed = JSON.parse(extrairJson(texto)) as ValidacaoComprovante;
     return {
       status: parsed.status ?? "INCONCLUSIVO",
@@ -131,7 +130,8 @@ export async function validarComprovante(
       resumo: parsed.resumo ?? "",
       processadoEm: new Date().toISOString(),
     };
-  } catch {
+  } catch (err) {
+    console.error("[validarComprovante] erro:", err);
     return {
       status: "INCONCLUSIVO",
       itens: [],
