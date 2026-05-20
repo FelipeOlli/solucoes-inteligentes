@@ -182,9 +182,19 @@ export default function AfiliadoPage() {
           </button>
         )}
         {mlConectado === true && (
-          <span className="text-xs px-3 py-1.5 rounded-full bg-green-100 text-green-700 border border-green-300">
-            ✓ ML conectado
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-3 py-1.5 rounded-full bg-green-100 text-green-700 border border-green-300">
+              ✓ ML conectado
+            </span>
+            <button type="button"
+              onClick={async () => {
+                const { data } = await api<{ url: string }>("/integrations/ml/connect", { method: "POST" });
+                if (data?.url) window.location.href = data.url;
+              }}
+              className="text-xs px-3 py-1.5 rounded-full border border-theme text-theme-muted">
+              Reconectar
+            </button>
+          </div>
         )}
       </div>
 
