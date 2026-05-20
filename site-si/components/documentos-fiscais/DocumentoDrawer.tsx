@@ -538,7 +538,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
               ) : (
                 <button
                   type="button"
-                  className="flex items-center gap-1.5 text-xs text-primary hover:opacity-70 transition-opacity disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-primary/40 text-xs text-primary hover:opacity-70 transition-opacity disabled:opacity-50"
                   onClick={() => comprovanteInputRef.current?.click()}
                   disabled={enviandoComprovante}
                 >
@@ -584,7 +584,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
             </a>
             <button
               type="button"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-theme text-xs text-theme-muted hover:text-theme transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-primary/40 text-xs text-primary hover:opacity-70 transition-opacity"
               onClick={abrirEdicao}
               title="Editar"
             >
