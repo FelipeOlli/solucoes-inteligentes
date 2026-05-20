@@ -11,6 +11,7 @@ import { TabelaDocumentos, DocumentoRow } from "@/components/documentos-fiscais/
 import { DocumentoDrawer, DocumentoDetalhe } from "@/components/documentos-fiscais/DocumentoDrawer";
 import { UploadDialog } from "@/components/documentos-fiscais/UploadDialog";
 import { PerfilEmpresa } from "@/components/documentos-fiscais/PerfilEmpresa";
+import { BaseConhecimento } from "@/components/documentos-fiscais/conhecimento/BaseConhecimento";
 
 type Empresa = {
   id: string; cnpj: string; razaoSocial: string;
@@ -36,7 +37,7 @@ type Kpis = {
 
 export default function DocumentosFiscaisPage() {
   const router = useRouter();
-  const [aba, setAba] = useState<"docs" | "perfil">("docs");
+  const [aba, setAba] = useState<"docs" | "perfil" | "conhecimento">("docs");
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [tipoAtivo, setTipoAtivo] = useState<TipoDocumentoFiscal | "TODOS">("TODOS");
   const [filtroPgto, setFiltroPgto] = useState<StatusPagamentoFiscal | "TODOS">("TODOS");
@@ -156,12 +157,13 @@ export default function DocumentosFiscaisPage() {
             ⬆ Upload
           </button>
         )}
+
       </div>
 
       {/* Abas */}
       {empresa && (
         <div className="flex gap-1 border-b border-theme">
-          {(["docs", "perfil"] as const).map((a) => (
+          {(["docs", "conhecimento", "perfil"] as const).map((a) => (
             <button
               key={a}
               type="button"
@@ -172,13 +174,15 @@ export default function DocumentosFiscaisPage() {
                   : "border-transparent text-theme-muted hover:text-theme"
               }`}
             >
-              {a === "docs" ? "Documentos Fiscais" : "Perfil da Empresa"}
+              {a === "docs" ? "Documentos Fiscais" : a === "conhecimento" ? "Base de Conhecimento" : "Perfil da Empresa"}
             </button>
           ))}
         </div>
       )}
 
       {empresa && aba === "perfil" && <PerfilEmpresa empresa={empresa} />}
+
+      {empresa && aba === "conhecimento" && <BaseConhecimento />}
 
       {empresa && aba === "docs" && (
         <>

@@ -468,3 +468,31 @@ model ObrigacaoFiscal {
   @@index([empresaFiscalId, vencimento])
   @@index([status])
 }
+
+model ArtigoConhecimento {
+  id        String              @id @default(cuid())
+  titulo    String
+  categoria String?
+  descricao String?
+  conteudo  String              @db.Text
+  anexos    AnexoConhecimento[]
+  ativo     Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@index([categoria])
+  @@index([ativo])
+}
+
+model AnexoConhecimento {
+  id           String             @id @default(cuid())
+  artigoId     String
+  artigo       ArtigoConhecimento @relation(fields: [artigoId], references: [id], onDelete: Cascade)
+  nomeArquivo  String
+  url          String
+  mimeType     String
+  tamanhoBytes Int
+  createdAt    DateTime           @default(now())
+
+  @@index([artigoId])
+}
