@@ -17,32 +17,16 @@ type Produto = {
 
 type ProdutoSalvo = Produto & { id: string; favorito: boolean; criadoEm: string };
 
-type MLItem = {
-  id: string | number;
-  title: string;
-  price: number | null;
-  thumbnail: string | null;
-  permalink: string;
-};
-
 function formatPreco(p: number | null): string {
   if (p == null) return "—";
   return p.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function aplicarTagML(url: string, tag: string, tool: string): string {
-  try {
-    const u = new URL(url);
-    if (tag) u.searchParams.set("matt_word", tag);
-    if (tool) u.searchParams.set("matt_tool", tool);
-    return u.toString();
-  } catch { return url; }
-}
-
-const EXTERNOS = [
+const MARKETPLACES = [
+  { label: "Mercado Livre", href: (q: string) => `https://lista.mercadolivre.com.br/${encodeURIComponent(q)}`, cor: "bg-yellow-400 text-black" },
   { label: "Magazine Luiza", href: (q: string) => `https://www.magazineluiza.com.br/busca/${encodeURIComponent(q)}/`, cor: "bg-blue-600" },
   { label: "Shopee", href: (q: string) => `https://shopee.com.br/search?keyword=${encodeURIComponent(q)}`, cor: "bg-orange-500" },
-  { label: "Amazon", href: (q: string) => `https://www.amazon.com.br/s?k=${encodeURIComponent(q)}`, cor: "bg-yellow-500 text-black" },
+  { label: "Amazon", href: (q: string) => `https://www.amazon.com.br/s?k=${encodeURIComponent(q)}`, cor: "bg-yellow-600" },
 ];
 
 export default function AfiliadoPage() {
@@ -51,9 +35,6 @@ export default function AfiliadoPage() {
   const [mlMsg, setMlMsg] = useState("");
 
   const [busca, setBusca] = useState("");
-  const [resultados, setResultados] = useState<Produto[]>([]);
-  const [buscando, setBuscando] = useState(false);
-  const [erroBusca, setErroBusca] = useState("");
 
   const [favoritos, setFavoritos] = useState<ProdutoSalvo[]>([]);
   const [loadingFav, setLoadingFav] = useState(true);
@@ -81,56 +62,8 @@ export default function AfiliadoPage() {
     else if (ml === "error") setMlMsg(`Erro ao autorizar ML: ${searchParams.get("reason") ?? "erro desconhecido"}`);
   }, [searchParams]);
 
-  async function handleBuscar(e: React.FormEvent) {
+  function handleBuscar(e: React.FormEvent) {
     e.preventDefault();
-    const q = busca.trim();
-    if (!q) return;
-    setBuscando(true);
-    setErroBusca("");
-    setResultados([]);
-
-    try {
-      // Busca feita do browser (IP brasileiro) para evitar bloqueio de IP do servidor
-      const { data: tokenData, error: tokenErr } = await api<{ token: string; affiliateTag: string; affiliateTool: string }>("/afiliados/ml-token");
-      if (!tokenData?.token) {
-        setErroBusca(tokenErr?.message ?? "Erro ao obter token ML.");
-        setBuscando(false);
-        return;
-      }
-
-      const res = await fetch(
-        `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(q)}&limit=20`,
-        { headers: { Authorization: `Bearer ${tokenData.token}` } }
-      );
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setErroBusca(`ML retornou ${res.status}: ${body.message ?? "erro desconhecido"}`);
-        setBuscando(false);
-        return;
-      }
-
-      const json = await res.json();
-      const mlTag = tokenData.affiliateTag;
-      const mlTool = tokenData.affiliateTool;
-
-      const produtos: Produto[] = (json.results ?? []).map((item: MLItem): Produto => ({
-        marketplace: "ML",
-        externalId: String(item.id),
-        titulo: item.title,
-        imagemUrl: item.thumbnail ? item.thumbnail.replace("http://", "https://") : null,
-        preco: item.price ?? null,
-        urlOriginal: item.permalink,
-        urlAfiliado: aplicarTagML(item.permalink, mlTag, mlTool),
-      }));
-
-      setResultados(produtos);
-      if (produtos.length === 0) setErroBusca("Nenhum produto encontrado.");
-    } catch (e) {
-      setErroBusca(`Erro: ${e instanceof Error ? e.message : String(e)}`);
-    }
-
-    setBuscando(false);
   }
 
   async function copiarLink(produto: Produto | ProdutoSalvo) {
@@ -244,7 +177,7 @@ export default function AfiliadoPage() {
         </div>
       )}
 
-      <p className="text-theme-muted text-sm mb-6">Busque no Mercado Livre ou abra a busca nos outros marketplaces.</p>
+      <p className="text-theme-muted text-sm mb-6">Digite o produto e abra a busca nos marketplaces. Salve os favoritos para consultar depois.</p>
 
       <div className="flex gap-3 mb-6 border-b border-theme">
         {(["busca", "favoritos"] as const).map((aba) => (
@@ -257,43 +190,23 @@ export default function AfiliadoPage() {
 
       {abaAtiva === "busca" && (
         <div>
-          <form onSubmit={handleBuscar} className="flex gap-2 mb-4">
+          <form onSubmit={handleBuscar} className="flex gap-2 mb-6">
             <input type="text" value={busca} onChange={(e) => setBusca(e.target.value)}
-              placeholder="Nome do produto (ex: furadeira, notebook...)"
-              className="flex-1 px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-              disabled={buscando} />
-            <button type="submit" disabled={!busca.trim() || buscando || mlConectado === false}
-              className="px-5 py-2 bg-primary text-white rounded-lg disabled:opacity-50 whitespace-nowrap">
-              {buscando ? "Buscando…" : "Buscar no ML"}
-            </button>
+              placeholder="Nome do produto (ex: furadeira, notebook, cabo hdmi...)"
+              className="flex-1 px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" />
           </form>
 
-          {mlConectado === false && (
-            <p className="text-sm text-yellow-600 mb-4">Autorize o Mercado Livre acima para ativar a busca.</p>
-          )}
-
-          {busca.trim() && (
-            <div className="flex flex-wrap gap-2 mb-6">
-              <span className="text-xs text-theme-muted self-center">Buscar também em:</span>
-              {EXTERNOS.map(({ label, href, cor }) => (
+          {busca.trim() ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {MARKETPLACES.map(({ label, href, cor }) => (
                 <a key={label} href={href(busca.trim())} target="_blank" rel="noopener noreferrer"
-                  className={`text-xs px-3 py-1.5 rounded-full text-white font-medium ${cor}`}>
+                  className={`flex items-center justify-center gap-1.5 py-4 rounded-xl text-sm font-semibold text-white shadow ${cor}`}>
                   {label} ↗
                 </a>
               ))}
             </div>
-          )}
-
-          {erroBusca && (
-            <div className="mb-4 p-3 rounded-lg border border-red-400 bg-red-50 text-red-700 text-sm">
-              {erroBusca}
-            </div>
-          )}
-
-          {resultados.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {resultados.map((p) => renderCard(p))}
-            </div>
+          ) : (
+            <p className="text-theme-muted text-sm">Digite o nome do produto acima para ver os marketplaces.</p>
           )}
         </div>
       )}
