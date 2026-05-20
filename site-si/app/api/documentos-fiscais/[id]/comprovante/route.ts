@@ -51,11 +51,6 @@ export async function POST(request: NextRequest, { params }: Params) {
     ext
   );
 
-  const statusPagamento =
-    doc.statusPagamento === "PENDENTE" && doc.dataPagamento
-      ? "PAGO"
-      : doc.statusPagamento;
-
   let comprovanteValidacaoIA = null;
   try {
     comprovanteValidacaoIA = await validarComprovante(buffer, file.type, {
@@ -65,6 +60,14 @@ export async function POST(request: NextRequest, { params }: Params) {
       numeroDocumento: doc.numeroDocumento,
     });
   } catch { /* não bloqueia o upload */ }
+
+  // IA confirmou → promove para PAGO; caso contrário mantém lógica anterior
+  const statusPagamento =
+    comprovanteValidacaoIA?.status === "CONFERE"
+      ? "PAGO"
+      : doc.statusPagamento === "PENDENTE" && doc.dataPagamento
+      ? "PAGO"
+      : doc.statusPagamento;
 
   const atualizado = await prisma.documentoFiscal.update({
     where: { id },
