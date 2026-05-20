@@ -29,7 +29,7 @@ function formatData(iso: unknown): string | null {
   if (!iso) return null;
   const d = new Date(String(iso));
   if (isNaN(d.getTime())) return null;
-  return d.toLocaleDateString("pt-BR");
+  return d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
 }
 
 function extrairJson(texto: string): string {
