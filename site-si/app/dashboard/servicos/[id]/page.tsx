@@ -93,6 +93,7 @@ type ServicoDetail = {
   dataConclusao?: string | null;
   prazoEstimado?: string | null;
   valorEstimado?: number | null;
+  valorRepasse?: number | null;
   imagens?: string[] | null;
   formaPagamento?: string | null;
   convidadoEmail?: string | null;
@@ -105,6 +106,7 @@ type ServicoDetail = {
 type PatchBody = {
   data_agendamento?: string | null;
   valor_estimado?: number | null;
+  valor_repasse?: number | null;
   categoria_id?: string | null;
   forma_pagamento?: string | null;
   tecnico_id?: string | null;
@@ -132,6 +134,7 @@ export default function ServicoDetailPage() {
   const [editCategoriaId, setEditCategoriaId] = useState("");
   const [editFormaPagamento, setEditFormaPagamento] = useState("");
   const [editTecnicoId, setEditTecnicoId] = useState("");
+  const [editValorRepasse, setEditValorRepasse] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   const [error, setError] = useState("");
   const [statusError, setStatusError] = useState("");
@@ -159,6 +162,7 @@ export default function ServicoDetailPage() {
     if (!servico) return;
     setEditDataAgendamento(servico.dataAgendamento ? new Date(servico.dataAgendamento).toISOString().slice(0, 16) : "");
     setEditValor(servico.valorEstimado != null ? String(servico.valorEstimado) : "");
+    setEditValorRepasse(servico.valorRepasse != null ? String(servico.valorRepasse) : "");
     setEditCategoriaId(servico.categoria?.id ?? "");
     setEditFormaPagamento(servico.formaPagamento ?? "");
     setEditTecnicoId(servico.tecnico?.id ?? "");
@@ -182,6 +186,7 @@ export default function ServicoDetailPage() {
     return {
       data_agendamento: editDataAgendamento ? new Date(editDataAgendamento).toISOString() : null,
       valor_estimado: editValor.trim() ? Number(editValor.trim().replace(",", ".")) || null : null,
+      valor_repasse: editValorRepasse.trim() ? Number(editValorRepasse.trim().replace(",", ".")) || null : null,
       categoria_id: editCategoriaId || null,
       forma_pagamento: editFormaPagamento || null,
       tecnico_id: editTecnicoId || null,
@@ -515,8 +520,18 @@ export default function ServicoDetailPage() {
               <input type="datetime-local" value={editDataAgendamento} onChange={(e) => setEditDataAgendamento(e.target.value)} className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" />
             </div>
             <div className="space-y-2 mb-3">
-              <label className="block text-sm font-medium text-theme-muted">Valor (R$)</label>
+              <label className="block text-sm font-medium text-theme-muted">Valor cobrado (R$)</label>
               <input type="text" value={editValor} onChange={(e) => setEditValor(e.target.value)} placeholder="0,00" className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" />
+            </div>
+            <div className="space-y-2 mb-3">
+              <label className="block text-sm font-medium text-theme-muted">Repasse ao técnico (R$)</label>
+              <input
+                type="text"
+                value={editValorRepasse}
+                onChange={(e) => setEditValorRepasse(e.target.value)}
+                placeholder="0,00 (deixe vazio se executou você mesmo)"
+                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+              />
             </div>
             <div className="space-y-2 mb-3">
               <label className="block text-sm font-medium text-theme-muted">Categoria</label>

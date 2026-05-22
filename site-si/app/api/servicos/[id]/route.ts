@@ -108,6 +108,7 @@ export async function PATCH(
   const data: Record<string, unknown> = {};
   if (body.prazo_estimado !== undefined) data.prazoEstimado = body.prazo_estimado ? new Date(body.prazo_estimado) : null;
   if (body.valor_estimado !== undefined) data.valorEstimado = body.valor_estimado != null ? Number(body.valor_estimado) : null;
+  if (body.valor_repasse !== undefined) data.valorRepasse = body.valor_repasse != null ? Number(body.valor_repasse) : null;
   if (body.data_agendamento !== undefined) data.dataAgendamento = body.data_agendamento ? new Date(body.data_agendamento) : null;
   if (body.descricao !== undefined) data.descricao = String(body.descricao).trim();
   if (body.endereco_servico !== undefined) data.enderecoServico = body.endereco_servico ? String(body.endereco_servico).trim() : null;

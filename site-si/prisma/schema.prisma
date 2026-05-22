@@ -138,6 +138,7 @@ model Servico {
   dataConclusao       DateTime?
   prazoEstimado       DateTime?
   valorEstimado       Float?
+  valorRepasse        Float?
   enderecoServico     String?
   contatoPreferencial String?
   imagens             String?
