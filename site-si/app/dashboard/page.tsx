@@ -60,7 +60,15 @@ export default function DashboardPage() {
 
   return (
     <div className="text-theme">
-      <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-6">Serviços</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+        <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary">Serviços</h1>
+        <Link
+          href="/dashboard/servicos/novo"
+          className="inline-flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg font-medium hover:opacity-90 transition w-full sm:w-auto"
+        >
+          + Novo serviço
+        </Link>
+      </div>
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
         <input
           type="search"

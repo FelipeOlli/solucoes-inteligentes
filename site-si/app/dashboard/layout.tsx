@@ -141,13 +141,6 @@ export default function DashboardLayout({
                 >
                   Financeiro
                 </Link>
-                <Link
-                  href="/dashboard/servicos/novo"
-                  className="font-medium"
-                  style={{ color: "var(--color-navbar-text)" }}
-                >
-                  + Novo serviço
-                </Link>
               </nav>
             </div>
             <div className="flex items-center gap-2">
@@ -309,14 +302,6 @@ export default function DashboardLayout({
                 onClick={() => setMobileNavOpen(false)}
               >
                 Financeiro
-              </Link>
-              <Link
-                href="/dashboard/servicos/novo"
-                className="font-medium"
-                style={{ color: "var(--color-navbar-text)" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                + Novo serviço
               </Link>
             </nav>
           )}
