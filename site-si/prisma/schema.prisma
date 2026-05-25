@@ -140,7 +140,6 @@ model Servico {
   valorEstimado       Float?
   valorRepasse        Float?
   valorMaterial       Float?
-  emiteNotaFiscal     Boolean             @default(false)
   enderecoServico     String?
   contatoPreferencial String?
   imagens             String?

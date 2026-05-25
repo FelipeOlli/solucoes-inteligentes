@@ -24,15 +24,12 @@ function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
-const TAXA_NF = 0.05;
-
 export default function OrcamentoPage() {
   const [valorServico, setValorServico] = useState("");
   const [valorMaterial, setValorMaterial] = useState("");
   const [lucro, setLucro] = useState("");
   const [metodo, setMetodo] = useState<MetodoPagamento>("maquininha");
   const [parcelas, setParcelas] = useState(1);
-  const [emiteNF, setEmiteNF] = useState(false);
 
   const vS = Number(valorServico.replace(/,/g, ".")) || 0;
   const vM = Number(valorMaterial.replace(/,/g, ".")) || 0;
@@ -43,15 +40,8 @@ export default function OrcamentoPage() {
 
   const taxaPct = metodo === "avista" ? 0 : TAXAS[metodo][parcelas - 1];
   const coef = 1 - taxaPct / 100;
-  // Com NF: resultado = (liquidoDesejado + FIXO×coef) / (coef − 0,15)
-  // Sem NF: resultado = liquidoDesejado / coef + FIXO
-  const resultado = liquidoDesejado >= 0
-    ? emiteNF
-      ? (liquidoDesejado + FIXO * coef) / (coef - TAXA_NF)
-      : liquidoDesejado / coef + FIXO
-    : 0;
+  const resultado = liquidoDesejado >= 0 ? liquidoDesejado / coef + FIXO : 0;
   const valorParcela = resultado / parcelas;
-  const taxaNFValor = emiteNF ? resultado * TAXA_NF : 0;
 
   const exibirResultado = valorServico !== "" || valorMaterial !== "";
 
@@ -104,10 +94,6 @@ export default function OrcamentoPage() {
             />
           </div>
 
-          <div className="flex items-center gap-3">
-            <input type="checkbox" id="emiteNF" checked={emiteNF} onChange={(e) => setEmiteNF(e.target.checked)} className="w-4 h-4 accent-purple-500 cursor-pointer" />
-            <label htmlFor="emiteNF" className="text-sm text-theme-muted cursor-pointer">Emitir nota fiscal <span className="text-purple-400">(+5% no preço final)</span></label>
-          </div>
           <div>
             <label className="block text-sm font-medium text-theme-muted mb-1">Forma de pagamento</label>
             <select
@@ -154,11 +140,6 @@ export default function OrcamentoPage() {
               Taxa aplicada: <span className="font-medium">{taxaPct.toFixed(2).replace(".", ",")}%</span>
               {metodo !== "avista" && ` (${metodoAtual.label})`}
             </p>
-            {emiteNF && (
-              <p>
-                Nota fiscal (5%): <span className="font-medium text-purple-400">{formatBRL(taxaNFValor)}</span>
-              </p>
-            )}
             {parcelas > 1 && (
               <p>
                 Parcela: <span className="font-medium">{formatBRL(valorParcela)}</span> × {parcelas}

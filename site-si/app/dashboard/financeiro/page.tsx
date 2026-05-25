@@ -22,7 +22,6 @@ type MesData = {
   receita: number;
   repasse: number;
   material: number;
-  notaFiscal: number;
   taxa: number;
   custoFixo: number;
   lucro: number;
@@ -35,7 +34,6 @@ type ResumoResponse = {
     receita: number;
     repasse: number;
     material: number;
-    notaFiscal: number;
     taxa: number;
     custoFixo: number;
     lucro: number;
@@ -104,10 +102,6 @@ export default function FinanceiroPage() {
           <p className={`font-bold text-lg ${r.lucro >= 0 ? "text-green-400" : "text-red-400"}`}>{fmt(r.lucro)}</p>
         </div>
         <div className="bg-theme-card border border-theme rounded-xl p-4">
-          <p className="text-xs text-theme-muted mb-1">Nota fiscal do mês</p>
-          <p className="font-bold text-lg text-purple-400">{r.notaFiscal > 0 ? fmt(r.notaFiscal) : <span className="text-theme-muted text-base">—</span>}</p>
-        </div>
-        <div className="bg-theme-card border border-theme rounded-xl p-4">
           <p className="text-xs text-theme-muted mb-1">Concluídos no mês</p>
           <p className="font-bold text-lg text-theme-primary">{r.servicos}</p>
         </div>
@@ -120,7 +114,7 @@ export default function FinanceiroPage() {
       {/* Breakdown de custos do mês */}
       <div className="bg-theme-card border border-theme rounded-xl p-4">
         <h2 className="font-heading font-semibold text-theme-primary mb-3">Composição do lucro — mês atual</h2>
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-sm">
           <div>
             <p className="text-theme-muted mb-0.5">Receita</p>
             <p className="font-semibold text-theme-primary">{fmt(r.receita)}</p>
@@ -132,10 +126,6 @@ export default function FinanceiroPage() {
           <div>
             <p className="text-theme-muted mb-0.5">− Material</p>
             <p className="font-semibold text-orange-400">{r.material > 0 ? fmt(r.material) : <span className="text-theme-muted">—</span>}</p>
-          </div>
-          <div>
-            <p className="text-theme-muted mb-0.5">− NF (5%)</p>
-            <p className="font-semibold text-purple-400">{r.notaFiscal > 0 ? fmt(r.notaFiscal) : <span className="text-theme-muted">—</span>}</p>
           </div>
           <div>
             <p className="text-theme-muted mb-0.5">− Taxa cartão</p>
@@ -152,7 +142,7 @@ export default function FinanceiroPage() {
         </div>
       </div>
 
-      {/* Gráfico de barras: Receita vs Repasse vs Lucro */}
+      {/* Gráfico de barras: Receita vs Custos vs Lucro */}
       <div className="bg-theme-card border border-theme rounded-xl p-4">
         <h2 className="font-heading font-semibold text-theme-primary mb-4">Receita, Custos e Lucro — últimos 12 meses</h2>
         <ResponsiveContainer width="100%" height={300}>
@@ -165,7 +155,6 @@ export default function FinanceiroPage() {
             <Bar dataKey="receita" name="Receita" fill="#6366f1" radius={[4, 4, 0, 0]} />
             <Bar dataKey="repasse" name="Repasse" fill="#f87171" radius={[4, 4, 0, 0]} />
             <Bar dataKey="material" name="Material" fill="#fb923c" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="notaFiscal" name="Nota Fiscal" fill="#a78bfa" radius={[4, 4, 0, 0]} />
             <Bar dataKey="taxa" name="Taxa cartão" fill="#eab308" radius={[4, 4, 0, 0]} />
             <Bar dataKey="custoFixo" name="Custo fixo" fill="#facc15" radius={[4, 4, 0, 0]} />
             <Bar dataKey="lucro" name="Lucro" fill="#34d399" radius={[4, 4, 0, 0]} />
@@ -212,7 +201,6 @@ export default function FinanceiroPage() {
               <th className="pb-2 font-medium text-right">Receita</th>
               <th className="pb-2 font-medium text-right">Repasse</th>
               <th className="pb-2 font-medium text-right">Material</th>
-              <th className="pb-2 font-medium text-right">NF (5%)</th>
               <th className="pb-2 font-medium text-right">Taxa cartão</th>
               <th className="pb-2 font-medium text-right">Custo fixo</th>
               <th className="pb-2 font-medium text-right">Lucro real</th>
@@ -226,7 +214,6 @@ export default function FinanceiroPage() {
                 <td className="py-2 text-right">{m.receita > 0 ? fmt(m.receita) : <span className="text-theme-muted">—</span>}</td>
                 <td className="py-2 text-right text-red-400">{m.repasse > 0 ? fmt(m.repasse) : <span className="text-theme-muted">—</span>}</td>
                 <td className="py-2 text-right text-orange-400">{m.material > 0 ? fmt(m.material) : <span className="text-theme-muted">—</span>}</td>
-                <td className="py-2 text-right text-purple-400">{m.notaFiscal > 0 ? fmt(m.notaFiscal) : <span className="text-theme-muted">—</span>}</td>
                 <td className="py-2 text-right text-yellow-500">{m.taxa > 0 ? fmt(m.taxa) : <span className="text-theme-muted">—</span>}</td>
                 <td className="py-2 text-right text-yellow-400">{m.custoFixo > 0 ? fmt(m.custoFixo) : <span className="text-theme-muted">—</span>}</td>
                 <td className={`py-2 text-right font-medium ${m.lucro > 0 ? "text-green-400" : m.lucro < 0 ? "text-red-400" : "text-theme-muted"}`}>

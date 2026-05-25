@@ -110,7 +110,6 @@ export async function PATCH(
   if (body.valor_estimado !== undefined) data.valorEstimado = body.valor_estimado != null ? Number(body.valor_estimado) : null;
   if (body.valor_repasse !== undefined) data.valorRepasse = body.valor_repasse != null ? Number(body.valor_repasse) : null;
   if (body.valor_material !== undefined) data.valorMaterial = body.valor_material != null ? Number(body.valor_material) : null;
-  if (body.emite_nota_fiscal !== undefined) data.emiteNotaFiscal = body.emite_nota_fiscal === true;
   if (body.data_agendamento !== undefined) data.dataAgendamento = body.data_agendamento ? new Date(body.data_agendamento) : null;
   if (body.descricao !== undefined) data.descricao = String(body.descricao).trim();
   if (body.endereco_servico !== undefined) data.enderecoServico = body.endereco_servico ? String(body.endereco_servico).trim() : null;

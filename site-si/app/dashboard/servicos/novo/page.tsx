@@ -34,7 +34,6 @@ export default function NovoServicoPage() {
   const [dataAgendamento, setDataAgendamento] = useState("");
   const [valorEstimado, setValorEstimado] = useState("");
   const [valorMaterial, setValorMaterial] = useState("");
-  const [emiteNotaFiscal, setEmiteNotaFiscal] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState("");
   const [imagens, setImagens] = useState<File[]>([]);
   const [orcamentoFiles, setOrcamentoFiles] = useState<File[]>([]);
@@ -98,7 +97,6 @@ export default function NovoServicoPage() {
       data_agendamento: dataAgendamento ? new Date(dataAgendamento).toISOString() : null,
       valor_estimado: valorEstimado ? Number(valorEstimado.trim().replace(",", ".")) || null : null,
       valor_material: valorMaterial ? Number(valorMaterial.trim().replace(",", ".")) || null : null,
-      emite_nota_fiscal: emiteNotaFiscal,
       forma_pagamento: formaPagamento || null,
       tecnico_id: tecnicoId || null,
     };
@@ -272,10 +270,6 @@ export default function NovoServicoPage() {
         <div>
           <label className="block text-sm font-medium text-theme-muted mb-1">Material gasto (R$)</label>
           <input type="text" inputMode="decimal" placeholder="0,00 (peças, insumos, etc.)" value={valorMaterial} onChange={(e) => setValorMaterial(e.target.value)} className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" />
-        </div>
-        <div className="flex items-center gap-3">
-          <input type="checkbox" id="emiteNF" checked={emiteNotaFiscal} onChange={(e) => setEmiteNotaFiscal(e.target.checked)} className="w-4 h-4 accent-purple-500 cursor-pointer" />
-          <label htmlFor="emiteNF" className="text-sm text-theme-muted cursor-pointer">Emitir nota fiscal <span className="text-purple-400">(5% sobre o valor)</span></label>
         </div>
         <div>
           <label className="block text-sm font-medium text-theme-muted mb-1">Forma de pagamento</label>
