@@ -18,21 +18,37 @@ export async function GET(request: NextRequest) {
 
   const dozeAtras = new Date(anoAtual, hoje.getMonth() - 11, 1);
 
-  const servicos = await prisma.servico.findMany({
-    where: {
-      statusAtual: "CONCLUIDO",
-      dataConclusao: { gte: dozeAtras },
-    },
-    select: {
-      dataConclusao: true,
-      valorEstimado: true,
-      valorRepasse: true,
-      valorMaterial: true,
-      formaPagamento: true,
-    },
-  });
+  const [servicos, docsFiscais, abertos] = await Promise.all([
+    prisma.servico.findMany({
+      where: {
+        statusAtual: "CONCLUIDO",
+        dataConclusao: { gte: dozeAtras },
+      },
+      select: {
+        dataConclusao: true,
+        valorEstimado: true,
+        valorRepasse: true,
+        valorMaterial: true,
+        formaPagamento: true,
+      },
+    }),
 
-  type MesData = { mes: string; receita: number; repasse: number; material: number; taxa: number; custoFixo: number; lucro: number; servicos: number };
+    prisma.documentoFiscal.findMany({
+      where: {
+        ativo: true,
+        statusPagamento: "PAGO",
+        dataPagamento: { gte: dozeAtras },
+        valorPago: { not: null },
+      },
+      select: { dataPagamento: true, valorPago: true },
+    }),
+
+    prisma.servico.count({
+      where: { statusAtual: { notIn: ["CONCLUIDO", "CANCELADO"] } },
+    }),
+  ]);
+
+  type MesData = { mes: string; receita: number; repasse: number; material: number; taxa: number; custoFixo: number; lucro: number; contabilidade: number; servicos: number };
   const meses: MesData[] = [];
 
   for (let i = 11; i >= 0; i--) {
@@ -45,6 +61,7 @@ export async function GET(request: NextRequest) {
       taxa: 0,
       custoFixo: 0,
       lucro: 0,
+      contabilidade: 0,
       servicos: 0,
     });
   }
@@ -74,6 +91,14 @@ export async function GET(request: NextRequest) {
     meses[mesIdx].servicos += 1;
   }
 
+  for (const d of docsFiscais) {
+    if (!d.dataPagamento) continue;
+    const dt = new Date(d.dataPagamento);
+    const mesIdx = (dt.getFullYear() - anoAtual) * 12 + (dt.getMonth() + 1 - mesAtual) + 11;
+    if (mesIdx < 0 || mesIdx > 11) continue;
+    meses[mesIdx].contabilidade += Number(d.valorPago);
+  }
+
   for (const m of meses) {
     m.receita = Math.round(m.receita * 100) / 100;
     m.repasse = Math.round(m.repasse * 100) / 100;
@@ -81,13 +106,11 @@ export async function GET(request: NextRequest) {
     m.taxa = Math.round(m.taxa * 100) / 100;
     m.custoFixo = Math.round(m.custoFixo * 100) / 100;
     m.lucro = Math.round(m.lucro * 100) / 100;
+    m.contabilidade = Math.round(m.contabilidade * 100) / 100;
   }
 
   const mesCorrente = meses[11];
-
-  const abertos = await prisma.servico.count({
-    where: { statusAtual: { notIn: ["CONCLUIDO", "CANCELADO"] } },
-  });
+  const lucroLiquido = Math.round((mesCorrente.lucro - mesCorrente.contabilidade) * 100) / 100;
 
   return jsonResponse({
     meses,
@@ -98,6 +121,8 @@ export async function GET(request: NextRequest) {
       taxa: mesCorrente.taxa,
       custoFixo: mesCorrente.custoFixo,
       lucro: mesCorrente.lucro,
+      contabilidade: mesCorrente.contabilidade,
+      lucroLiquido,
       servicos: mesCorrente.servicos,
       abertos,
     },
