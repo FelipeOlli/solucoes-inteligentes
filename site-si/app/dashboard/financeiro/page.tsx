@@ -134,7 +134,7 @@ export default function FinanceiroPage() {
             <p className="font-semibold text-orange-400">{r.material > 0 ? fmt(r.material) : <span className="text-theme-muted">—</span>}</p>
           </div>
           <div>
-            <p className="text-theme-muted mb-0.5">− NF (15%)</p>
+            <p className="text-theme-muted mb-0.5">− NF (5%)</p>
             <p className="font-semibold text-purple-400">{r.notaFiscal > 0 ? fmt(r.notaFiscal) : <span className="text-theme-muted">—</span>}</p>
           </div>
           <div>
@@ -212,7 +212,7 @@ export default function FinanceiroPage() {
               <th className="pb-2 font-medium text-right">Receita</th>
               <th className="pb-2 font-medium text-right">Repasse</th>
               <th className="pb-2 font-medium text-right">Material</th>
-              <th className="pb-2 font-medium text-right">NF (15%)</th>
+              <th className="pb-2 font-medium text-right">NF (5%)</th>
               <th className="pb-2 font-medium text-right">Taxa cartão</th>
               <th className="pb-2 font-medium text-right">Custo fixo</th>
               <th className="pb-2 font-medium text-right">Lucro real</th>

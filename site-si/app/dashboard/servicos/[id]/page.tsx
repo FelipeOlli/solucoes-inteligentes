@@ -592,7 +592,7 @@ export default function ServicoDetailPage() {
             </div>
             <div className="flex items-center gap-3 mb-3">
               <input type="checkbox" id="editEmiteNF" checked={editEmiteNF} onChange={(e) => setEditEmiteNF(e.target.checked)} className="w-4 h-4 accent-purple-500 cursor-pointer" />
-              <label htmlFor="editEmiteNF" className="text-sm text-theme-muted cursor-pointer">Emitir nota fiscal <span className="text-purple-400">(15% sobre o valor)</span></label>
+              <label htmlFor="editEmiteNF" className="text-sm text-theme-muted cursor-pointer">Emitir nota fiscal <span className="text-purple-400">(5% sobre o valor)</span></label>
             </div>
             <div className="space-y-2 mb-3">
               <label className="block text-sm font-medium text-theme-muted">Categoria</label>

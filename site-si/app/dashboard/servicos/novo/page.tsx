@@ -275,7 +275,7 @@ export default function NovoServicoPage() {
         </div>
         <div className="flex items-center gap-3">
           <input type="checkbox" id="emiteNF" checked={emiteNotaFiscal} onChange={(e) => setEmiteNotaFiscal(e.target.checked)} className="w-4 h-4 accent-purple-500 cursor-pointer" />
-          <label htmlFor="emiteNF" className="text-sm text-theme-muted cursor-pointer">Emitir nota fiscal <span className="text-purple-400">(15% sobre o valor)</span></label>
+          <label htmlFor="emiteNF" className="text-sm text-theme-muted cursor-pointer">Emitir nota fiscal <span className="text-purple-400">(5% sobre o valor)</span></label>
         </div>
         <div>
           <label className="block text-sm font-medium text-theme-muted mb-1">Forma de pagamento</label>

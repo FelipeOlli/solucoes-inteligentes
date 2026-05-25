@@ -1,5 +1,5 @@
 export const CUSTO_FIXO = 50;
-export const TAXA_NF = 15;
+export const TAXA_NF = 5;
 
 const TAXA_POR_PAGAMENTO: Record<string, number> = {
   DINHEIRO: 0,

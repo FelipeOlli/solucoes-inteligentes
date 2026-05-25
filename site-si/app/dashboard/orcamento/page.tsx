@@ -24,7 +24,7 @@ function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
-const TAXA_NF = 0.15;
+const TAXA_NF = 0.05;
 
 export default function OrcamentoPage() {
   const [valorServico, setValorServico] = useState("");
@@ -106,7 +106,7 @@ export default function OrcamentoPage() {
 
           <div className="flex items-center gap-3">
             <input type="checkbox" id="emiteNF" checked={emiteNF} onChange={(e) => setEmiteNF(e.target.checked)} className="w-4 h-4 accent-purple-500 cursor-pointer" />
-            <label htmlFor="emiteNF" className="text-sm text-theme-muted cursor-pointer">Emitir nota fiscal <span className="text-purple-400">(+15% no preço final)</span></label>
+            <label htmlFor="emiteNF" className="text-sm text-theme-muted cursor-pointer">Emitir nota fiscal <span className="text-purple-400">(+5% no preço final)</span></label>
           </div>
           <div>
             <label className="block text-sm font-medium text-theme-muted mb-1">Forma de pagamento</label>
@@ -156,7 +156,7 @@ export default function OrcamentoPage() {
             </p>
             {emiteNF && (
               <p>
-                Nota fiscal (15%): <span className="font-medium text-purple-400">{formatBRL(taxaNFValor)}</span>
+                Nota fiscal (5%): <span className="font-medium text-purple-400">{formatBRL(taxaNFValor)}</span>
               </p>
             )}
             {parcelas > 1 && (
