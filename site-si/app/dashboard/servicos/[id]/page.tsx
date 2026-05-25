@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api, withBasePath } from "@/lib/api";
 import { STATUS_LIST } from "@/lib/status";
-import { calcularLucroReal, CUSTO_FIXO, taxaPorPagamento } from "@/lib/lucro";
+import { calcularLucroReal, taxaPorPagamento } from "@/lib/lucro";
 
 const STATUS_LABEL: Record<string, string> = {
   ABERTO: "Aberto",
@@ -463,7 +463,7 @@ export default function ServicoDetailPage() {
           formaPagamento: servico.formaPagamento,
         });
         const taxa = taxaPorPagamento(servico.formaPagamento);
-        const taxaValor = (servico.valorEstimado - CUSTO_FIXO) * taxa / 100;
+        const taxaValor = servico.valorEstimado * taxa / 100;
         const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
         return (
           <div className="bg-theme-card border border-theme rounded-xl p-4 mb-6">
@@ -476,7 +476,9 @@ export default function ServicoDetailPage() {
               {(servico.valorMaterial ?? 0) > 0 && (
                 <span className="text-orange-400">− Material <strong>{fmt(servico.valorMaterial!)}</strong></span>
               )}
-              <span className="text-yellow-500">− Taxa ({taxa.toFixed(2)}%) + Fixo <strong>{fmt(taxaValor + CUSTO_FIXO)}</strong></span>
+              {taxaValor > 0 && (
+                <span className="text-yellow-500">− Taxa ({taxa.toFixed(2)}%) <strong>{fmt(taxaValor)}</strong></span>
+              )}
               <span className={`font-bold text-base border-l border-theme pl-4 ${(lucro ?? 0) >= 0 ? "text-green-400" : "text-red-400"}`}>
                 = Lucro {lucro != null ? fmt(lucro) : "—"}
               </span>

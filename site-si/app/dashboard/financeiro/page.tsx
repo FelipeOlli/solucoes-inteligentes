@@ -23,7 +23,6 @@ type MesData = {
   repasse: number;
   material: number;
   taxa: number;
-  custoFixo: number;
   lucro: number;
   contabilidade: number;
   servicos: number;
@@ -36,7 +35,6 @@ type ResumoResponse = {
     repasse: number;
     material: number;
     taxa: number;
-    custoFixo: number;
     lucro: number;
     contabilidade: number;
     lucroLiquido: number;
@@ -126,7 +124,7 @@ export default function FinanceiroPage() {
       {/* Breakdown de custos do mês */}
       <div className="bg-theme-card border border-theme rounded-xl p-4">
         <h2 className="font-heading font-semibold text-theme-primary mb-3">Composição do lucro — mês atual</h2>
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-sm">
           <div>
             <p className="text-theme-muted mb-0.5">Receita</p>
             <p className="font-semibold text-theme-primary">{fmt(r.receita)}</p>
@@ -142,10 +140,6 @@ export default function FinanceiroPage() {
           <div>
             <p className="text-theme-muted mb-0.5">− Taxa cartão</p>
             <p className="font-semibold text-yellow-500">{r.taxa > 0 ? fmt(r.taxa) : <span className="text-theme-muted">—</span>}</p>
-          </div>
-          <div>
-            <p className="text-theme-muted mb-0.5">− Custo fixo</p>
-            <p className="font-semibold text-yellow-400">{r.custoFixo > 0 ? fmt(r.custoFixo) : <span className="text-theme-muted">—</span>}</p>
           </div>
           <div>
             <p className="text-theme-muted mb-0.5">− Contabilidade</p>
@@ -172,7 +166,6 @@ export default function FinanceiroPage() {
             <Bar dataKey="repasse" name="Repasse" fill="#f87171" radius={[4, 4, 0, 0]} />
             <Bar dataKey="material" name="Material" fill="#fb923c" radius={[4, 4, 0, 0]} />
             <Bar dataKey="taxa" name="Taxa cartão" fill="#eab308" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="custoFixo" name="Custo fixo" fill="#facc15" radius={[4, 4, 0, 0]} />
             <Bar dataKey="contabilidade" name="Contabilidade" fill="#06b6d4" radius={[4, 4, 0, 0]} />
             <Bar dataKey="lucro" name="Lucro" fill="#34d399" radius={[4, 4, 0, 0]} />
           </BarChart>
@@ -211,7 +204,7 @@ export default function FinanceiroPage() {
       {/* Tabela resumo mensal */}
       <div className="bg-theme-card border border-theme rounded-xl p-4 overflow-x-auto">
         <h2 className="font-heading font-semibold text-theme-primary mb-4">Resumo mensal</h2>
-        <table className="w-full text-sm min-w-[600px]">
+        <table className="w-full text-sm min-w-[560px]">
           <thead>
             <tr className="text-left text-theme-muted border-b border-theme">
               <th className="pb-2 font-medium">Mês</th>
@@ -220,7 +213,6 @@ export default function FinanceiroPage() {
               <th className="pb-2 font-medium text-right">Repasse</th>
               <th className="pb-2 font-medium text-right">Material</th>
               <th className="pb-2 font-medium text-right">Taxa cartão</th>
-              <th className="pb-2 font-medium text-right">Custo fixo</th>
               <th className="pb-2 font-medium text-right">Contabilidade</th>
               <th className="pb-2 font-medium text-right">Lucro líquido</th>
             </tr>
@@ -236,7 +228,6 @@ export default function FinanceiroPage() {
                   <td className="py-2 text-right text-red-400">{m.repasse > 0 ? fmt(m.repasse) : <span className="text-theme-muted">—</span>}</td>
                   <td className="py-2 text-right text-orange-400">{m.material > 0 ? fmt(m.material) : <span className="text-theme-muted">—</span>}</td>
                   <td className="py-2 text-right text-yellow-500">{m.taxa > 0 ? fmt(m.taxa) : <span className="text-theme-muted">—</span>}</td>
-                  <td className="py-2 text-right text-yellow-400">{m.custoFixo > 0 ? fmt(m.custoFixo) : <span className="text-theme-muted">—</span>}</td>
                   <td className="py-2 text-right text-cyan-400">{m.contabilidade > 0 ? fmt(m.contabilidade) : <span className="text-theme-muted">—</span>}</td>
                   <td className={`py-2 text-right font-medium ${ll > 0 ? "text-green-400" : ll < 0 ? "text-red-400" : "text-theme-muted"}`}>
                     {m.servicos > 0 || m.contabilidade > 0 ? fmt(ll) : "—"}

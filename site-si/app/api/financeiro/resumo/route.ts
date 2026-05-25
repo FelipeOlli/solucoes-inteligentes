@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { jsonResponse, unauthorized, forbidden } from "@/lib/api-response";
-import { calcularLucroReal, CUSTO_FIXO, taxaPorPagamento } from "@/lib/lucro";
+import { calcularLucroReal, taxaPorPagamento } from "@/lib/lucro";
 
 function mesLabel(year: number, month: number): string {
   return new Date(year, month - 1, 1).toLocaleString("pt-BR", { month: "short", year: "2-digit" });
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     }),
   ]);
 
-  type MesData = { mes: string; receita: number; repasse: number; material: number; taxa: number; custoFixo: number; lucro: number; contabilidade: number; servicos: number };
+  type MesData = { mes: string; receita: number; repasse: number; material: number; taxa: number; lucro: number; contabilidade: number; servicos: number };
   const meses: MesData[] = [];
 
   for (let i = 11; i >= 0; i--) {
@@ -59,7 +59,6 @@ export async function GET(request: NextRequest) {
       repasse: 0,
       material: 0,
       taxa: 0,
-      custoFixo: 0,
       lucro: 0,
       contabilidade: 0,
       servicos: 0,
@@ -75,7 +74,7 @@ export async function GET(request: NextRequest) {
     const repasse = s.valorRepasse ?? 0;
     const material = s.valorMaterial ?? 0;
     const taxaPct = taxaPorPagamento(s.formaPagamento);
-    const taxaValor = (receita - CUSTO_FIXO) * taxaPct / 100;
+    const taxaValor = receita * taxaPct / 100;
     const lucro = calcularLucroReal({
       valorEstimado: s.valorEstimado,
       valorRepasse: s.valorRepasse,
@@ -86,7 +85,6 @@ export async function GET(request: NextRequest) {
     meses[mesIdx].repasse += repasse;
     meses[mesIdx].material += material;
     meses[mesIdx].taxa += taxaValor;
-    meses[mesIdx].custoFixo += CUSTO_FIXO;
     meses[mesIdx].lucro += lucro;
     meses[mesIdx].servicos += 1;
   }
@@ -104,7 +102,6 @@ export async function GET(request: NextRequest) {
     m.repasse = Math.round(m.repasse * 100) / 100;
     m.material = Math.round(m.material * 100) / 100;
     m.taxa = Math.round(m.taxa * 100) / 100;
-    m.custoFixo = Math.round(m.custoFixo * 100) / 100;
     m.lucro = Math.round(m.lucro * 100) / 100;
     m.contabilidade = Math.round(m.contabilidade * 100) / 100;
   }
@@ -119,7 +116,6 @@ export async function GET(request: NextRequest) {
       repasse: mesCorrente.repasse,
       material: mesCorrente.material,
       taxa: mesCorrente.taxa,
-      custoFixo: mesCorrente.custoFixo,
       lucro: mesCorrente.lucro,
       contabilidade: mesCorrente.contabilidade,
       lucroLiquido,

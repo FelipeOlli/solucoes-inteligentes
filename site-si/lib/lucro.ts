@@ -1,5 +1,3 @@
-export const CUSTO_FIXO = 50;
-
 const TAXA_POR_PAGAMENTO: Record<string, number> = {
   DINHEIRO: 0,
   PIX: 0,
@@ -23,7 +21,7 @@ export function calcularLucroReal({
   const taxa = TAXA_POR_PAGAMENTO[formaPagamento ?? ""] ?? 0;
   const coef = 1 - taxa / 100;
 
-  const liquido = (valorEstimado - CUSTO_FIXO) * coef;
+  const liquido = valorEstimado * coef;
   const repasse = valorRepasse ?? 0;
   const material = valorMaterial ?? 0;
 
