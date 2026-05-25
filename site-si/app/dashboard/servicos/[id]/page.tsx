@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api, withBasePath } from "@/lib/api";
 import { STATUS_LIST } from "@/lib/status";
+import { calcularLucroReal, CUSTO_FIXO, taxaPorPagamento, TAXA_NF } from "@/lib/lucro";
 
 const STATUS_LABEL: Record<string, string> = {
   ABERTO: "Aberto",
@@ -31,9 +32,9 @@ function isImageFileName(urlOrName: string): boolean {
 }
 
 function getStatusBadgeClass(status: string): string {
-  if (status === "CONCLUIDO") return "bg-gray-200 text-gray-700";
+  if (status === "CONCLUIDO") return "bg-green-100 text-green-800";
   if (status === "CANCELADO") return "bg-red-100 text-red-800";
-  return "bg-secondary/20 text-white";
+  return "bg-yellow-100 text-yellow-800";
 }
 
 function formatCampoHist(campo: string, anterior: string | null, novo: string | null): string {
@@ -94,6 +95,8 @@ type ServicoDetail = {
   prazoEstimado?: string | null;
   valorEstimado?: number | null;
   valorRepasse?: number | null;
+  valorMaterial?: number | null;
+  emiteNotaFiscal?: boolean;
   imagens?: string[] | null;
   formaPagamento?: string | null;
   convidadoEmail?: string | null;
@@ -107,6 +110,8 @@ type PatchBody = {
   data_agendamento?: string | null;
   valor_estimado?: number | null;
   valor_repasse?: number | null;
+  valor_material?: number | null;
+  emite_nota_fiscal?: boolean;
   categoria_id?: string | null;
   forma_pagamento?: string | null;
   tecnico_id?: string | null;
@@ -135,6 +140,8 @@ export default function ServicoDetailPage() {
   const [editFormaPagamento, setEditFormaPagamento] = useState("");
   const [editTecnicoId, setEditTecnicoId] = useState("");
   const [editValorRepasse, setEditValorRepasse] = useState("");
+  const [editValorMaterial, setEditValorMaterial] = useState("");
+  const [editEmiteNF, setEditEmiteNF] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [error, setError] = useState("");
   const [statusError, setStatusError] = useState("");
@@ -163,11 +170,13 @@ export default function ServicoDetailPage() {
     setEditDataAgendamento(servico.dataAgendamento ? new Date(servico.dataAgendamento).toISOString().slice(0, 16) : "");
     setEditValor(servico.valorEstimado != null ? String(servico.valorEstimado) : "");
     setEditValorRepasse(servico.valorRepasse != null ? String(servico.valorRepasse) : "");
+    setEditValorMaterial(servico.valorMaterial != null ? String(servico.valorMaterial) : "");
+    setEditEmiteNF(servico.emiteNotaFiscal ?? false);
     setEditCategoriaId(servico.categoria?.id ?? "");
     setEditFormaPagamento(servico.formaPagamento ?? "");
     setEditTecnicoId(servico.tecnico?.id ?? "");
     setNovoStatus(servico.statusAtual);
-  }, [servico?.id, servico?.dataAgendamento, servico?.valorEstimado, servico?.categoria?.id, servico?.statusAtual, servico?.formaPagamento]);
+  }, [servico?.id, servico?.dataAgendamento, servico?.valorEstimado, servico?.categoria?.id, servico?.statusAtual, servico?.formaPagamento, servico?.emiteNotaFiscal]);
 
   useEffect(() => {
     api<Categoria[]>("/categorias").then(({ data }) => data && setCategorias(data));
@@ -187,6 +196,8 @@ export default function ServicoDetailPage() {
       data_agendamento: editDataAgendamento ? new Date(editDataAgendamento).toISOString() : null,
       valor_estimado: editValor.trim() ? Number(editValor.trim().replace(",", ".")) || null : null,
       valor_repasse: editValorRepasse.trim() ? Number(editValorRepasse.trim().replace(",", ".")) || null : null,
+      valor_material: editValorMaterial.trim() ? Number(editValorMaterial.trim().replace(",", ".")) || null : null,
+      emite_nota_fiscal: editEmiteNF,
       categoria_id: editCategoriaId || null,
       forma_pagamento: editFormaPagamento || null,
       tecnico_id: editTecnicoId || null,
@@ -430,7 +441,7 @@ export default function ServicoDetailPage() {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
         <div className="min-w-0">
           <h1 className="font-heading text-2xl font-bold text-theme-primary">{servico.codigo}</h1>
           <p className="text-body text-gray-600 break-words">
@@ -440,13 +451,49 @@ export default function ServicoDetailPage() {
             <p className="text-sm text-white mt-1">Agendado: {new Date(servico.dataAgendamento).toLocaleString("pt-BR")}</p>
           )}
           {servico.valorEstimado != null && (
-            <p className="text-sm font-medium mt-1">Valor: R$ {Number(servico.valorEstimado).toLocaleString("pt-BR")}</p>
+            <p className="text-sm font-medium mt-1">Valor cobrado: R$ {Number(servico.valorEstimado).toLocaleString("pt-BR")}</p>
           )}
         </div>
         <span className={`px-3 py-1 rounded self-start ${getStatusBadgeClass(servico.statusAtual)}`}>
           {STATUS_LABEL[servico.statusAtual]}
         </span>
       </div>
+
+      {/* Card de lucro real — visível quando há valor cobrado */}
+      {servico.valorEstimado != null && (() => {
+        const lucro = calcularLucroReal({
+          valorEstimado: servico.valorEstimado,
+          valorRepasse: servico.valorRepasse,
+          valorMaterial: servico.valorMaterial,
+          formaPagamento: servico.formaPagamento,
+          emiteNotaFiscal: servico.emiteNotaFiscal,
+        });
+        const taxa = taxaPorPagamento(servico.formaPagamento);
+        const taxaValor = (servico.valorEstimado - CUSTO_FIXO) * taxa / 100;
+        const nfValor = servico.emiteNotaFiscal ? servico.valorEstimado * (TAXA_NF / 100) : 0;
+        const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        return (
+          <div className="bg-theme-card border border-theme rounded-xl p-4 mb-6">
+            <h2 className="font-heading font-semibold text-theme-primary text-sm mb-3">Composição do lucro</h2>
+            <div className="flex flex-wrap gap-4 text-sm items-center">
+              <span>Receita <strong>{fmt(servico.valorEstimado)}</strong></span>
+              {(servico.valorRepasse ?? 0) > 0 && (
+                <span className="text-red-400">− Repasse <strong>{fmt(servico.valorRepasse!)}</strong></span>
+              )}
+              {(servico.valorMaterial ?? 0) > 0 && (
+                <span className="text-orange-400">− Material <strong>{fmt(servico.valorMaterial!)}</strong></span>
+              )}
+              {servico.emiteNotaFiscal && (
+                <span className="text-purple-400">− NF ({TAXA_NF}%) <strong>{fmt(nfValor)}</strong></span>
+              )}
+              <span className="text-yellow-500">− Taxa ({taxa.toFixed(2)}%) + Fixo <strong>{fmt(taxaValor + CUSTO_FIXO)}</strong></span>
+              <span className={`font-bold text-base border-l border-theme pl-4 ${(lucro ?? 0) >= 0 ? "text-green-400" : "text-red-400"}`}>
+                = Lucro {lucro != null ? fmt(lucro) : "—"}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="bg-theme-card p-4 rounded-lg border border-theme text-theme">
@@ -532,6 +579,20 @@ export default function ServicoDetailPage() {
                 placeholder="0,00 (deixe vazio se executou você mesmo)"
                 className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
               />
+            </div>
+            <div className="space-y-2 mb-3">
+              <label className="block text-sm font-medium text-theme-muted">Material gasto (R$)</label>
+              <input
+                type="text"
+                value={editValorMaterial}
+                onChange={(e) => setEditValorMaterial(e.target.value)}
+                placeholder="0,00 (peças, insumos, etc.)"
+                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+              />
+            </div>
+            <div className="flex items-center gap-3 mb-3">
+              <input type="checkbox" id="editEmiteNF" checked={editEmiteNF} onChange={(e) => setEditEmiteNF(e.target.checked)} className="w-4 h-4 accent-purple-500 cursor-pointer" />
+              <label htmlFor="editEmiteNF" className="text-sm text-theme-muted cursor-pointer">Emitir nota fiscal <span className="text-purple-400">(15% sobre o valor)</span></label>
             </div>
             <div className="space-y-2 mb-3">
               <label className="block text-sm font-medium text-theme-muted">Categoria</label>

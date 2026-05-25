@@ -1,0 +1,1 @@
+ALTER TABLE "Servico" ADD COLUMN "emiteNotaFiscal" BOOLEAN NOT NULL DEFAULT false;
