@@ -115,6 +115,10 @@ model Tecnico {
   endereco  String?
   telefone  String?
   email     String?
+  chavePix  String?
+  banco     String?
+  agencia   String?
+  conta     String?
   ativo     Boolean   @default(true)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

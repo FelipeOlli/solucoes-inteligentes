@@ -15,6 +15,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (body.endereco !== undefined) data.endereco = body.endereco ? String(body.endereco).trim() : null;
     if (body.telefone !== undefined) data.telefone = body.telefone ? String(body.telefone).trim() : null;
     if (body.email !== undefined) data.email = body.email ? String(body.email).trim() : null;
+    if (body.chavePix !== undefined) data.chavePix = body.chavePix ? String(body.chavePix).trim() : null;
+    if (body.banco !== undefined) data.banco = body.banco ? String(body.banco).trim() : null;
+    if (body.agencia !== undefined) data.agencia = body.agencia ? String(body.agencia).trim() : null;
+    if (body.conta !== undefined) data.conta = body.conta ? String(body.conta).trim() : null;
     if (body.ativo !== undefined) data.ativo = Boolean(body.ativo);
 
     const tecnico = await prisma.tecnico.update({ where: { id }, data });
