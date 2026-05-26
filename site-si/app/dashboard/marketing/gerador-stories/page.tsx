@@ -116,14 +116,20 @@ export default function GeradorStoriesPage() {
     await document.fonts.ready;
     await new Promise((r) => requestAnimationFrame(r));
     try {
-      const canvas = await window.html2canvas(el, {
-        width: 1080, height: 1920, scale: 1, backgroundColor: "#050006",
+      const dpr = window.devicePixelRatio || 1;
+      const captured = await window.html2canvas(el, {
+        width: 1080, height: 1920, scale: dpr, backgroundColor: "#050006",
         useCORS: true, allowTaint: true, logging: false,
       });
+      // Reduz para 1080×1920 independente do DPR, mantendo fidelidade visual
+      const out = document.createElement("canvas");
+      out.width = 1080; out.height = 1920;
+      const ctx = out.getContext("2d")!;
+      ctx.drawImage(captured, 0, 0, 1080, 1920);
       const a = document.createElement("a");
       const nome = (titulo || "story").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40);
       a.download = `story-si-${nome}.png`;
-      a.href = canvas.toDataURL("image/png");
+      a.href = out.toDataURL("image/png");
       a.click();
     } catch (err) {
       alert("Erro ao gerar: " + (err instanceof Error ? err.message : err));
