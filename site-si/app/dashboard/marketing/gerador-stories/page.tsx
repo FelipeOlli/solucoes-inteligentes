@@ -288,7 +288,11 @@ export default function GeradorStoriesPage() {
               <div className={s.stHeader}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo/logo-branco.svg" alt="Soluções Inteligentes" className={s.stLogo} />
-                <div className={s.stTag}>{tag}</div>
+                <div className={s.stTag}>
+                <span className={s.stTagLinha} />
+                {tag}
+                <span className={s.stTagLinha} />
+              </div>
               </div>
 
               {desconto && <div className={s.stSelo}>{desconto}</div>}
@@ -305,7 +309,12 @@ export default function GeradorStoriesPage() {
               <div className={s.stInfo}>
                 <div className={s.stTitulo}>{titulo}</div>
                 <div className={s.stPrecos}>
-                  {precoDe && <span className={s.stDe}>R$ {precoDe}</span>}
+                  {precoDe && (
+                    <span className={s.stDeWrap}>
+                      <span className={s.stDeTexto}>R$ {precoDe}</span>
+                      <span className={s.stDeRisco} />
+                    </span>
+                  )}
                   <span className={s.stPorLabel}>por apenas</span>
                   <span className={s.stPor}>R$ {precoPor}</span>
                 </div>

@@ -132,7 +132,7 @@
   align-items: center; gap: 16px; padding: 10px 8px; line-height: 1;
   text-shadow: 0 0 28px rgba(25,203,150,.45);
 }
-.stTag::before, .stTag::after { content: ''; width: 42px; height: 4px; border-radius: 3px; background: var(--verde); opacity: .85; box-shadow: 0 0 14px rgba(25,203,150,.6); }
+.stTagLinha { width: 42px; height: 4px; border-radius: 3px; background: var(--verde); opacity: .85; box-shadow: 0 0 14px rgba(25,203,150,.6); display: inline-block; flex-shrink: 0; }
 
 .stFotoBox {
   position: absolute; top: 430px; left: 95px; right: 95px; height: 620px; border-radius: 32px;
@@ -144,7 +144,8 @@
 .stSelo {
   position: absolute; top: 392px; right: 72px; z-index: 6; background: var(--verde); color: #04241a;
   font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 54px; padding: 14px 30px;
-  border-radius: 18px; transform: rotate(-6deg); box-shadow: 0 12px 30px rgba(0,0,0,.45); line-height: 1;
+  border-radius: 18px; transform: rotate(-6deg); transform-origin: center center;
+  box-shadow: 0 12px 30px rgba(0,0,0,.45); line-height: 1;
 }
 
 .stInfo {
@@ -153,7 +154,9 @@
 }
 .stTitulo { font-family: 'Titillium Web', sans-serif; font-weight: 700; font-size: 70px; line-height: 1.04; color: #fff; margin-bottom: 30px; letter-spacing: -.5px; }
 .stPrecos { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.stDe { font-family: 'Poppins', sans-serif; font-weight: 500; font-size: 40px; color: #9aa3b4; text-decoration: line-through; text-decoration-color: #e0444f; text-decoration-thickness: 4px; }
+.stDeWrap { position: relative; display: inline-block; }
+.stDeTexto { font-family: 'Poppins', sans-serif; font-weight: 500; font-size: 40px; color: #9aa3b4; line-height: 1; display: block; }
+.stDeRisco { position: absolute; left: -4px; right: -4px; top: 50%; height: 4px; background: #e0444f; transform: translateY(-50%); border-radius: 2px; }
 .stPorLabel { font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 32px; color: #cdd4e0; margin-top: 6px; }
 .stPor { font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 108px; color: var(--verde); line-height: 1; letter-spacing: -1px; }
 
