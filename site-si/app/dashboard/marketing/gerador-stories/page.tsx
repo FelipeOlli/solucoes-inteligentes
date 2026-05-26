@@ -299,7 +299,7 @@ export default function GeradorStoriesPage() {
               </div>
               </div>
 
-              {desconto && <div className={s.stSelo}>{desconto}</div>}
+              {desconto && <div className={s.stSeloWrap}><div className={s.stSelo}>{desconto}</div></div>}
 
               <div className={s.stFotoBox}>
                 {foto ? (
