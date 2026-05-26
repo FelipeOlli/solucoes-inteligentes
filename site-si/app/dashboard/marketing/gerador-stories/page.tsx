@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Script from "next/script";
 import Image from "next/image";
 import { api } from "@/lib/api";
@@ -33,33 +33,33 @@ export default function GeradorStoriesPage() {
   const [erroIa, setErroIa] = useState("");
   const [baixando, setBaixando] = useState(false);
 
-  const stageRef = useRef<HTMLDivElement>(null);
   const storyRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.25);
 
   const num = (v: string) => Number(v.replace(",", "."));
 
-  const desconto = (() => {
+  const desconto = useMemo(() => {
     const d = num(precoDe);
     const p = num(precoPor);
     if (!isNaN(d) && d > 0 && !isNaN(p)) return `-${Math.round((1 - p / d) * 100)}%`;
     return null;
-  })();
+  }, [precoDe, precoPor]);
 
   const ajustarEscala = useCallback(() => {
     const wrap = previewRef.current;
-    const stage = stageRef.current;
-    if (!wrap || !stage) return;
-    const disp = Math.min((wrap.clientHeight - 80) / 1920, (wrap.clientWidth - 80) / 1080);
-    stage.style.transform = `scale(${disp})`;
-    stage.style.width = `${1080 * disp}px`;
-    stage.style.height = `${1920 * disp}px`;
+    if (!wrap) return;
+    const scaleX = (wrap.clientWidth - 48) / 1080;
+    const scaleY = (wrap.clientHeight - 48) / 1920;
+    setScale(Math.min(scaleX, scaleY));
   }, []);
 
   useEffect(() => {
     ajustarEscala();
+    const ro = new ResizeObserver(ajustarEscala);
+    if (previewRef.current) ro.observe(previewRef.current);
     window.addEventListener("resize", ajustarEscala);
-    return () => window.removeEventListener("resize", ajustarEscala);
+    return () => { ro.disconnect(); window.removeEventListener("resize", ajustarEscala); };
   }, [ajustarEscala]);
 
   function handleFoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -94,12 +94,13 @@ export default function GeradorStoriesPage() {
   }
 
   async function baixarStory() {
-    if (!window.html2canvas || !storyRef.current || !stageRef.current) return;
+    if (!window.html2canvas || !storyRef.current) return;
     setBaixando(true);
-    const prevTransform = stageRef.current.style.transform;
-    stageRef.current.style.transform = "scale(1)";
+    const el = storyRef.current;
+    const prevTransform = el.style.transform;
+    el.style.transform = "none";
     try {
-      const canvas = await window.html2canvas(storyRef.current, {
+      const canvas = await window.html2canvas(el, {
         width: 1080, height: 1920, scale: 1, backgroundColor: "#050006", useCORS: true,
       });
       const a = document.createElement("a");
@@ -110,7 +111,7 @@ export default function GeradorStoriesPage() {
     } catch (err) {
       alert("Erro ao gerar: " + (err instanceof Error ? err.message : err));
     }
-    stageRef.current.style.transform = prevTransform;
+    el.style.transform = prevTransform;
     setBaixando(false);
   }
 
@@ -236,8 +237,14 @@ export default function GeradorStoriesPage() {
 
         {/* PREVIEW */}
         <main className={s.previewWrap} ref={previewRef}>
-          <div className={s.stage} ref={stageRef}>
-            <div id="story" className={s.story} ref={storyRef}>
+          {/* wrapper ocupa exatamente o espaço visual da arte escalada */}
+          <div style={{ width: 1080 * scale, height: 1920 * scale, flexShrink: 0, overflow: "hidden" }}>
+            <div
+              id="story"
+              className={s.story}
+              ref={storyRef}
+              style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}
+            >
               {/* Circuito decorativo */}
               <svg className={s.circuito} viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
                 <g stroke="#19cb96" strokeWidth="2" fill="none" opacity="0.13">
@@ -291,3 +298,4 @@ export default function GeradorStoriesPage() {
     </>
   );
 }
+

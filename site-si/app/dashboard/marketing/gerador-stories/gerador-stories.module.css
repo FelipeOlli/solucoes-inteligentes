@@ -9,13 +9,15 @@
   --borda: #262c3a;
   --txtDim: #8a93a6;
   display: flex;
-  height: calc(100vh - 7rem); /* desconta a navbar fixa */
+  /* 7rem = pt-28 da navbar; 1.5rem = pb-6 do layout; 1rem de folga */
+  height: calc(100vh - 8.5rem);
   overflow: hidden;
   background: #0a0c11;
   color: #e8ecf3;
   font-family: 'Poppins', sans-serif;
   border-radius: 16px;
-  margin: 0 -1rem; /* ocupa a largura toda sem padding do layout */
+  /* cancela px-4 e pb-6 do layout pai */
+  margin: 0 -1rem -1.5rem;
 }
 
 /* ===== PAINEL ===== */
@@ -111,8 +113,7 @@
 .notaRespiro { font-size: 11px; color: var(--txtDim); margin-top: 7px; line-height: 1.5; }
 
 /* ===== PREVIEW ===== */
-.previewWrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; overflow: hidden; }
-.stage { transform-origin: center; }
+.previewWrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; overflow: hidden; }
 
 /* Story canvas 1080×1920 */
 .story {
