@@ -102,6 +102,46 @@ export default function GeradorStoriesPage() {
     setSugestoes((prev) => prev.map((s, i) => ({ ...s, selecionado: i === idx })));
   }
 
+  async function blobParaDataUrl(blob: Blob): Promise<string> {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async function inlinarImagens(el: HTMLElement) {
+    const imgs = el.querySelectorAll<HTMLImageElement>("img");
+    await Promise.all(Array.from(imgs).map(async (img) => {
+      if (!img.src || img.src.startsWith("data:")) return;
+      try {
+        const blob = await fetch(img.src).then(r => r.blob());
+        img.src = await blobParaDataUrl(blob);
+      } catch { /* ignora imagens que não carregam */ }
+    }));
+  }
+
+  async function inlinarFontes(el: HTMLElement) {
+    // SVG foreignObject não herda fontes do documento — precisa injetar @font-face inline
+    const FONTS_URL = "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&family=Titillium+Web:wght@400;700;900&display=swap";
+    try {
+      const css = await fetch(FONTS_URL).then(r => r.text());
+      // substitui URLs de binários por data URLs para que o SVG isolado as resolva
+      const urls = [...new Set([...css.matchAll(/url\((https:\/\/fonts\.gstatic\.com[^)]+)\)/g)].map(m => m[1]))];
+      let cssInlined = css;
+      await Promise.all(urls.map(async (url) => {
+        try {
+          const blob = await fetch(url).then(r => r.blob());
+          const dataUrl = await blobParaDataUrl(blob);
+          cssInlined = cssInlined.replaceAll(url, dataUrl);
+        } catch { /* ignora fonte que falhar */ }
+      }));
+      const style = document.createElement("style");
+      style.textContent = cssInlined;
+      el.prepend(style);
+    } catch { /* sem fontes inline — usa fallback */ }
+  }
+
   async function baixarStory() {
     if (!storyRef.current) return;
     if (!h2cPronto || !window.html2canvas) { alert("Aguarde o carregamento e tente novamente."); return; }
@@ -116,6 +156,8 @@ export default function GeradorStoriesPage() {
     clone.style.setProperty("--preto", "#050006");
     clone.style.setProperty("--azul", "#122969");
     clone.style.setProperty("--branco", "#ffffff");
+    // foreignObjectRendering exige recursos inline — imagens e fontes não chegam pelo SVG isolado
+    await Promise.all([inlinarImagens(clone), inlinarFontes(clone)]);
     container.appendChild(clone);
     document.body.appendChild(container);
     await document.fonts.ready;
