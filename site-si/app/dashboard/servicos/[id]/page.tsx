@@ -143,6 +143,10 @@ export default function ServicoDetailPage() {
   const [error, setError] = useState("");
   const [statusError, setStatusError] = useState("");
 
+  // Modal exclusão
+  const [showModalExcluir, setShowModalExcluir] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   // Modal convidado
   const [showModalConvidado, setShowModalConvidado] = useState(false);
   const [pendingBody, setPendingBody] = useState<PatchBody | null>(null);
@@ -219,6 +223,14 @@ export default function ServicoDetailPage() {
     }
 
     await executarSalvar(buildBody());
+  }
+
+  async function handleExcluir() {
+    setDeleting(true);
+    const { status } = await api(`/servicos/${id}`, { method: "DELETE" });
+    setDeleting(false);
+    if (status === 401) { router.push("/login"); return; }
+    if (status === 200) router.push("/dashboard/servicos");
   }
 
   async function handleConfirmarConvidado() {
@@ -362,6 +374,36 @@ export default function ServicoDetailPage() {
 
   return (
     <div className="text-theme">
+      {/* Modal de exclusão */}
+      {showModalExcluir && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-theme-card rounded-lg border border-theme p-6 w-full max-w-sm shadow-xl">
+            <h2 className="font-heading font-bold text-theme-primary text-lg mb-2">Excluir serviço</h2>
+            <p className="text-sm text-theme-muted mb-5">
+              Esta ação é irreversível. O serviço <span className="font-medium text-theme">{servico.codigo}</span> e todos os seus dados serão excluídos permanentemente.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowModalExcluir(false)}
+                disabled={deleting}
+                className="px-4 py-2 border border-theme rounded-lg text-sm text-theme-muted hover:opacity-80 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleExcluir}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm disabled:opacity-50"
+              >
+                {deleting ? "Excluindo…" : "Excluir permanentemente"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de convidado */}
       {showModalConvidado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -449,9 +491,18 @@ export default function ServicoDetailPage() {
             <p className="text-sm font-medium mt-1">Valor cobrado: R$ {Number(servico.valorEstimado).toLocaleString("pt-BR")}</p>
           )}
         </div>
-        <span className={`px-3 py-1 rounded self-start ${getStatusBadgeClass(servico.statusAtual)}`}>
-          {STATUS_LABEL[servico.statusAtual]}
-        </span>
+        <div className="flex items-start gap-2 self-start">
+          <span className={`px-3 py-1 rounded ${getStatusBadgeClass(servico.statusAtual)}`}>
+            {STATUS_LABEL[servico.statusAtual]}
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowModalExcluir(true)}
+            className="px-3 py-1 rounded border border-red-300 text-red-600 text-sm hover:bg-red-50 transition"
+          >
+            Excluir
+          </button>
+        </div>
       </div>
 
       {/* Card de lucro real — visível quando há valor cobrado */}

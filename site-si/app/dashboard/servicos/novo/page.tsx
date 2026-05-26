@@ -6,7 +6,7 @@ import { api, withBasePath } from "@/lib/api";
 
 type Cliente = { id: string; nome: string; email: string; telefone: string };
 type Categoria = { id: string; nome: string };
-type Tecnico = { id: string; nome: string };
+type Tecnico = { id: string; nome: string; email?: string | null };
 
 export default function NovoServicoPage() {
   const router = useRouter();
@@ -39,6 +39,10 @@ export default function NovoServicoPage() {
   const [orcamentoFiles, setOrcamentoFiles] = useState<File[]>([]);
   const [draggingImagens, setDraggingImagens] = useState(false);
   const [draggingOrcamento, setDraggingOrcamento] = useState(false);
+  const [showModalConvidado, setShowModalConvidado] = useState(false);
+  const [convidadoTipo, setConvidadoTipo] = useState<"sem" | "tecnico" | "outro">("sem");
+  const [convidadoTecnicoEmail, setConvidadoTecnicoEmail] = useState("");
+  const [convidadoOutroEmail, setConvidadoOutroEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const valorFromQuery = searchParams.get("valor");
@@ -87,10 +91,7 @@ export default function NovoServicoPage() {
     });
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  function buildPostBody(convidadoEmail: string | null): Record<string, unknown> {
     const body: Record<string, unknown> = {
       categoria_id: categoriaId,
       descricao: descricao.trim(),
@@ -99,6 +100,7 @@ export default function NovoServicoPage() {
       valor_material: valorMaterial ? Number(valorMaterial.trim().replace(",", ".")) || null : null,
       forma_pagamento: formaPagamento || null,
       tecnico_id: tecnicoId || null,
+      convidado_email: convidadoEmail,
     };
     if (usarNovoCliente) {
       body.cliente = {
@@ -114,16 +116,16 @@ export default function NovoServicoPage() {
         observacoes: novoCliente.observacoes.trim() || undefined,
       };
     } else {
-      if (!clienteId) {
-        setError("Selecione um cliente ou cadastre um novo.");
-        setLoading(false);
-        return;
-      }
       body.id_cliente = clienteId;
     }
+    return body;
+  }
+
+  async function executarCriacao(convidadoEmail: string | null) {
+    setLoading(true);
     const { data, error: err, status } = await api<{ id: string; codigo: string }>("/servicos", {
       method: "POST",
-      body,
+      body: buildPostBody(convidadoEmail),
     });
     if (status === 401) {
       router.push("/login");
@@ -143,8 +145,111 @@ export default function NovoServicoPage() {
     if (data?.id) router.push(`/dashboard/servicos/${data.id}`);
   }
 
+  async function handleConfirmarConvidado() {
+    let email: string | null = null;
+    if (convidadoTipo === "tecnico") email = convidadoTecnicoEmail || null;
+    else if (convidadoTipo === "outro") email = convidadoOutroEmail.trim() || null;
+    setShowModalConvidado(false);
+    await executarCriacao(email);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+
+    if (!usarNovoCliente && !clienteId) {
+      setError("Selecione um cliente ou cadastre um novo.");
+      return;
+    }
+
+    if (dataAgendamento) {
+      setConvidadoTipo("sem");
+      setConvidadoTecnicoEmail("");
+      setConvidadoOutroEmail("");
+      setShowModalConvidado(true);
+      return;
+    }
+
+    await executarCriacao(null);
+  }
+
+  const tecnicosComEmail = tecnicos.filter((t) => t.email);
+
   return (
     <div className="text-theme">
+      {showModalConvidado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-theme-card rounded-lg border border-theme p-6 w-full max-w-md shadow-xl">
+            <h2 className="font-heading font-bold text-theme-primary text-lg mb-1">Convidado para o agendamento</h2>
+            <p className="text-sm text-theme-muted mb-4">Haverá algum convidado neste agendamento? O convidado receberá um convite pelo Google Calendar.</p>
+
+            <div className="space-y-3 mb-5">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="convidado" value="sem" checked={convidadoTipo === "sem"} onChange={() => setConvidadoTipo("sem")} />
+                <span className="text-sm">Sem convidado</span>
+              </label>
+
+              {tecnicosComEmail.length > 0 && (
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input type="radio" name="convidado" value="tecnico" checked={convidadoTipo === "tecnico"} onChange={() => setConvidadoTipo("tecnico")} className="mt-1" />
+                  <div className="flex-1">
+                    <span className="text-sm">Técnico cadastrado</span>
+                    {convidadoTipo === "tecnico" && (
+                      <select
+                        value={convidadoTecnicoEmail}
+                        onChange={(e) => setConvidadoTecnicoEmail(e.target.value)}
+                        className="mt-2 w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm"
+                        autoFocus
+                      >
+                        <option value="">Selecionar técnico…</option>
+                        {tecnicosComEmail.map((t) => (
+                          <option key={t.id} value={t.email!}>{t.nome} ({t.email})</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </label>
+              )}
+
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input type="radio" name="convidado" value="outro" checked={convidadoTipo === "outro"} onChange={() => setConvidadoTipo("outro")} className="mt-1" />
+                <div className="flex-1">
+                  <span className="text-sm">Outro email</span>
+                  {convidadoTipo === "outro" && (
+                    <input
+                      type="email"
+                      value={convidadoOutroEmail}
+                      onChange={(e) => setConvidadoOutroEmail(e.target.value)}
+                      placeholder="email@exemplo.com"
+                      className="mt-2 w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm"
+                      autoFocus
+                    />
+                  )}
+                </div>
+              </label>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowModalConvidado(false)}
+                className="px-4 py-2 border border-theme rounded-lg text-sm text-theme-muted hover:opacity-80"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmarConvidado}
+                disabled={loading || (convidadoTipo === "tecnico" && !convidadoTecnicoEmail) || (convidadoTipo === "outro" && !convidadoOutroEmail.trim())}
+                className="px-4 py-2 bg-primary text-white rounded-lg text-sm disabled:opacity-50"
+              >
+                {loading ? "Criando…" : "Confirmar e criar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-6">Novo serviço</h1>
       <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
         <div>

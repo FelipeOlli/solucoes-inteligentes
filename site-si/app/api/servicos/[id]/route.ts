@@ -230,3 +230,31 @@ export async function PATCH(
   const imagens = servico.imagens ? (JSON.parse(servico.imagens) as string[]) : null;
   return jsonResponse({ ...servico, imagens });
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await getAuthFromRequest(request);
+  if (!auth || !isDono(auth)) return auth ? forbidden() : unauthorized();
+
+  const id = await getServicoId((await params).id);
+  if (!id) return notFound();
+
+  const servico = await prisma.servico.findUnique({
+    where: { id },
+    select: { id: true, dataAgendamento: true, googleEventId: true },
+  });
+  if (!servico) return notFound();
+
+  if (servico.dataAgendamento && servico.googleEventId) {
+    await enqueueServicoSync(id, "DELETE", { source: "servicos_delete" });
+    await processAgendaSyncQueue().catch((err) => {
+      console.warn("Falha ao remover evento do Calendar antes de excluir serviço:", err);
+    });
+  }
+
+  await prisma.servico.delete({ where: { id } });
+
+  return jsonResponse({ ok: true });
+}

@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
     const formaPagamento = (body.forma_pagamento ?? body.formaPagamento ?? "").trim() || null;
 
     const tecnicoId = body.tecnico_id ? String(body.tecnico_id).trim() || null : null;
+    const convidadoEmail = body.convidado_email ? String(body.convidado_email).trim() || null : null;
 
     const servico = await prisma.servico.create({
       data: {
@@ -113,6 +114,7 @@ export async function POST(request: NextRequest) {
         clienteId,
         categoriaId,
         tecnicoId,
+        convidadoEmail,
         descricao,
         statusAtual: "ABERTO",
         dataAbertura,
