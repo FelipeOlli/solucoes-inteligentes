@@ -104,7 +104,7 @@ FORMATO DE RESPOSTA — responda APENAS com JSON válido, sem texto antes ou dep
 
     if (!titulos.length) throw new Error("Resposta sem títulos.");
 
-    return jsonResponse({ titulos });
+    return jsonResponse({ titulos, _paginaInfo: conteudoPagina || null });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Erro desconhecido";
     return jsonResponse({ error: msg }, 502);

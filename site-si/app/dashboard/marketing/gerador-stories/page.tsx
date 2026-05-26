@@ -84,7 +84,7 @@ export default function GeradorStoriesPage() {
     setLoadingIa(true);
     setErroIa("");
     setSugestoes([]);
-    const { data, error, status } = await api<{ titulos?: string[]; error?: string }>(
+    const { data, error, status } = await api<{ titulos?: string[]; error?: string; _paginaInfo?: string | null }>(
       "/marketing/sugerir-titulos",
       { method: "POST", body: { titulo, link, precoDe, precoPor } }
     );
@@ -93,6 +93,9 @@ export default function GeradorStoriesPage() {
     if (error || data?.error) {
       setErroIa(data?.error ?? error?.message ?? "Erro ao gerar títulos.");
       return;
+    }
+    if (link && data?._paginaInfo === null) {
+      setErroIa("Não consegui ler o link (site bloqueou). Os títulos foram gerados só com os dados manuais.");
     }
     setSugestoes((data?.titulos ?? []).map((t) => ({ texto: t, selecionado: false })));
   }
