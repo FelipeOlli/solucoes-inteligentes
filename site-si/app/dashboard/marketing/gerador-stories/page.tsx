@@ -122,7 +122,7 @@ export default function GeradorStoriesPage() {
       el.style.cssText += ";display:inline-block;position:relative;top:22px;";
     });
     const seloEl = clone.querySelector<HTMLElement>('[class*="stSelo"]:not([class*="stSeloWrap"])');
-    if (seloEl) seloEl.style.cssText += ";display:inline-block;padding:36px 30px 10px;";
+    if (seloEl) { seloEl.style.display = "inline-block"; seloEl.style.paddingTop = "30px"; seloEl.style.paddingBottom = "10px"; }
     container.appendChild(clone);
     document.body.appendChild(container);
     await document.fonts.ready;

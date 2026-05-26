@@ -161,7 +161,7 @@
 .stDeWrap { position: relative; display: inline-block; }
 .stDeTexto { font-family: 'Poppins', sans-serif; font-weight: 500; font-size: 40px; color: #9aa3b4; line-height: 1; display: block; }
 /* calibração visual: centro óptico do glyph Poppins 500 40px no html2canvas */
-.stDeRisco { position: absolute; left: -4px; right: -4px; top: 28px; height: 4px; background: #e0444f; border-radius: 2px; }
+.stDeRisco { position: absolute; left: -4px; right: -4px; top: 32px; height: 4px; background: #e0444f; border-radius: 2px; }
 .stPorLabel { font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 32px; color: #cdd4e0; margin-top: 6px; }
 .stPor { font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 108px; color: var(--verde); line-height: 1; letter-spacing: -1px; }
 
