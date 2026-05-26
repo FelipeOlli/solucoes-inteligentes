@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Script from "next/script";
-import Image from "next/image";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import s from "./gerador-stories.module.css";
@@ -34,6 +33,7 @@ export default function GeradorStoriesPage() {
   const [baixando, setBaixando] = useState(false);
 
   const storyRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.25);
 
@@ -94,14 +94,21 @@ export default function GeradorStoriesPage() {
   }
 
   async function baixarStory() {
-    if (!window.html2canvas || !storyRef.current) return;
+    if (!storyRef.current || !wrapperRef.current) return;
+    if (!window.html2canvas) { alert("Aguarde o carregamento da página e tente novamente."); return; }
     setBaixando(true);
     const el = storyRef.current;
-    const prevTransform = el.style.transform;
+    const wrapper = wrapperRef.current;
+    // Expande wrapper e remove transform para captura em tamanho real
+    const prevOverflow = wrapper.style.overflow;
+    wrapper.style.overflow = "visible";
     el.style.transform = "none";
+    // Aguarda reflow
+    await new Promise((r) => requestAnimationFrame(r));
     try {
       const canvas = await window.html2canvas(el, {
-        width: 1080, height: 1920, scale: 1, backgroundColor: "#050006", useCORS: true,
+        width: 1080, height: 1920, scale: 1, backgroundColor: "#050006",
+        useCORS: true, allowTaint: true, logging: false,
       });
       const a = document.createElement("a");
       const nome = (titulo || "story").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40);
@@ -111,7 +118,9 @@ export default function GeradorStoriesPage() {
     } catch (err) {
       alert("Erro ao gerar: " + (err instanceof Error ? err.message : err));
     }
-    el.style.transform = prevTransform;
+    // Restaura
+    el.style.transform = `scale(${scale})`;
+    wrapper.style.overflow = prevOverflow;
     setBaixando(false);
   }
 
@@ -238,7 +247,7 @@ export default function GeradorStoriesPage() {
         {/* PREVIEW */}
         <main className={s.previewWrap} ref={previewRef}>
           {/* wrapper ocupa exatamente o espaço visual da arte escalada */}
-          <div style={{ width: 1080 * scale, height: 1920 * scale, flexShrink: 0, overflow: "hidden" }}>
+          <div ref={wrapperRef} style={{ width: 1080 * scale, height: 1920 * scale, flexShrink: 0, overflow: "hidden" }}>
             <div
               id="story"
               className={s.story}
@@ -262,7 +271,8 @@ export default function GeradorStoriesPage() {
               <div className={s.glow2} />
 
               <div className={s.stHeader}>
-                <Image src="/logo/logo-branco.svg" alt="Soluções Inteligentes" width={400} height={150} className={s.stLogo} style={{ height: 150, width: "auto" }} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo/logo-branco.svg" alt="Soluções Inteligentes" className={s.stLogo} />
                 <div className={s.stTag}>{tag}</div>
               </div>
 
