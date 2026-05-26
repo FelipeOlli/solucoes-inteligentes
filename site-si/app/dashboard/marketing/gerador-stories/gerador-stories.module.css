@@ -135,7 +135,7 @@
 .stTagLinha { width: 63px; height: 6px; border-radius: 3px; background: var(--verde); opacity: .85; box-shadow: 0 0 14px rgba(25,203,150,.6); flex-shrink: 0; align-self: center; }
 
 .stFotoBox {
-  position: absolute; top: 430px; left: 95px; right: 95px; height: 620px; border-radius: 32px;
+  position: absolute; top: 370px; left: 95px; right: 95px; height: 620px; border-radius: 32px;
   overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center;
   box-shadow: 0 30px 80px rgba(0,0,0,.5);
 }
