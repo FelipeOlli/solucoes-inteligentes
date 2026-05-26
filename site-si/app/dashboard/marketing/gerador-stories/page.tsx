@@ -122,7 +122,8 @@ export default function GeradorStoriesPage() {
       el.style.cssText += ";display:inline-block;position:relative;top:22px;";
     });
     const seloEl = clone.querySelector<HTMLElement>('[class*="stSelo"]:not([class*="stSeloWrap"])');
-    if (seloEl) { seloEl.style.display = "inline-block"; seloEl.style.paddingTop = "20px"; seloEl.style.paddingBottom = "10px"; }
+    // line-height centering é mais confiável que padding no html2canvas para texto único
+    if (seloEl) { seloEl.style.padding = "0 30px"; seloEl.style.lineHeight = "82px"; seloEl.style.display = "inline-block"; }
     container.appendChild(clone);
     document.body.appendChild(container);
     await document.fonts.ready;
