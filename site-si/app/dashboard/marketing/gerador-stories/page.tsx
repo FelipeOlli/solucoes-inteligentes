@@ -116,6 +116,13 @@ export default function GeradorStoriesPage() {
     clone.style.setProperty("--preto", "#050006");
     clone.style.setProperty("--azul", "#122969");
     clone.style.setProperty("--branco", "#ffffff");
+    // html2canvas 1.4.1 não aplica flex align-items:center corretamente;
+    // forçar inline os ajustes que dependem de alinhamento vertical relativo ao texto
+    clone.querySelectorAll<HTMLElement>('[class*="stTagLinha"]').forEach((el) => {
+      el.style.cssText += ";display:inline-block;position:relative;top:14px;";
+    });
+    const seloEl = clone.querySelector<HTMLElement>('[class*="stSelo"]:not([class*="stSeloWrap"])');
+    if (seloEl) seloEl.style.cssText += ";display:inline-block;padding:24px 30px 10px;";
     container.appendChild(clone);
     document.body.appendChild(container);
     await document.fonts.ready;

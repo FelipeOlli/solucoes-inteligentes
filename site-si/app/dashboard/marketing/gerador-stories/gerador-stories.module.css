@@ -132,7 +132,7 @@
   align-items: center; gap: 16px; padding: 10px 8px; line-height: 1;
   text-shadow: 0 0 28px rgba(25,203,150,.45);
 }
-.stTagLinha { width: 42px; height: 4px; border-radius: 3px; background: var(--verde); opacity: .85; box-shadow: 0 0 14px rgba(25,203,150,.6); flex-shrink: 0; align-self: center; margin-top: 20px; }
+.stTagLinha { width: 42px; height: 4px; border-radius: 3px; background: var(--verde); opacity: .85; box-shadow: 0 0 14px rgba(25,203,150,.6); flex-shrink: 0; align-self: center; }
 
 .stFotoBox {
   position: absolute; top: 430px; left: 95px; right: 95px; height: 620px; border-radius: 32px;
