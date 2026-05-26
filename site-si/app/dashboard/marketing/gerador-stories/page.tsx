@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import Script from "next/script";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import s from "./gerador-stories.module.css";
@@ -31,6 +30,7 @@ export default function GeradorStoriesPage() {
   const [loadingIa, setLoadingIa] = useState(false);
   const [erroIa, setErroIa] = useState("");
   const [baixando, setBaixando] = useState(false);
+  const [h2cPronto, setH2cPronto] = useState(false);
 
   const storyRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -61,6 +61,15 @@ export default function GeradorStoriesPage() {
     window.addEventListener("resize", ajustarEscala);
     return () => { ro.disconnect(); window.removeEventListener("resize", ajustarEscala); };
   }, [ajustarEscala]);
+
+  useEffect(() => {
+    if (typeof window.html2canvas === "function") { setH2cPronto(true); return; }
+    const script = document.createElement("script");
+    script.src = "/vendor/html2canvas.min.js";
+    script.onload = () => setH2cPronto(true);
+    script.onerror = () => console.error("Falha ao carregar html2canvas");
+    document.head.appendChild(script);
+  }, []);
 
   function handleFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -95,7 +104,7 @@ export default function GeradorStoriesPage() {
 
   async function baixarStory() {
     if (!storyRef.current || !wrapperRef.current) return;
-    if (!window.html2canvas) { alert("Aguarde o carregamento da página e tente novamente."); return; }
+    if (!h2cPronto || !window.html2canvas) { alert("Aguarde o carregamento e tente novamente."); return; }
     setBaixando(true);
     const el = storyRef.current;
     const wrapper = wrapperRef.current;
@@ -126,7 +135,6 @@ export default function GeradorStoriesPage() {
 
   return (
     <>
-      <Script src="/vendor/html2canvas.min.js" strategy="afterInteractive" />
       <div className={s.root}>
         {/* PAINEL */}
         <aside className={s.painel}>
@@ -235,11 +243,11 @@ export default function GeradorStoriesPage() {
           </div>
 
           {/* Download */}
-          <button type="button" className={s.btnBaixar} onClick={baixarStory} disabled={baixando}>
+          <button type="button" className={s.btnBaixar} onClick={baixarStory} disabled={baixando || !h2cPronto}>
             <svg fill="none" viewBox="0 0 24 24" style={{ width: 19, height: 19, stroke: "#04241a", strokeWidth: 2.4 }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
-            {baixando ? "Gerando…" : "Baixar Story (PNG)"}
+            {baixando ? "Gerando…" : !h2cPronto ? "Carregando…" : "Baixar Story (PNG)"}
           </button>
           <p className={s.dicaFinal}>Depois de baixar: poste no Instagram e cole o <b>sticker de link</b> nativo no respiro do rodapé.</p>
         </aside>
