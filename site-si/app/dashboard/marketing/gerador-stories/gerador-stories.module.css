@@ -129,7 +129,7 @@
 .stTag {
   margin-top: 22px; font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 69px;
   letter-spacing: 5px; color: var(--verde); text-transform: uppercase; display: inline-flex;
-  align-items: center; gap: 24px; padding: 10px 8px; line-height: 1;
+  align-items: center; gap: 24px; padding: 10px 8px; line-height: 1; white-space: nowrap;
   text-shadow: 0 0 28px rgba(25,203,150,.45);
 }
 .stTagLinha { width: 63px; height: 6px; border-radius: 3px; background: var(--verde); opacity: .85; box-shadow: 0 0 14px rgba(25,203,150,.6); flex-shrink: 0; align-self: center; }
