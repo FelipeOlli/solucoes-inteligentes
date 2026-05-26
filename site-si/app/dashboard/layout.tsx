@@ -19,7 +19,6 @@ export default function DashboardLayout({
   const [theme, setTheme] = useState<ThemeId>("default");
   const [themeOpen, setThemeOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [marketingOpen, setMarketingOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -142,40 +141,13 @@ export default function DashboardLayout({
                 >
                   Financeiro
                 </Link>
-                {/* Dropdown Marketing */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setMarketingOpen((o) => !o)}
-                    className={`text-sm transition opacity-90 hover:opacity-100 flex items-center gap-1 ${pathname.startsWith("/dashboard/marketing") ? "font-semibold underline" : ""}`}
-                    style={{ color: pathname.startsWith("/dashboard/marketing") ? "var(--color-navbar-text)" : "inherit" }}
-                  >
-                    Marketing
-                    <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" style={{ width: 12, height: 12, stroke: "currentColor" }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {marketingOpen && (
-                    <>
-                      <div className="fixed inset-0 z-10" aria-hidden onClick={() => setMarketingOpen(false)} />
-                      <ul
-                        className="absolute left-0 top-full mt-2 py-1 rounded-xl border shadow-lg z-20 min-w-[180px]"
-                        style={{ backgroundColor: "var(--color-navbar)", borderColor: "var(--color-navbar-border)" }}
-                      >
-                        <li>
-                          <Link
-                            href="/dashboard/marketing/gerador-stories"
-                            onClick={() => setMarketingOpen(false)}
-                            className="block px-4 py-2 text-sm hover:opacity-90"
-                            style={{ color: "var(--color-navbar-text)" }}
-                          >
-                            Gerador de Stories
-                          </Link>
-                        </li>
-                      </ul>
-                    </>
-                  )}
-                </div>
+                <Link
+                  href="/dashboard/marketing"
+                  className={navLinkClass(pathname.startsWith("/dashboard/marketing"))}
+                  style={{ color: pathname.startsWith("/dashboard/marketing") ? "var(--color-navbar-text)" : "inherit" }}
+                >
+                  Marketing
+                </Link>
               </nav>
             </div>
             <div className="flex items-center gap-2">
@@ -338,25 +310,14 @@ export default function DashboardLayout({
               >
                 Financeiro
               </Link>
-              {/* Marketing mobile */}
-              <details open={pathname.startsWith("/dashboard/marketing")}>
-                <summary
-                  className={`text-sm cursor-pointer select-none list-none transition opacity-90 hover:opacity-100 ${pathname.startsWith("/dashboard/marketing") ? "font-semibold underline" : ""}`}
-                  style={{ color: pathname.startsWith("/dashboard/marketing") ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Marketing ▾
-                </summary>
-                <div className="pl-4 mt-1 flex flex-col gap-2">
-                  <Link
-                    href="/dashboard/marketing/gerador-stories"
-                    className={navLinkClass(pathname === "/dashboard/marketing/gerador-stories")}
-                    style={{ color: pathname === "/dashboard/marketing/gerador-stories" ? "var(--color-navbar-text)" : "inherit" }}
-                    onClick={() => setMobileNavOpen(false)}
-                  >
-                    Gerador de Stories
-                  </Link>
-                </div>
-              </details>
+              <Link
+                href="/dashboard/marketing"
+                className={navLinkClass(pathname.startsWith("/dashboard/marketing"))}
+                style={{ color: pathname.startsWith("/dashboard/marketing") ? "var(--color-navbar-text)" : "inherit" }}
+                onClick={() => setMobileNavOpen(false)}
+              >
+                Marketing
+              </Link>
             </nav>
           )}
         </div>
