@@ -116,27 +116,19 @@ export default function GeradorStoriesPage() {
     clone.style.setProperty("--preto", "#050006");
     clone.style.setProperty("--azul", "#122969");
     clone.style.setProperty("--branco", "#ffffff");
-    // html2canvas 1.4.1 não aplica flex align-items:center corretamente;
-    // forçar inline os ajustes que dependem de alinhamento vertical relativo ao texto
-    clone.querySelectorAll<HTMLElement>('[class*="stTagLinha"]').forEach((el) => {
-      el.style.cssText += ";display:inline-block;position:relative;top:22px;";
-    });
-    const seloEl = clone.querySelector<HTMLElement>('[class*="stSelo"]:not([class*="stSeloWrap"])');
-    // remove classe para eliminar interferência do CSS module e reescreve tudo inline
-    if (seloEl) {
-      seloEl.removeAttribute("class");
-      seloEl.style.cssText = "display:inline-block;background:#19cb96;color:#04241a;font-family:'Titillium Web',sans-serif;font-weight:900;font-size:54px;padding:14px 30px;border-radius:18px;transform:rotate(-6deg);transform-origin:center center;box-shadow:0 12px 30px rgba(0,0,0,.45);line-height:1;";
-    }
     container.appendChild(clone);
     document.body.appendChild(container);
     await document.fonts.ready;
     await new Promise((r) => requestAnimationFrame(r));
     try {
       const dpr = window.devicePixelRatio || 1;
+      // foreignObjectRendering: usa SVG <foreignObject> — renderização nativa do navegador,
+      // pixel-perfect em relação à preview. Elimina bugs de posicionamento do modo padrão.
       const captured = await window.html2canvas(clone, {
         width: 1080, height: 1920, scale: dpr, backgroundColor: "#050006",
         useCORS: true, allowTaint: true, logging: false,
         windowWidth: 1080, windowHeight: 1920, scrollX: 0, scrollY: 0,
+        foreignObjectRendering: true,
       });
       const out = document.createElement("canvas");
       out.width = 1080; out.height = 1920;

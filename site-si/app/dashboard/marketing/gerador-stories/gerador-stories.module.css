@@ -144,10 +144,8 @@
 /* Wrapper posiciona sem transform; .stSelo aplica só a rotação */
 .stSeloWrap { position: absolute; top: 392px; right: 72px; z-index: 6; }
 .stSelo {
-  display: inline-block;
-  padding: 26px 30px 14px;
-  background: var(--verde); color: #04241a;
-  font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 54px;
+  display: inline-block; background: var(--verde); color: #04241a;
+  font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 54px; padding: 14px 30px;
   border-radius: 18px; transform: rotate(-6deg); transform-origin: center center;
   box-shadow: 0 12px 30px rgba(0,0,0,.45); line-height: 1;
 }
@@ -160,8 +158,8 @@
 .stPrecos { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .stDeWrap { position: relative; display: inline-block; }
 .stDeTexto { font-family: 'Poppins', sans-serif; font-weight: 500; font-size: 40px; color: #9aa3b4; line-height: 1; display: block; }
-/* calibração visual: centro óptico do glyph Poppins 500 40px no html2canvas */
-.stDeRisco { position: absolute; left: -4px; right: -4px; top: 32px; height: 4px; background: #e0444f; border-radius: 2px; }
+/* font-size 40px, line-height 1 → centro em 20px − metade da altura (2px) = 18px */
+.stDeRisco { position: absolute; left: -4px; right: -4px; top: 18px; height: 4px; background: #e0444f; border-radius: 2px; }
 .stPorLabel { font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 32px; color: #cdd4e0; margin-top: 6px; }
 .stPor { font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 108px; color: var(--verde); line-height: 1; letter-spacing: -1px; }
 
