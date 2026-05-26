@@ -112,7 +112,8 @@ export default function GeradorStoriesPage() {
     const prevOverflow = wrapper.style.overflow;
     wrapper.style.overflow = "visible";
     el.style.transform = "none";
-    // Aguarda reflow
+    // Aguarda fontes e reflow antes de capturar
+    await document.fonts.ready;
     await new Promise((r) => requestAnimationFrame(r));
     try {
       const canvas = await window.html2canvas(el, {
