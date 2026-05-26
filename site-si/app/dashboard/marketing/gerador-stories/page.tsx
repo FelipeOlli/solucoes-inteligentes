@@ -106,28 +106,26 @@ export default function GeradorStoriesPage() {
     if (!storyRef.current) return;
     if (!h2cPronto || !window.html2canvas) { alert("Aguarde o carregamento e tente novamente."); return; }
     setBaixando(true);
-    // Clona o elemento para captura isolada — sem transform, sem scroll offset
+    // Container invisível em (0,0) — posição negativa quebra o cálculo de right/top no html2canvas
+    const container = document.createElement("div");
+    container.style.cssText = "position:fixed;top:0;left:0;width:1080px;height:1920px;overflow:hidden;z-index:-9999;pointer-events:none;opacity:0;";
     const clone = storyRef.current.cloneNode(true) as HTMLElement;
-    clone.style.position = "fixed";
-    clone.style.top = "-9999px";
-    clone.style.left = "-9999px";
-    clone.style.transform = "none";
-    clone.style.width = "1080px";
-    clone.style.height = "1920px";
-    clone.style.overflow = "hidden";
+    clone.style.cssText = "position:absolute;top:0;left:0;transform:none;width:1080px;height:1920px;overflow:hidden;";
     // CSS vars definidas no .root ficam fora de escopo no clone — injetar diretamente
     clone.style.setProperty("--verde", "#19cb96");
     clone.style.setProperty("--preto", "#050006");
     clone.style.setProperty("--azul", "#122969");
     clone.style.setProperty("--branco", "#ffffff");
-    document.body.appendChild(clone);
+    container.appendChild(clone);
+    document.body.appendChild(container);
     await document.fonts.ready;
     await new Promise((r) => requestAnimationFrame(r));
     try {
       const dpr = window.devicePixelRatio || 1;
       const captured = await window.html2canvas(clone, {
         width: 1080, height: 1920, scale: dpr, backgroundColor: "#050006",
-        useCORS: true, allowTaint: true, logging: false, x: 0, y: 0,
+        useCORS: true, allowTaint: true, logging: false,
+        windowWidth: 1080, windowHeight: 1920, scrollX: 0, scrollY: 0,
       });
       const out = document.createElement("canvas");
       out.width = 1080; out.height = 1920;
@@ -140,7 +138,7 @@ export default function GeradorStoriesPage() {
     } catch (err) {
       alert("Erro ao gerar: " + (err instanceof Error ? err.message : err));
     }
-    document.body.removeChild(clone);
+    document.body.removeChild(container);
     setBaixando(false);
   }
 
