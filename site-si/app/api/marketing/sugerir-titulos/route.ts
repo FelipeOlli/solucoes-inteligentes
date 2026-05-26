@@ -5,6 +5,41 @@ import { jsonResponse, unauthorized, forbidden, badRequest } from "@/lib/api-res
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+function extrairMeta(html: string, prop: string): string {
+  const re = new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']+)["']`, "i");
+  const re2 = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${prop}["']`, "i");
+  return (re.exec(html) ?? re2.exec(html))?.[1]?.trim() ?? "";
+}
+
+function extrairTitle(html: string): string {
+  return /<title[^>]*>([^<]+)<\/title>/i.exec(html)?.[1]?.trim() ?? "";
+}
+
+async function lerPagina(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "pt-BR,pt;q=0.9",
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(8000),
+    });
+    const html = await res.text();
+    const ogTitle = extrairMeta(html, "og:title");
+    const ogDesc = extrairMeta(html, "og:description");
+    const title = extrairTitle(html);
+    const partes = [
+      ogTitle ? "Título da página: " + ogTitle : (title ? "Título da página: " + title : ""),
+      ogDesc ? "Descrição: " + ogDesc.slice(0, 400) : "",
+    ].filter(Boolean);
+    return partes.length ? partes.join("\n") : "";
+  } catch {
+    return "";
+  }
+}
+
 export async function POST(request: NextRequest) {
   const auth = await getAuthFromRequest(request);
   if (!auth || !isDono(auth)) return auth ? forbidden() : unauthorized();
@@ -18,9 +53,11 @@ export async function POST(request: NextRequest) {
   const nPor = Number(String(precoPor).replace(",", "."));
   const desconto = !isNaN(nDe) && nDe > 0 ? Math.round((1 - nPor / nDe) * 100) + "%" : null;
 
+  const conteudoPagina = link ? await lerPagina(link) : "";
+
   const contexto = [
     titulo ? "Nome cru do produto: " + titulo : "",
-    link ? "Link da oferta: " + link : "",
+    conteudoPagina || (link ? "Link da oferta: " + link : ""),
     precoDe ? "Preço original: R$ " + precoDe : "",
     "Preço atual: R$ " + precoPor,
     desconto ? "Desconto: " + desconto : "",
