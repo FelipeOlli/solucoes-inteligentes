@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import s from "./gerador-stories.module.css";
 
@@ -14,8 +13,6 @@ declare global {
 const TAGS = ["OFERTA", "ACHADO DO DIA", "BAIXOU"] as const;
 type Tag = typeof TAGS[number];
 
-type Sugestao = { texto: string; selecionado: boolean };
-
 export default function GeradorStoriesPage() {
   const router = useRouter();
 
@@ -25,10 +22,6 @@ export default function GeradorStoriesPage() {
   const [precoDe, setPrecoDe] = useState("299,90");
   const [precoPor, setPrecoPor] = useState("179,90");
   const [tag, setTag] = useState<Tag>("OFERTA");
-  const [link, setLink] = useState("");
-  const [sugestoes, setSugestoes] = useState<Sugestao[]>([]);
-  const [loadingIa, setLoadingIa] = useState(false);
-  const [erroIa, setErroIa] = useState("");
   const [baixando, setBaixando] = useState(false);
   const [h2cPronto, setH2cPronto] = useState(false);
 
@@ -78,31 +71,6 @@ export default function GeradorStoriesPage() {
     const reader = new FileReader();
     reader.onload = (ev) => setFoto(ev.target?.result as string);
     reader.readAsDataURL(f);
-  }
-
-  async function gerarTitulos() {
-    setLoadingIa(true);
-    setErroIa("");
-    setSugestoes([]);
-    const { data, error, status } = await api<{ titulos?: string[]; error?: string; _paginaInfo?: string | null }>(
-      "/marketing/sugerir-titulos",
-      { method: "POST", body: { titulo, link, precoDe, precoPor } }
-    );
-    setLoadingIa(false);
-    if (status === 401) { router.push("/login"); return; }
-    if (error || data?.error) {
-      setErroIa(data?.error ?? error?.message ?? "Erro ao gerar títulos.");
-      return;
-    }
-    if (link && data?._paginaInfo === null) {
-      setErroIa("Não consegui ler o link (site bloqueou). Os títulos foram gerados só com os dados manuais.");
-    }
-    setSugestoes((data?.titulos ?? []).map((t) => ({ texto: t, selecionado: false })));
-  }
-
-  function usarSugestao(idx: number) {
-    setTitulo(sugestoes[idx].texto);
-    setSugestoes((prev) => prev.map((s, i) => ({ ...s, selecionado: i === idx })));
   }
 
   async function blobParaDataUrl(blob: Blob): Promise<string> {
@@ -243,52 +211,6 @@ export default function GeradorStoriesPage() {
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* IA */}
-          <div className={s.blocoIa}>
-            <div className={s.blocoIaTopo}>
-              <svg fill="none" viewBox="0 0 24 24" strokeWidth="1.8" style={{ width: 16, height: 16, stroke: "#19cb96" }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-              </svg>
-              <span>Sugestão de título com IA</span>
-              <span className={s.badgeHaiku}>Haiku</span>
-            </div>
-            <input
-              className={s.input}
-              type="text"
-              placeholder="Cole o link da oferta (Shopee, ML, Amazon…)"
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
-              style={{ marginBottom: 10 }}
-            />
-            <button type="button" className={s.btnGerar} onClick={gerarTitulos} disabled={loadingIa || !precoPor}>
-              {loadingIa ? (
-                <><span className={s.spinner} />Gerando…</>
-              ) : (
-                <>
-                  <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" style={{ width: 15, height: 15, stroke: "#19cb96" }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
-                  Gerar títulos com Haiku
-                </>
-              )}
-            </button>
-            {erroIa && <div className={s.erroIa}>{erroIa}</div>}
-            {sugestoes.length > 0 && (
-              <div className={s.sugestoes}>
-                {sugestoes.map((sg, i) => (
-                  <div
-                    key={i}
-                    className={`${s.cardTitulo} ${sg.selecionado ? s.cardTituloSelecionado : ""}`}
-                    onClick={() => usarSugestao(i)}
-                  >
-                    {sg.texto}
-                    <span className={s.usar}>Usar este</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Info publicidade */}
