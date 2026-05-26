@@ -108,7 +108,18 @@ export default function GeradorStoriesPage() {
     setBaixando(true);
     // Clona o elemento para captura isolada — sem transform, sem scroll offset
     const clone = storyRef.current.cloneNode(true) as HTMLElement;
-    clone.style.cssText = "position:fixed;top:-9999px;left:-9999px;transform:none;width:1080px;height:1920px;overflow:hidden;";
+    clone.style.position = "fixed";
+    clone.style.top = "-9999px";
+    clone.style.left = "-9999px";
+    clone.style.transform = "none";
+    clone.style.width = "1080px";
+    clone.style.height = "1920px";
+    clone.style.overflow = "hidden";
+    // CSS vars definidas no .root ficam fora de escopo no clone — injetar diretamente
+    clone.style.setProperty("--verde", "#19cb96");
+    clone.style.setProperty("--preto", "#050006");
+    clone.style.setProperty("--azul", "#122969");
+    clone.style.setProperty("--branco", "#ffffff");
     document.body.appendChild(clone);
     await document.fonts.ready;
     await new Promise((r) => requestAnimationFrame(r));
