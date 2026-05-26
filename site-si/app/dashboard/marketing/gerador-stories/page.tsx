@@ -103,29 +103,24 @@ export default function GeradorStoriesPage() {
   }
 
   async function baixarStory() {
-    if (!storyRef.current || !wrapperRef.current) return;
+    if (!storyRef.current) return;
     if (!h2cPronto || !window.html2canvas) { alert("Aguarde o carregamento e tente novamente."); return; }
     setBaixando(true);
-    const el = storyRef.current;
-    const wrapper = wrapperRef.current;
-    // Expande wrapper e remove transform para captura em tamanho real
-    const prevOverflow = wrapper.style.overflow;
-    wrapper.style.overflow = "visible";
-    el.style.transform = "none";
-    // Aguarda fontes e reflow antes de capturar
+    // Clona o elemento para captura isolada — sem transform, sem scroll offset
+    const clone = storyRef.current.cloneNode(true) as HTMLElement;
+    clone.style.cssText = "position:fixed;top:-9999px;left:-9999px;transform:none;width:1080px;height:1920px;overflow:hidden;";
+    document.body.appendChild(clone);
     await document.fonts.ready;
     await new Promise((r) => requestAnimationFrame(r));
     try {
       const dpr = window.devicePixelRatio || 1;
-      const captured = await window.html2canvas(el, {
+      const captured = await window.html2canvas(clone, {
         width: 1080, height: 1920, scale: dpr, backgroundColor: "#050006",
-        useCORS: true, allowTaint: true, logging: false,
+        useCORS: true, allowTaint: true, logging: false, x: 0, y: 0,
       });
-      // Reduz para 1080×1920 independente do DPR, mantendo fidelidade visual
       const out = document.createElement("canvas");
       out.width = 1080; out.height = 1920;
-      const ctx = out.getContext("2d")!;
-      ctx.drawImage(captured, 0, 0, 1080, 1920);
+      out.getContext("2d")!.drawImage(captured, 0, 0, 1080, 1920);
       const a = document.createElement("a");
       const nome = (titulo || "story").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40);
       a.download = `story-si-${nome}.png`;
@@ -134,9 +129,7 @@ export default function GeradorStoriesPage() {
     } catch (err) {
       alert("Erro ao gerar: " + (err instanceof Error ? err.message : err));
     }
-    // Restaura
-    el.style.transform = `scale(${scale})`;
-    wrapper.style.overflow = prevOverflow;
+    document.body.removeChild(clone);
     setBaixando(false);
   }
 
