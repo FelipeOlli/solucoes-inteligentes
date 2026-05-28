@@ -124,9 +124,13 @@ export default function OrcamentoPage() {
     if (!clienteSelecionado || !descricao.trim() || !exibirResultado) return;
     setGerando(true);
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
       const res = await fetch("/api/orcamento/pdf", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           clienteId: clienteSelecionado.id,
           descricao: descricao.trim(),
