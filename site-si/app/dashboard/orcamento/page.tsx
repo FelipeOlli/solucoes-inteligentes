@@ -66,22 +66,26 @@ export default function OrcamentoPage() {
   const exibirResultado = valorServico !== "" || valorMaterial !== "";
   const metodoAtual = METODOS.find((m) => m.id === metodo)!;
 
-  // busca clientes com debounce
-  useEffect(() => {
-    if (!clienteQuery.trim() || clienteSelecionado) return;
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/clientes?q=${encodeURIComponent(clienteQuery)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setClientes(data.slice(0, 8));
-          setShowDropdown(true);
-        }
-      } catch {
-        // silencioso
+  async function buscarClientes(q: string) {
+    try {
+      const url = q.trim() ? `/api/clientes?q=${encodeURIComponent(q.trim())}` : "/api/clientes";
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setClientes(data.slice(0, 8));
+        setShowDropdown(true);
       }
-    }, 300);
+    } catch {
+      // silencioso
+    }
+  }
+
+  // busca clientes com debounce ao digitar
+  useEffect(() => {
+    if (clienteSelecionado) return;
+    const timer = setTimeout(() => buscarClientes(clienteQuery), 200);
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clienteQuery, clienteSelecionado]);
 
   // fecha dropdown ao clicar fora
@@ -170,7 +174,9 @@ export default function OrcamentoPage() {
                   setClienteQuery(e.target.value);
                   if (clienteSelecionado) limparCliente();
                 }}
-                onFocus={() => { if (clientes.length > 0) setShowDropdown(true); }}
+                onFocus={() => {
+                  if (!clienteSelecionado) buscarClientes(clienteQuery);
+                }}
                 placeholder="Buscar cliente..."
                 className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
               />
