@@ -68,8 +68,11 @@ export default function OrcamentoPage() {
 
   async function buscarClientes(q: string) {
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
       const url = q.trim() ? `/api/clientes?q=${encodeURIComponent(q.trim())}` : "/api/clientes";
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       if (res.ok) {
         const data = await res.json();
         setClientes(data.slice(0, 8));
