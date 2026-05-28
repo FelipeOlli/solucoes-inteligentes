@@ -5,13 +5,8 @@ import {
   View,
   Image,
   StyleSheet,
-  Font,
 } from "@react-pdf/renderer";
 
-Font.register({
-  family: "Helvetica",
-  fonts: [],
-});
 
 const NAVY = "#122969";
 const GRAY = "#555555";

@@ -2,12 +2,18 @@ export const runtime = "nodejs";
 
 import { NextRequest } from "next/server";
 import path from "path";
+import fs from "fs";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import { createElement, type ReactElement, type JSXElementConstructor } from "react";
 import { prisma } from "@/lib/db";
 import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { unauthorized, forbidden, errorResponse } from "@/lib/api-response";
 import { OrcamentoPDFDocument } from "@/lib/orcamento/pdf-template";
+
+function toDataURI(filePath: string, mime: string): string {
+  const data = fs.readFileSync(filePath);
+  return `data:${mime};base64,${data.toString("base64")}`;
+}
 
 export async function POST(request: NextRequest) {
   const auth = await getAuthFromRequest(request);
@@ -38,8 +44,8 @@ export async function POST(request: NextRequest) {
   if (!cliente) return errorResponse("Cliente não encontrado", "NOT_FOUND", 404);
 
   const publicDir = path.join(process.cwd(), "public");
-  const logoPath = path.join(publicDir, "orcamento", "logo-si.png");
-  const carimboPath = path.join(publicDir, "orcamento", "assinatura-carimbo.png");
+  const logoDataURI = toDataURI(path.join(publicDir, "orcamento", "logo-si.png"), "image/png");
+  const carimboDataURI = toDataURI(path.join(publicDir, "orcamento", "assinatura-carimbo.png"), "image/png");
 
   const doc = createElement(OrcamentoPDFDocument, {
     clienteNome: cliente.nome,
@@ -50,8 +56,8 @@ export async function POST(request: NextRequest) {
     metodo,
     parcelas,
     valorParcela,
-    logoPath,
-    carimboPath,
+    logoPath: logoDataURI,
+    carimboPath: carimboDataURI,
   });
 
   let buffer: Buffer;
