@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 const FIXO = 50;
@@ -24,12 +24,32 @@ function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
+interface Cliente {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string;
+}
+
 export default function OrcamentoPage() {
   const [valorServico, setValorServico] = useState("");
   const [valorMaterial, setValorMaterial] = useState("");
   const [lucro, setLucro] = useState("");
   const [metodo, setMetodo] = useState<MetodoPagamento>("maquininha");
   const [parcelas, setParcelas] = useState(1);
+
+  // cliente
+  const [clienteQuery, setClienteQuery] = useState("");
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // descrição
+  const [descricao, setDescricao] = useState("");
+
+  // estado do botão
+  const [gerando, setGerando] = useState(false);
 
   const vS = Number(valorServico.replace(/,/g, ".")) || 0;
   const vM = Number(valorMaterial.replace(/,/g, ".")) || 0;
@@ -44,8 +64,36 @@ export default function OrcamentoPage() {
   const valorParcela = resultado / parcelas;
 
   const exibirResultado = valorServico !== "" || valorMaterial !== "";
-
   const metodoAtual = METODOS.find((m) => m.id === metodo)!;
+
+  // busca clientes com debounce
+  useEffect(() => {
+    if (!clienteQuery.trim() || clienteSelecionado) return;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/clientes?q=${encodeURIComponent(clienteQuery)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setClientes(data.slice(0, 8));
+          setShowDropdown(true);
+        }
+      } catch {
+        // silencioso
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [clienteQuery, clienteSelecionado]);
+
+  // fecha dropdown ao clicar fora
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   function handleMetodoChange(novoMetodo: MetodoPagamento) {
     setMetodo(novoMetodo);
@@ -53,13 +101,121 @@ export default function OrcamentoPage() {
     if (parcelas > max) setParcelas(1);
   }
 
+  function selecionarCliente(c: Cliente) {
+    setClienteSelecionado(c);
+    setClienteQuery(c.nome);
+    setShowDropdown(false);
+    setClientes([]);
+  }
+
+  function limparCliente() {
+    setClienteSelecionado(null);
+    setClienteQuery("");
+  }
+
+  async function gerarPDF() {
+    if (!clienteSelecionado || !descricao.trim() || !exibirResultado) return;
+    setGerando(true);
+    try {
+      const res = await fetch("/api/orcamento/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clienteId: clienteSelecionado.id,
+          descricao: descricao.trim(),
+          valor: resultado,
+          metodo,
+          parcelas,
+          taxaPct,
+          valorParcela,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err?.error || "Erro ao gerar PDF");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Si_${clienteSelecionado.nome.replace(/[^a-zA-Z0-9À-ú ]/g, "").replace(/\s+/g, "_")}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("Erro de rede ao gerar PDF");
+    } finally {
+      setGerando(false);
+    }
+  }
+
+  const podGerarPDF = !!clienteSelecionado && descricao.trim().length > 0 && exibirResultado;
+
   return (
     <div className="text-theme">
       <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-2">Orçamento</h1>
-      <p className="text-body text-theme-muted mb-6">Informe os valores para calcular o valor final do serviço.</p>
+      <p className="text-body text-theme-muted mb-6">Informe os valores para calcular o valor final e gerar o PDF do orçamento.</p>
 
       <div className="bg-theme-card p-6 rounded-lg border border-theme max-w-md">
         <div className="space-y-4">
+
+          {/* Seletor de cliente */}
+          <div ref={dropdownRef} className="relative">
+            <label className="block text-sm font-medium text-theme-muted mb-1">Cliente</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={clienteQuery}
+                onChange={(e) => {
+                  setClienteQuery(e.target.value);
+                  if (clienteSelecionado) limparCliente();
+                }}
+                onFocus={() => { if (clientes.length > 0) setShowDropdown(true); }}
+                placeholder="Buscar cliente..."
+                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+              />
+              {clienteSelecionado && (
+                <button
+                  onClick={limparCliente}
+                  className="px-3 py-2 rounded-lg border border-theme text-theme-muted hover:text-theme text-sm"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            {showDropdown && clientes.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-theme-card border border-theme rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                {clientes.map((c) => (
+                  <button
+                    key={c.id}
+                    onMouseDown={() => selecionarCliente(c)}
+                    className="w-full text-left px-4 py-2 hover:bg-theme-hover text-sm"
+                  >
+                    <span className="font-medium text-theme">{c.nome}</span>
+                    <span className="text-theme-muted ml-2">{c.telefone}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {clienteSelecionado && (
+              <p className="text-xs text-theme-muted mt-1">
+                {clienteSelecionado.email} · {clienteSelecionado.telefone}
+              </p>
+            )}
+          </div>
+
+          {/* Descrição do serviço */}
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Descrição do serviço</label>
+            <textarea
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              placeholder="Ex: Troca do display (Samsung A325M/DS)"
+              rows={2}
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme resize-none"
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-theme-muted mb-1">Valor do serviço (R$)</label>
             <input
@@ -149,10 +305,22 @@ export default function OrcamentoPage() {
         )}
 
         {exibirResultado && (
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col gap-2">
+            <button
+              onClick={gerarPDF}
+              disabled={!podGerarPDF || gerando}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-theme-cta font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {gerando ? "Gerando..." : "Gerar PDF do orçamento"}
+            </button>
+            {!podGerarPDF && (
+              <p className="text-xs text-theme-muted">
+                Preencha cliente e descrição para gerar o PDF.
+              </p>
+            )}
             <Link
               href={`/dashboard/servicos/novo?valor=${encodeURIComponent(resultado.toFixed(2))}`}
-              className="inline-flex px-4 py-2 rounded-lg bg-theme-cta font-medium hover:opacity-90"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-theme font-medium text-sm hover:opacity-90"
             >
               Novo serviço com valor final
             </Link>

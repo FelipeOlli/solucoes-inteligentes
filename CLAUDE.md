@@ -88,9 +88,9 @@ Commits detalhados vão no git, não aqui.
 - Tabela exibe PIX com prioridade; se não tiver, mostra banco/agência/conta
 
 ## Sessões recentes
-### 2026-05-20 — Base de Conhecimento
-Estado atual: nova aba "Base de Conhecimento" em Contabilidade — CRUD de artigos com título, categoria, resumo, conteúdo e anexos (PDF, HTML, TXT, XLSX, DOCX etc.); modal centralizado com backdrop sólido; arquivos pendentes selecionados antes de salvar são enviados automaticamente junto ao POST; fecha ao salvar | Próximo: melhorias no módulo ou novas features
 ### 2026-05-22 — Painel Financeiro
 Estado atual: campo `valorRepasse` no serviço; painel `/dashboard/financeiro` com KPIs do mês (receita, repasse, lucro, concluídos, abertos), gráfico de barras e linha (Recharts), tabela resumo 12 meses | Armadilha: migration `20260522000000_add_valor_repasse` precisa rodar no EasyPanel antes do deploy; lucro calculado só nos CONCLUIDOS com dataConclusao preenchida
 ### 2026-05-24 — Financeiro refinado + Técnicos bancários
 Estado atual: lucro real sem custo fixo arbitrário; gasto contabilidade integrado ao painel via DocumentoFiscal; técnicos com dados bancários (PIX/conta); badges de status coloridos; calculadora de orçamento separada da fórmula de lucro | Migrations: add_valor_material, add_tecnico_dados_bancarios, remove_emite_nota_fiscal
+### 2026-05-26 — Gerador de Stories
+Estado atual: PNG pixel-perfect via `foreignObjectRendering:true` + inline de imagens e fontes Google Fonts no clone; etiqueta superior 50% maior (69px, nowrap); safe zones do Instagram (logo top:200px, rodapé bottom:240px); risco vermelho e selo -40% alinhados; bloco de sugestão de título com IA removido | Armadilha: `foreignObjectRendering` exige que todas as `<img>` e fontes sejam data URLs antes da captura — funções `inlinarImagens` e `inlinarFontes` fazem isso em `baixarStory()`
