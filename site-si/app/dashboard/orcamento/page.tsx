@@ -143,7 +143,7 @@ export default function OrcamentoPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(err?.error || "Erro ao gerar PDF");
+        alert(err?.error || `Erro ${res.status} ao gerar PDF`);
         return;
       }
       const blob = await res.blob();

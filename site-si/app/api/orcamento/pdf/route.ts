@@ -54,9 +54,19 @@ export async function POST(request: NextRequest) {
     carimboPath,
   });
 
-  const buffer = await renderToBuffer(
-    doc as ReactElement<DocumentProps, string | JSXElementConstructor<unknown>>
-  );
+  let buffer: Buffer;
+  try {
+    buffer = await renderToBuffer(
+      doc as ReactElement<DocumentProps, string | JSXElementConstructor<unknown>>
+    );
+  } catch (err) {
+    console.error("[orcamento/pdf] renderToBuffer falhou:", err);
+    return errorResponse(
+      `Falha ao renderizar PDF: ${err instanceof Error ? err.message : String(err)}`,
+      "RENDER_ERROR",
+      500
+    );
+  }
 
   const nomeArquivo = `Si_${cliente.nome.replace(/[^a-zA-Z0-9À-ú ]/g, "").replace(/\s+/g, "_")}.pdf`;
 
