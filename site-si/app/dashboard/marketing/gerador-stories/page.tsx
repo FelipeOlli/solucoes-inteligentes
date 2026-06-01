@@ -284,7 +284,6 @@ export default function GeradorStoriesPage() {
                   {precoDe && (
                     <span className={s.stDeWrap}>
                       <span className={s.stDeTexto}>R$ {precoDe}</span>
-                      <span className={s.stDeRisco} />
                     </span>
                   )}
                   <span className={s.stPorLabel}>por apenas</span>
