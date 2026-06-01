@@ -39,7 +39,19 @@ export async function PATCH(
     return badRequest(`Transição de ${servico.statusAtual} para ${statusNovo} não permitida.`);
   }
 
-  const dataConclusao = statusNovo === "CONCLUIDO" || statusNovo === "CANCELADO" ? new Date() : null;
+  let dataConclusao: Date | null = null;
+  if (statusNovo === "CONCLUIDO" || statusNovo === "CANCELADO") {
+    if (body.data_conclusao) {
+      const parsed = new Date(body.data_conclusao);
+      if (isNaN(parsed.getTime())) return badRequest("data_conclusao inválida.");
+      if (parsed > new Date()) return badRequest("data_conclusao não pode ser no futuro.");
+      if (servico.dataAbertura && parsed < new Date(servico.dataAbertura))
+        return badRequest("data_conclusao não pode ser anterior à abertura do serviço.");
+      dataConclusao = parsed;
+    } else {
+      dataConclusao = new Date();
+    }
+  }
 
   await prisma.$transaction([
     prisma.servico.update({

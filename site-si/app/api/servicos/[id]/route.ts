@@ -89,6 +89,8 @@ export async function PATCH(
     select: {
       id: true,
       dataAgendamento: true,
+      dataAbertura: true,
+      dataConclusao: true,
       statusAtual: true,
       valorEstimado: true,
       categoriaId: true,
@@ -126,6 +128,22 @@ export async function PATCH(
   }
   if (body.convidado_email !== undefined) {
     data.convidadoEmail = body.convidado_email ? String(body.convidado_email).trim() : null;
+  }
+  if (body.data_conclusao !== undefined) {
+    const statusFinal = ["CONCLUIDO", "CANCELADO"];
+    if (!statusFinal.includes(before.statusAtual)) {
+      return badRequest("Só é possível alterar data de conclusão em serviços concluídos ou cancelados.");
+    }
+    if (body.data_conclusao === null) {
+      data.dataConclusao = null;
+    } else {
+      const parsed = new Date(body.data_conclusao);
+      if (isNaN(parsed.getTime())) return badRequest("data_conclusao inválida.");
+      if (parsed > new Date()) return badRequest("data_conclusao não pode ser no futuro.");
+      if (before.dataAbertura && parsed < new Date(before.dataAbertura))
+        return badRequest("data_conclusao não pode ser anterior à abertura do serviço.");
+      data.dataConclusao = parsed;
+    }
   }
 
   // Detect reagendamento: old date exists AND new date is different and non-null

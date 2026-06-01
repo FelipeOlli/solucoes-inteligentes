@@ -114,7 +114,13 @@ type PatchBody = {
   forma_pagamento?: string | null;
   tecnico_id?: string | null;
   convidado_email?: string | null;
+  data_conclusao?: string | null;
 };
+
+function localDateIso(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d, 12, 0, 0).toISOString();
+}
 
 export default function ServicoDetailPage() {
   const router = useRouter();
@@ -142,6 +148,11 @@ export default function ServicoDetailPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [error, setError] = useState("");
   const [statusError, setStatusError] = useState("");
+
+  // Modal conclusão/cancelamento
+  const [showModalConclusao, setShowModalConclusao] = useState(false);
+  const [dataConclusaoInput, setDataConclusaoInput] = useState("");
+  const [editDataConclusao, setEditDataConclusao] = useState("");
 
   // Modal exclusão
   const [showModalExcluir, setShowModalExcluir] = useState(false);
@@ -176,7 +187,8 @@ export default function ServicoDetailPage() {
     setEditFormaPagamento(servico.formaPagamento ?? "");
     setEditTecnicoId(servico.tecnico?.id ?? "");
     setNovoStatus(servico.statusAtual);
-  }, [servico?.id, servico?.dataAgendamento, servico?.valorEstimado, servico?.categoria?.id, servico?.statusAtual, servico?.formaPagamento]);
+    setEditDataConclusao(servico.dataConclusao ? new Date(servico.dataConclusao).toISOString().slice(0, 10) : "");
+  }, [servico?.id, servico?.dataAgendamento, servico?.valorEstimado, servico?.categoria?.id, servico?.statusAtual, servico?.formaPagamento, servico?.dataConclusao]);
 
   useEffect(() => {
     api<Categoria[]>("/categorias").then(({ data }) => data && setCategorias(data));
@@ -192,7 +204,7 @@ export default function ServicoDetailPage() {
   }
 
   function buildBody(): PatchBody {
-    return {
+    const body: PatchBody = {
       data_agendamento: editDataAgendamento ? new Date(editDataAgendamento).toISOString() : null,
       valor_estimado: editValor.trim() ? Number(editValor.trim().replace(",", ".")) || null : null,
       valor_repasse: editValorRepasse.trim() ? Number(editValorRepasse.trim().replace(",", ".")) || null : null,
@@ -201,6 +213,10 @@ export default function ServicoDetailPage() {
       forma_pagamento: editFormaPagamento || null,
       tecnico_id: editTecnicoId || null,
     };
+    if (servico && (servico.statusAtual === "CONCLUIDO" || servico.statusAtual === "CANCELADO") && editDataConclusao) {
+      body.data_conclusao = localDateIso(editDataConclusao);
+    }
+    return body;
   }
 
   async function handleSalvarDados(e: React.FormEvent) {
@@ -247,6 +263,11 @@ export default function ServicoDetailPage() {
     e.preventDefault();
     if (!novoStatus || novoStatus === servico?.statusAtual) return;
     setStatusError("");
+    if (novoStatus === "CONCLUIDO" || novoStatus === "CANCELADO") {
+      setDataConclusaoInput(new Date().toISOString().slice(0, 10));
+      setShowModalConclusao(true);
+      return;
+    }
     const { status, error: err } = await api(`/servicos/${id}/status`, { method: "PATCH", body: { status_novo: novoStatus } });
     if (status === 401) router.push("/login");
     if (status === 200) {
@@ -255,6 +276,16 @@ export default function ServicoDetailPage() {
     } else {
       setStatusError(err?.message ?? "Não foi possível atualizar o status.");
     }
+  }
+
+  async function handleConfirmarConclusao() {
+    setShowModalConclusao(false);
+    const body: { status_novo: string; data_conclusao?: string } = { status_novo: novoStatus };
+    if (dataConclusaoInput) body.data_conclusao = localDateIso(dataConclusaoInput);
+    const { status, error: err } = await api(`/servicos/${id}/status`, { method: "PATCH", body });
+    if (status === 401) router.push("/login");
+    if (status === 200) { setStatusError(""); load(); }
+    else setStatusError(err?.message ?? "Não foi possível atualizar o status.");
   }
 
   async function handleNota(e: React.FormEvent) {
@@ -398,6 +429,45 @@ export default function ServicoDetailPage() {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm disabled:opacity-50"
               >
                 {deleting ? "Excluindo…" : "Excluir permanentemente"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de data de conclusão/cancelamento */}
+      {showModalConclusao && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-theme-card rounded-lg border border-theme p-6 w-full max-w-sm shadow-xl">
+            <h2 className="font-heading font-bold text-theme-primary text-lg mb-2">
+              {novoStatus === "CONCLUIDO" ? "Data de conclusão" : "Data de cancelamento"}
+            </h2>
+            <p className="text-sm text-theme-muted mb-4">
+              Qual foi a data real em que o serviço foi {novoStatus === "CONCLUIDO" ? "concluído" : "cancelado"}?
+            </p>
+            <input
+              type="date"
+              value={dataConclusaoInput}
+              onChange={(e) => setDataConclusaoInput(e.target.value)}
+              max={new Date().toISOString().slice(0, 10)}
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme mb-4"
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowModalConclusao(false)}
+                className="px-4 py-2 border border-theme rounded-lg text-sm text-theme-muted hover:opacity-80"
+              >
+                Voltar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmarConclusao}
+                disabled={!dataConclusaoInput}
+                className="px-4 py-2 bg-primary text-white rounded-lg text-sm disabled:opacity-50"
+              >
+                Confirmar
               </button>
             </div>
           </div>
@@ -669,6 +739,20 @@ export default function ServicoDetailPage() {
                 ))}
               </select>
             </div>
+            {(servico.statusAtual === "CONCLUIDO" || servico.statusAtual === "CANCELADO") && (
+              <div className="space-y-2 mb-3">
+                <label className="block text-sm font-medium text-theme-muted">
+                  Data de {servico.statusAtual === "CONCLUIDO" ? "conclusão" : "cancelamento"}
+                </label>
+                <input
+                  type="date"
+                  value={editDataConclusao}
+                  onChange={(e) => setEditDataConclusao(e.target.value)}
+                  max={new Date().toISOString().slice(0, 10)}
+                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                />
+              </div>
+            )}
             <button type="submit" disabled={savingEdit} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">Salvar</button>
           </form>
 
