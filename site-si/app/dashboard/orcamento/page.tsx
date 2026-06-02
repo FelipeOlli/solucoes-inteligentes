@@ -20,6 +20,8 @@ const METODOS: { id: MetodoPagamento; label: string; maxParcelas: number }[] = [
   { id: "link",       label: "Link de pagamento (D+2)",   maxParcelas: 12 },
 ];
 
+const MARGENS_RAPIDAS = [30, 40, 50];
+
 function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
@@ -34,7 +36,9 @@ interface Cliente {
 export default function OrcamentoPage() {
   const [valorServico, setValorServico] = useState("");
   const [valorMaterial, setValorMaterial] = useState("");
-  const [lucro, setLucro] = useState("");
+  // margem: pct selecionado (30/40/50) ou null = personalizado
+  const [margemPct, setMargemPct] = useState<number | null>(30);
+  const [margemCustom, setMargemCustom] = useState("");
   const [metodo, setMetodo] = useState<MetodoPagamento>("maquininha");
   const [parcelas, setParcelas] = useState(1);
 
@@ -54,8 +58,12 @@ export default function OrcamentoPage() {
   const vS = Number(valorServico.replace(/,/g, ".")) || 0;
   const vM = Number(valorMaterial.replace(/,/g, ".")) || 0;
   const A1 = vS + vM;
-  const lucroEstimado = A1 * 0.3;
-  const lucroAplicado = lucro.trim() !== "" ? (Number(lucro.replace(/,/g, ".")) || 0) : lucroEstimado;
+
+  const personalizadoAtivo = margemPct === null;
+  const margemAtiva = personalizadoAtivo
+    ? (Number(margemCustom.replace(/,/g, ".")) || 0)
+    : (margemPct ?? 30);
+  const lucroAplicado = A1 * (margemAtiva / 100);
   const liquidoDesejado = A1 + lucroAplicado;
 
   const taxaPct = metodo === "avista" ? 0 : TAXAS[metodo][parcelas - 1];
@@ -83,7 +91,6 @@ export default function OrcamentoPage() {
     }
   }
 
-  // busca clientes com debounce ao digitar
   useEffect(() => {
     if (clienteSelecionado) return;
     const timer = setTimeout(() => buscarClientes(clienteQuery), 200);
@@ -91,7 +98,6 @@ export default function OrcamentoPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clienteQuery, clienteSelecionado]);
 
-  // fecha dropdown ao clicar fora
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -121,7 +127,7 @@ export default function OrcamentoPage() {
   }
 
   async function gerarPDF() {
-    if (!clienteSelecionado || !descricao.trim() || !exibirResultado) return;
+    if (!exibirResultado) return;
     setGerando(true);
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
@@ -132,8 +138,8 @@ export default function OrcamentoPage() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          clienteId: clienteSelecionado.id,
-          descricao: descricao.trim(),
+          clienteId: clienteSelecionado?.id ?? null,
+          descricao: descricao.trim() || null,
           valor: resultado,
           metodo,
           parcelas,
@@ -150,7 +156,10 @@ export default function OrcamentoPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Si_${clienteSelecionado.nome.replace(/[^a-zA-Z0-9À-ú ]/g, "").replace(/\s+/g, "_")}.pdf`;
+      const nomeBase = clienteSelecionado
+        ? clienteSelecionado.nome.replace(/[^a-zA-Z0-9À-ú ]/g, "").replace(/\s+/g, "_")
+        : `Orcamento_${new Date().toISOString().slice(0, 10)}`;
+      a.download = `Si_${nomeBase}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -160,8 +169,6 @@ export default function OrcamentoPage() {
     }
   }
 
-  const podGerarPDF = !!clienteSelecionado && descricao.trim().length > 0 && exibirResultado;
-
   return (
     <div className="text-theme">
       <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-2">Orçamento</h1>
@@ -170,9 +177,123 @@ export default function OrcamentoPage() {
       <div className="bg-theme-card p-6 rounded-lg border border-theme max-w-md">
         <div className="space-y-4">
 
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Valor do serviço (R$)</label>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={valorServico}
+              onChange={(e) => setValorServico(e.target.value.replace(/[^0-9,.-]/g, ""))}
+              placeholder="0,00"
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Valor do material (R$)</label>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={valorMaterial}
+              onChange={(e) => setValorMaterial(e.target.value.replace(/[^0-9,.-]/g, ""))}
+              placeholder="0,00"
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Margem de lucro</label>
+            <div className="flex gap-2 flex-wrap">
+              {MARGENS_RAPIDAS.map((pct) => (
+                <button
+                  key={pct}
+                  type="button"
+                  onClick={() => { setMargemPct(pct); setMargemCustom(""); }}
+                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition ${
+                    margemPct === pct
+                      ? "bg-primary text-white border-primary"
+                      : "border-theme text-theme hover:opacity-80"
+                  }`}
+                >
+                  {pct}%
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setMargemPct(null)}
+                className={`px-4 py-2 rounded-lg border text-sm font-medium transition ${
+                  personalizadoAtivo
+                    ? "bg-primary text-white border-primary"
+                    : "border-theme text-theme hover:opacity-80"
+                }`}
+              >
+                Personalizado
+              </button>
+            </div>
+            {personalizadoAtivo && (
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={margemCustom}
+                  onChange={(e) => setMargemCustom(e.target.value.replace(/[^0-9,.-]/g, ""))}
+                  placeholder="Ex: 35"
+                  autoFocus
+                  className="w-32 px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                />
+                <span className="text-sm text-theme-muted">%</span>
+                {A1 > 0 && margemCustom && (
+                  <span className="text-xs text-theme-muted">= {formatBRL(lucroAplicado)}</span>
+                )}
+              </div>
+            )}
+            {!personalizadoAtivo && A1 > 0 && (
+              <p className="text-xs text-theme-muted mt-1">Lucro estimado: {formatBRL(lucroAplicado)}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Forma de pagamento</label>
+            <select
+              value={metodo}
+              onChange={(e) => handleMetodoChange(e.target.value as MetodoPagamento)}
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+            >
+              {METODOS.map((m) => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {metodoAtual.maxParcelas > 1 && (
+            <div>
+              <label className="block text-sm font-medium text-theme-muted mb-1">Parcelas</label>
+              <select
+                value={parcelas}
+                onChange={(e) => setParcelas(Number(e.target.value))}
+                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+              >
+                {Array.from({ length: metodoAtual.maxParcelas }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>{n}×</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Valor final do serviço (R$)</label>
+            <input
+              type="text"
+              value={exibirResultado ? formatBRL(resultado) : ""}
+              readOnly
+              placeholder="Calculado automaticamente"
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme font-semibold"
+            />
+          </div>
+
           {/* Seletor de cliente */}
           <div ref={dropdownRef} className="relative">
-            <label className="block text-sm font-medium text-theme-muted mb-1">Cliente</label>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Cliente <span className="font-normal text-theme-muted">(opcional)</span></label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -219,7 +340,7 @@ export default function OrcamentoPage() {
 
           {/* Descrição do serviço */}
           <div>
-            <label className="block text-sm font-medium text-theme-muted mb-1">Descrição do serviço</label>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Descrição do serviço <span className="font-normal text-theme-muted">(opcional)</span></label>
             <textarea
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
@@ -229,78 +350,6 @@ export default function OrcamentoPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-theme-muted mb-1">Valor do serviço (R$)</label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={valorServico}
-              onChange={(e) => setValorServico(e.target.value.replace(/[^0-9,.-]/g, ""))}
-              placeholder="0,00"
-              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-theme-muted mb-1">Valor do material (R$)</label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={valorMaterial}
-              onChange={(e) => setValorMaterial(e.target.value.replace(/[^0-9,.-]/g, ""))}
-              placeholder="0,00"
-              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-theme-muted mb-1">Lucro (R$)</label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={lucro}
-              onChange={(e) => setLucro(e.target.value.replace(/[^0-9,.-]/g, ""))}
-              placeholder={A1 > 0 ? formatBRL(lucroEstimado) : "Estimativa de 30%"}
-              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-theme-muted mb-1">Forma de pagamento</label>
-            <select
-              value={metodo}
-              onChange={(e) => handleMetodoChange(e.target.value as MetodoPagamento)}
-              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-            >
-              {METODOS.map((m) => (
-                <option key={m.id} value={m.id}>{m.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {metodoAtual.maxParcelas > 1 && (
-            <div>
-              <label className="block text-sm font-medium text-theme-muted mb-1">Parcelas</label>
-              <select
-                value={parcelas}
-                onChange={(e) => setParcelas(Number(e.target.value))}
-                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-              >
-                {Array.from({ length: metodoAtual.maxParcelas }, (_, i) => i + 1).map((n) => (
-                  <option key={n} value={n}>{n}×</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-theme-muted mb-1">Valor final do serviço (R$)</label>
-            <input
-              type="text"
-              value={exibirResultado ? formatBRL(resultado) : ""}
-              readOnly
-              placeholder="Calculado automaticamente"
-              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme font-semibold"
-            />
-          </div>
         </div>
 
         {exibirResultado && (
@@ -321,16 +370,11 @@ export default function OrcamentoPage() {
           <div className="mt-4 flex flex-col gap-2">
             <button
               onClick={gerarPDF}
-              disabled={!podGerarPDF || gerando}
+              disabled={gerando}
               className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-theme-cta font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {gerando ? "Gerando..." : "Gerar PDF do orçamento"}
             </button>
-            {!podGerarPDF && (
-              <p className="text-xs text-theme-muted">
-                Preencha cliente e descrição para gerar o PDF.
-              </p>
-            )}
             <Link
               href={`/dashboard/servicos/novo?valor=${encodeURIComponent(resultado.toFixed(2))}`}
               className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-theme font-medium text-sm hover:opacity-90"

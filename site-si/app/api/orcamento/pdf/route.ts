@@ -20,8 +20,8 @@ export async function POST(request: NextRequest) {
   if (!auth || !isDono(auth)) return auth ? forbidden() : unauthorized();
 
   let body: {
-    clienteId: string;
-    descricao: string;
+    clienteId?: string | null;
+    descricao?: string | null;
     valor: number;
     metodo: string;
     parcelas: number;
@@ -36,22 +36,28 @@ export async function POST(request: NextRequest) {
   }
 
   const { clienteId, descricao, valor, metodo, parcelas, valorParcela } = body;
-  if (!clienteId || !descricao || valor == null) {
-    return errorResponse("clienteId, descricao e valor são obrigatórios", "BAD_REQUEST", 400);
+  if (valor == null) {
+    return errorResponse("valor é obrigatório", "BAD_REQUEST", 400);
   }
 
-  const cliente = await prisma.cliente.findUnique({ where: { id: clienteId } });
-  if (!cliente) return errorResponse("Cliente não encontrado", "NOT_FOUND", 404);
+  let clienteNome = "", clienteEmail = "", clienteTelefone = "";
+  if (clienteId) {
+    const cliente = await prisma.cliente.findUnique({ where: { id: clienteId } });
+    if (!cliente) return errorResponse("Cliente não encontrado", "NOT_FOUND", 404);
+    clienteNome = cliente.nome;
+    clienteEmail = cliente.email;
+    clienteTelefone = cliente.telefone;
+  }
 
   const publicDir = path.join(process.cwd(), "public");
   const logoDataURI = toDataURI(path.join(publicDir, "orcamento", "logo-si.png"), "image/png");
   const carimboDataURI = toDataURI(path.join(publicDir, "orcamento", "assinatura-carimbo.png"), "image/png");
 
   const doc = createElement(OrcamentoPDFDocument, {
-    clienteNome: cliente.nome,
-    clienteEmail: cliente.email,
-    clienteTelefone: cliente.telefone,
-    descricao,
+    clienteNome,
+    clienteEmail,
+    clienteTelefone,
+    descricao: descricao ?? "",
     valor,
     metodo,
     parcelas,
@@ -74,7 +80,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const nomeArquivo = `Si_${cliente.nome.replace(/[^a-zA-Z0-9À-ú ]/g, "").replace(/\s+/g, "_")}.pdf`;
+  const nomeBase = clienteNome
+    ? clienteNome.replace(/[^a-zA-Z0-9À-ú ]/g, "").replace(/\s+/g, "_")
+    : `Orcamento_${new Date().toISOString().slice(0, 10)}`;
+  const nomeArquivo = `Si_${nomeBase}.pdf`;
 
   return new Response(new Uint8Array(buffer), {
     status: 200,

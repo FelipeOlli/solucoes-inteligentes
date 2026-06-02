@@ -130,10 +130,10 @@ function formatDate(date: Date) {
 }
 
 export interface OrcamentoPDFProps {
-  clienteNome: string;
-  clienteEmail: string;
-  clienteTelefone: string;
-  descricao: string;
+  clienteNome?: string;
+  clienteEmail?: string;
+  clienteTelefone?: string;
+  descricao?: string;
   valor: number;
   metodo: string;
   parcelas: number;
@@ -178,23 +178,31 @@ export function OrcamentoPDFDocument({
             <Text style={s.labelBold}>Data: </Text>
             <Text>{hoje}</Text>
           </View>
-          <View style={s.row}>
-            <Text style={s.labelBold}>Cliente: </Text>
-            <Text> {clienteNome}</Text>
-          </View>
-          <View style={s.row}>
-            <Text style={s.labelBold}>E-mail: </Text>
-            <Text> {clienteEmail || ""}</Text>
-          </View>
-          <View style={s.row}>
-            <Text style={s.labelBold}>Telefone: </Text>
-            <Text> {clienteTelefone || ""}</Text>
-          </View>
+          {!!clienteNome && (
+            <>
+              <View style={s.row}>
+                <Text style={s.labelBold}>Cliente: </Text>
+                <Text> {clienteNome}</Text>
+              </View>
+              <View style={s.row}>
+                <Text style={s.labelBold}>E-mail: </Text>
+                <Text> {clienteEmail || ""}</Text>
+              </View>
+              <View style={s.row}>
+                <Text style={s.labelBold}>Telefone: </Text>
+                <Text> {clienteTelefone || ""}</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Descrição do serviço */}
-        <Text style={s.sectionTitle}>Descrição do Serviço</Text>
-        <Text style={{ fontSize: 10, lineHeight: 1.5 }}>{descricao}</Text>
+        {!!descricao && (
+          <>
+            <Text style={s.sectionTitle}>Descrição do Serviço</Text>
+            <Text style={{ fontSize: 10, lineHeight: 1.5 }}>{descricao}</Text>
+          </>
+        )}
 
         {/* Valor */}
         <View style={s.valueRow}>
