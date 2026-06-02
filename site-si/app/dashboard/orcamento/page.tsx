@@ -48,6 +48,7 @@ export default function OrcamentoPage() {
   const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const clienteFocado = useRef(false);
 
   // descrição
   const [descricao, setDescricao] = useState("");
@@ -91,7 +92,7 @@ export default function OrcamentoPage() {
   }
 
   useEffect(() => {
-    if (clienteSelecionado) return;
+    if (clienteSelecionado || !clienteFocado.current) return;
     const timer = setTimeout(() => buscarClientes(clienteQuery), 200);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -299,7 +300,10 @@ export default function OrcamentoPage() {
                   if (clienteSelecionado) limparCliente();
                 }}
                 onFocus={() => {
-                  if (!clienteSelecionado) buscarClientes(clienteQuery);
+                  if (!clienteSelecionado) {
+                    clienteFocado.current = true;
+                    buscarClientes(clienteQuery);
+                  }
                 }}
                 placeholder="Buscar cliente..."
                 className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
