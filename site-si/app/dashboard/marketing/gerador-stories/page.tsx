@@ -92,27 +92,6 @@ export default function GeradorStoriesPage() {
     }));
   }
 
-  async function inlinarFontes(): Promise<HTMLStyleElement | null> {
-    const FONTS_URL = "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&family=Titillium+Web:wght@400;700;900&display=swap";
-    try {
-      const css = await fetch(FONTS_URL).then(r => r.text());
-      const urls = [...new Set([...css.matchAll(/url\((https:\/\/fonts\.gstatic\.com[^)]+)\)/g)].map(m => m[1]))];
-      let cssInlined = css;
-      await Promise.all(urls.map(async (url) => {
-        try {
-          const blob = await fetch(url).then(r => r.blob());
-          const dataUrl = await blobParaDataUrl(blob);
-          cssInlined = cssInlined.replaceAll(url, dataUrl);
-        } catch { /* ignora fonte que falhar */ }
-      }));
-      const style = document.createElement("style");
-      style.textContent = cssInlined;
-      // injeta no <head> para que o browser reconheça os @font-face antes da captura
-      document.head.appendChild(style);
-      return style;
-    } catch { return null; }
-  }
-
   async function baixarStory() {
     if (!storyRef.current) return;
     if (!h2cPronto || !window.html2canvas) { alert("Aguarde o carregamento e tente novamente."); return; }
@@ -125,21 +104,19 @@ export default function GeradorStoriesPage() {
     clone.style.setProperty("--preto", "#050006");
     clone.style.setProperty("--azul", "#122969");
     clone.style.setProperty("--branco", "#ffffff");
-    const [, fontStyle] = await Promise.all([inlinarImagens(clone), inlinarFontes()]);
+    // modo padrão (sem foreignObjectRendering) usa estilos computados do DOM,
+    // onde as fontes já estão carregadas via globals.css — não precisa inlinar fontes
+    await inlinarImagens(clone);
     container.appendChild(clone);
     document.body.appendChild(container);
-    // aguarda o browser carregar os @font-face recém-injetados
     await document.fonts.ready;
     await new Promise((r) => requestAnimationFrame(r));
     try {
       const dpr = window.devicePixelRatio || 1;
-      // foreignObjectRendering: usa SVG <foreignObject> — renderização nativa do navegador,
-      // pixel-perfect em relação à preview. Elimina bugs de posicionamento do modo padrão.
       const captured = await window.html2canvas(clone, {
         width: 1080, height: 1920, scale: dpr, backgroundColor: "#050006",
         useCORS: true, allowTaint: true, logging: false,
         windowWidth: 1080, windowHeight: 1920, scrollX: 0, scrollY: 0,
-        foreignObjectRendering: true,
       });
       const out = document.createElement("canvas");
       out.width = 1080; out.height = 1920;
@@ -153,7 +130,6 @@ export default function GeradorStoriesPage() {
       alert("Erro ao gerar: " + (err instanceof Error ? err.message : err));
     }
     document.body.removeChild(container);
-    if (fontStyle) document.head.removeChild(fontStyle);
     setBaixando(false);
   }
 
