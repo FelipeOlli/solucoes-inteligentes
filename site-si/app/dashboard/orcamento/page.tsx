@@ -60,10 +60,9 @@ export default function OrcamentoPage() {
   const A1 = vS + vM;
 
   const personalizadoAtivo = margemPct === null;
-  const margemAtiva = personalizadoAtivo
+  const lucroAplicado = personalizadoAtivo
     ? (Number(margemCustom.replace(/,/g, ".")) || 0)
-    : (margemPct ?? 30);
-  const lucroAplicado = A1 * (margemAtiva / 100);
+    : A1 * ((margemPct ?? 30) / 100);
   const liquidoDesejado = A1 + lucroAplicado;
 
   const taxaPct = metodo === "avista" ? 0 : TAXAS[metodo][parcelas - 1];
@@ -232,19 +231,16 @@ export default function OrcamentoPage() {
             </div>
             {personalizadoAtivo && (
               <div className="mt-2 flex items-center gap-2">
+                <span className="text-sm text-theme-muted">R$</span>
                 <input
                   type="text"
                   inputMode="decimal"
                   value={margemCustom}
                   onChange={(e) => setMargemCustom(e.target.value.replace(/[^0-9,.-]/g, ""))}
-                  placeholder="Ex: 35"
+                  placeholder="0,00"
                   autoFocus
-                  className="w-32 px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                  className="w-36 px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
                 />
-                <span className="text-sm text-theme-muted">%</span>
-                {A1 > 0 && margemCustom && (
-                  <span className="text-xs text-theme-muted">= {formatBRL(lucroAplicado)}</span>
-                )}
               </div>
             )}
             {!personalizadoAtivo && A1 > 0 && (
