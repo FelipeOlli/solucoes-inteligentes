@@ -285,9 +285,7 @@ export default function GeradorStoriesPage() {
               </div>
 
               <div className={s.stRespiro} />
-              <div className={s.stLinkAfiliado}>
-                <span className={s.stLinkAfiliadoTxt}>🔗 link de afiliado</span>
-              </div>
+              <div className={s.stLinkAfiliado} />
               <div className={s.stRodape}>
                 <span>Achou na <span className={s.arroba}>@solucoesinteligentes_si</span></span>
                 <span className={s.stPubliRod}>#publicidade · oferta sujeita a alteração e estoque</span>

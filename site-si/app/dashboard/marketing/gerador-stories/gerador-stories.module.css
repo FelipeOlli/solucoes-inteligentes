@@ -164,8 +164,7 @@
 .stPor { font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 108px; color: var(--verde); line-height: 1; letter-spacing: -1px; white-space: nowrap; }
 
 .stRespiro { position: absolute; bottom: 300px; left: 130px; right: 130px; height: 150px; z-index: 1; pointer-events: none; }
-.stLinkAfiliado { position: absolute; bottom: 130px; left: 75px; right: 75px; height: 96px; border: 2px dashed rgba(25,203,150,.45); border-radius: 22px; background: rgba(25,203,150,.06); display: flex; align-items: center; justify-content: center; gap: 14px; z-index: 5; }
-.stLinkAfiliadoTxt { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 28px; color: rgba(25,203,150,.65); letter-spacing: .5px; }
+.stLinkAfiliado { position: absolute; bottom: 130px; left: 75px; right: 75px; height: 96px; border: 2px dashed rgba(25,203,150,.45); border-radius: 22px; background: rgba(25,203,150,.06); z-index: 5; }
 .stRodape { position: absolute; bottom: 45px; left: 0; right: 0; text-align: center; font-family: 'Poppins', sans-serif; font-weight: 500; font-size: 30px; color: #fff; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .stPubliRod { font-size: 20px; font-weight: 400; color: #6f7889; letter-spacing: 1px; }
 .arroba { color: var(--verde); }
