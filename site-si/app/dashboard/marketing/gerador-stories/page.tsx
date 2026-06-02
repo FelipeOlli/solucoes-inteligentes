@@ -278,17 +278,15 @@ export default function GeradorStoriesPage() {
                 )}
               </div>
 
+              <div className={s.stTitulo}>{titulo}</div>
               <div className={s.stInfo}>
-                <div className={s.stTitulo}>{titulo}</div>
-                <div className={s.stPrecos}>
-                  {precoDe && (
-                    <span className={s.stDeWrap}>
-                      <span className={s.stDeTexto}>R$ {precoDe}</span>
-                    </span>
-                  )}
-                  <span className={s.stPorLabel}>por apenas</span>
-                  <span className={s.stPor}>R$ {precoPor}</span>
-                </div>
+                {precoDe && (
+                  <span className={s.stDeWrap}>
+                    <span className={s.stDeTexto}>R$ {precoDe}</span>
+                  </span>
+                )}
+                <span className={s.stPorLabel}>por apenas</span>
+                <span className={s.stPor}>R$ {precoPor}</span>
               </div>
 
               <div className={s.stRespiro} />
