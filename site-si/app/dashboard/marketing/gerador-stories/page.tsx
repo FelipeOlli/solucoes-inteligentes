@@ -92,6 +92,27 @@ export default function GeradorStoriesPage() {
     }));
   }
 
+  async function inlinarFontes(el: HTMLElement) {
+    const FONTS_URL = "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&family=Titillium+Web:wght@400;700;900&display=swap";
+    try {
+      const css = await fetch(FONTS_URL).then(r => r.text());
+      // regex aceita url(...) e url('...') e url("...")
+      const urls = [...new Set([...css.matchAll(/url\(['"]?(https:\/\/fonts\.gstatic\.com[^'")\s]+)['"]?\)/g)].map(m => m[1]))];
+      let cssInlined = css;
+      await Promise.all(urls.map(async (url) => {
+        try {
+          const blob = await fetch(url).then(r => r.blob());
+          const dataUrl = await blobParaDataUrl(blob);
+          cssInlined = cssInlined.replaceAll(url, dataUrl);
+        } catch { /* ignora fonte que falhar */ }
+      }));
+      const style = document.createElement("style");
+      style.textContent = cssInlined;
+      // injeta no clone para que o foreignObject SVG encontre os @font-face
+      el.prepend(style);
+    } catch { /* fallback sem fontes inline */ }
+  }
+
   async function baixarStory() {
     if (!storyRef.current) return;
     if (!h2cPronto || !window.html2canvas) { alert("Aguarde o carregamento e tente novamente."); return; }
@@ -104,9 +125,7 @@ export default function GeradorStoriesPage() {
     clone.style.setProperty("--preto", "#050006");
     clone.style.setProperty("--azul", "#122969");
     clone.style.setProperty("--branco", "#ffffff");
-    // modo padrão (sem foreignObjectRendering) usa estilos computados do DOM,
-    // onde as fontes já estão carregadas via globals.css — não precisa inlinar fontes
-    await inlinarImagens(clone);
+    await Promise.all([inlinarImagens(clone), inlinarFontes(clone)]);
     container.appendChild(clone);
     document.body.appendChild(container);
     await document.fonts.ready;
@@ -117,6 +136,7 @@ export default function GeradorStoriesPage() {
         width: 1080, height: 1920, scale: dpr, backgroundColor: "#050006",
         useCORS: true, allowTaint: true, logging: false,
         windowWidth: 1080, windowHeight: 1920, scrollX: 0, scrollY: 0,
+        foreignObjectRendering: true,
       });
       const out = document.createElement("canvas");
       out.width = 1080; out.height = 1920;
