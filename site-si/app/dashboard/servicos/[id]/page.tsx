@@ -246,7 +246,7 @@ export default function ServicoDetailPage() {
     const { status } = await api(`/servicos/${id}`, { method: "DELETE" });
     setDeleting(false);
     if (status === 401) { router.push("/login"); return; }
-    if (status === 200) router.push("/dashboard/servicos");
+    if (status === 200) router.push("/dashboard");
   }
 
   async function handleConfirmarConvidado() {
