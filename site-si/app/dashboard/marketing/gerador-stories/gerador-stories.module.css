@@ -159,7 +159,7 @@
 }
 .stDeWrap { display: inline-block; }
 /* background gradient = traço vermelho confiável com foreignObjectRendering (text-decoration e position:absolute saem da posição) */
-.stDeTexto { font-family: 'Poppins', sans-serif; font-weight: 500; font-size: 40px; color: #9aa3b4; line-height: 1; display: block; background: linear-gradient(to bottom, transparent 18px, #e0444f 18px, #e0444f 22px, transparent 22px); }
+.stDeTexto { font-family: 'Poppins', sans-serif; font-weight: 500; font-size: 40px; color: #9aa3b4; line-height: 1; display: block; white-space: nowrap; background: linear-gradient(to bottom, transparent 18px, #e0444f 18px, #e0444f 22px, transparent 22px); }
 .stPorLabel { font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 32px; color: #cdd4e0; margin-top: 6px; }
 .stPor { font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 108px; color: var(--verde); line-height: 1; letter-spacing: -1px; white-space: nowrap; }
 
