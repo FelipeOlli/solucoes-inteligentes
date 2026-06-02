@@ -92,12 +92,10 @@ export default function GeradorStoriesPage() {
     }));
   }
 
-  async function inlinarFontes(el: HTMLElement) {
-    // SVG foreignObject não herda fontes do documento — precisa injetar @font-face inline
+  async function inlinarFontes(): Promise<HTMLStyleElement | null> {
     const FONTS_URL = "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&family=Titillium+Web:wght@400;700;900&display=swap";
     try {
       const css = await fetch(FONTS_URL).then(r => r.text());
-      // substitui URLs de binários por data URLs para que o SVG isolado as resolva
       const urls = [...new Set([...css.matchAll(/url\((https:\/\/fonts\.gstatic\.com[^)]+)\)/g)].map(m => m[1]))];
       let cssInlined = css;
       await Promise.all(urls.map(async (url) => {
@@ -109,28 +107,28 @@ export default function GeradorStoriesPage() {
       }));
       const style = document.createElement("style");
       style.textContent = cssInlined;
-      el.prepend(style);
-    } catch { /* sem fontes inline — usa fallback */ }
+      // injeta no <head> para que o browser reconheça os @font-face antes da captura
+      document.head.appendChild(style);
+      return style;
+    } catch { return null; }
   }
 
   async function baixarStory() {
     if (!storyRef.current) return;
     if (!h2cPronto || !window.html2canvas) { alert("Aguarde o carregamento e tente novamente."); return; }
     setBaixando(true);
-    // Container invisível em (0,0) — posição negativa quebra o cálculo de right/top no html2canvas
     const container = document.createElement("div");
     container.style.cssText = "position:fixed;top:0;left:0;width:1080px;height:1920px;overflow:hidden;z-index:-9999;pointer-events:none;opacity:0;";
     const clone = storyRef.current.cloneNode(true) as HTMLElement;
     clone.style.cssText = "position:absolute;top:0;left:0;transform:none;width:1080px;height:1920px;overflow:hidden;";
-    // CSS vars definidas no .root ficam fora de escopo no clone — injetar diretamente
     clone.style.setProperty("--verde", "#19cb96");
     clone.style.setProperty("--preto", "#050006");
     clone.style.setProperty("--azul", "#122969");
     clone.style.setProperty("--branco", "#ffffff");
-    // foreignObjectRendering exige recursos inline — imagens e fontes não chegam pelo SVG isolado
-    await Promise.all([inlinarImagens(clone), inlinarFontes(clone)]);
+    const [, fontStyle] = await Promise.all([inlinarImagens(clone), inlinarFontes()]);
     container.appendChild(clone);
     document.body.appendChild(container);
+    // aguarda o browser carregar os @font-face recém-injetados
     await document.fonts.ready;
     await new Promise((r) => requestAnimationFrame(r));
     try {
@@ -155,6 +153,7 @@ export default function GeradorStoriesPage() {
       alert("Erro ao gerar: " + (err instanceof Error ? err.message : err));
     }
     document.body.removeChild(container);
+    if (fontStyle) document.head.removeChild(fontStyle);
     setBaixando(false);
   }
 
