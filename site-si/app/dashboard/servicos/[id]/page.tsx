@@ -25,10 +25,16 @@ const FORMA_PAGAMENTO_LABEL: Record<string, string> = {
 };
 
 const IMAGE_FILE_RE = /\.(avif|bmp|gif|heic|heif|jpe?g|png|svg|webp)$/i;
+const VIDEO_FILE_RE = /\.(mp4|mov|webm|m4v|ogv|ogg|3gp|avi|mkv)$/i;
 
 function isImageFileName(urlOrName: string): boolean {
   const pathOnly = urlOrName.split("?")[0];
   return IMAGE_FILE_RE.test(pathOnly);
+}
+
+function isVideoFileName(urlOrName: string): boolean {
+  const pathOnly = urlOrName.split("?")[0];
+  return VIDEO_FILE_RE.test(pathOnly);
 }
 
 function getStatusBadgeClass(status: string): string {
@@ -350,8 +356,11 @@ export default function ServicoDetailPage() {
     const files = Array.from(e.target.files ?? []);
     e.target.value = "";
     if (!files.length) return;
-    const imageFiles = files.filter((f) => f.type.startsWith("image/") || isImageFileName(f.name));
-    await uploadFiles(imageFiles);
+    const mediaFiles = files.filter(
+      (f) => f.type.startsWith("image/") || f.type.startsWith("video/")
+           || isImageFileName(f.name) || isVideoFileName(f.name)
+    );
+    await uploadFiles(mediaFiles);
   }
 
   async function handleUploadOrcamentoInput(e: React.ChangeEvent<HTMLInputElement>) {
@@ -366,8 +375,11 @@ export default function ServicoDetailPage() {
     setDraggingFotos(false);
     const files = Array.from(e.dataTransfer.files ?? []);
     if (!files.length) return;
-    const imageFiles = files.filter((f) => f.type.startsWith("image/") || isImageFileName(f.name));
-    await uploadFiles(imageFiles);
+    const mediaFiles = files.filter(
+      (f) => f.type.startsWith("image/") || f.type.startsWith("video/")
+           || isImageFileName(f.name) || isVideoFileName(f.name)
+    );
+    await uploadFiles(mediaFiles);
   }
 
   async function handleDropOrcamento(e: React.DragEvent<HTMLDivElement>) {
@@ -399,8 +411,8 @@ export default function ServicoDetailPage() {
     ...(servico.campoHist ?? []).map((c) => ({ type: "campo" as const, ...c })),
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  const imageUrls = (servico.imagens ?? []).filter((url) => isImageFileName(url));
-  const anexoUrls = (servico.imagens ?? []).filter((url) => !isImageFileName(url));
+  const mediaUrls = (servico.imagens ?? []).filter((url) => isImageFileName(url) || isVideoFileName(url));
+  const anexoUrls = (servico.imagens ?? []).filter((url) => !isImageFileName(url) && !isVideoFileName(url));
   const tecnicosComEmail = tecnicos.filter((t) => t.email);
 
   return (
@@ -775,23 +787,27 @@ export default function ServicoDetailPage() {
           </div>
 
           <div className="bg-theme-card p-4 rounded-lg border border-theme">
-            <h2 className="font-heading font-bold text-theme-primary mb-2">Fotos / imagens</h2>
-            {imageUrls.length > 0 && (
+            <h2 className="font-heading font-bold text-theme-primary mb-2">Fotos / imagens / vídeos</h2>
+            {mediaUrls.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
-                {imageUrls.map((url) => {
+                {mediaUrls.map((url) => {
                   const href = withBasePath(url);
                   return (
                     <div key={url} className="relative group shrink-0">
-                      <a href={href} target="_blank" rel="noopener noreferrer" className="block">
-                        <img src={href} alt="" className="w-20 h-20 object-cover rounded border border-theme" />
-                      </a>
+                      {isVideoFileName(url) ? (
+                        <video src={href} controls className="w-20 h-20 object-cover rounded border border-theme" />
+                      ) : (
+                        <a href={href} target="_blank" rel="noopener noreferrer" className="block">
+                          <img src={href} alt="" className="w-20 h-20 object-cover rounded border border-theme" />
+                        </a>
+                      )}
                       <button
                         type="button"
                         onClick={() => removeAttachment(url)}
                         disabled={removingUrl === url}
                         className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold shadow hover:opacity-90 disabled:opacity-50"
-                        title="Remover imagem"
-                        aria-label="Remover imagem"
+                        title="Remover"
+                        aria-label="Remover"
                       >
                         ×
                       </button>
@@ -813,14 +829,14 @@ export default function ServicoDetailPage() {
                 <span className="sr-only">Anexar foto</span>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*,video/*"
                   multiple
                   disabled={uploadingImg}
                   onChange={handleUploadFotosInput}
                   className="w-full text-sm text-theme-muted file:mr-3 file:rounded-md file:border-0 file:px-4 file:py-2 file:bg-primary file:text-white file:font-medium hover:file:opacity-90"
                 />
               </label>
-              <p className="text-xs text-theme-muted mt-2">Arraste e solte imagens aqui ou clique em Escolher arquivos.</p>
+              <p className="text-xs text-theme-muted mt-2">Arraste e solte imagens ou vídeos aqui ou clique em Escolher arquivos.</p>
             </div>
             {uploadingImg && <p className="text-sm text-theme-muted mt-1">Enviando…</p>}
           </div>
