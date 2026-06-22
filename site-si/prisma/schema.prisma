@@ -502,3 +502,28 @@ model AnexoConhecimento {
 
   @@index([artigoId])
 }
+
+enum CategoriaAnexoOrcamento {
+  MODELO
+  CARIMBO
+}
+
+enum TipoCarimbo {
+  PIX
+  CARTAO_CREDITO
+  CHEQUE
+}
+
+model AnexoOrcamento {
+  id           String                  @id @default(cuid())
+  categoria    CategoriaAnexoOrcamento
+  rotulo       String                  // nome do modelo ou rótulo descritivo
+  tipoCarimbo  TipoCarimbo?            // preenchido só quando categoria = CARIMBO
+  nomeArquivo  String
+  url          String
+  mimeType     String
+  tamanhoBytes Int
+  createdAt    DateTime                @default(now())
+
+  @@index([categoria])
+}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import RepositorioAnexos from "@/components/orcamento/RepositorioAnexos";
 
 const FIXO = 50;
 
@@ -384,6 +385,8 @@ export default function OrcamentoPage() {
           </div>
         )}
       </div>
+
+      <RepositorioAnexos />
     </div>
   );
 }
