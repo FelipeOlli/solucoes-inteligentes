@@ -1,4 +1,7 @@
-import { mkdir, unlink, writeFile } from "fs/promises";
+import { mkdir, unlink } from "fs/promises";
+import { createWriteStream } from "fs";
+import { pipeline } from "stream/promises";
+import { Readable } from "stream";
 import path from "path";
 import { nanoid } from "nanoid";
 
@@ -12,12 +15,15 @@ export async function saveAnexoOrcamento(
 
   const filename = `${nanoid()}.${ext}`;
   const filepath = path.join(UPLOAD_DIR, filename);
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(filepath, buffer);
+
+  // stream direto para disco para não estourar memória/call stack em arquivos grandes
+  const readable = Readable.fromWeb(file.stream() as Parameters<typeof Readable.fromWeb>[0]);
+  const writable = createWriteStream(filepath);
+  await pipeline(readable, writable);
 
   return {
     url: `/uploads/orcamento-anexos/${filename}`,
-    tamanhoBytes: buffer.length,
+    tamanhoBytes: file.size,
   };
 }
 
