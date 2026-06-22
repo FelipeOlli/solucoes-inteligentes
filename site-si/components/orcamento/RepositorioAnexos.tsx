@@ -32,7 +32,7 @@ function getToken(): string | null {
 }
 
 function authHeaders(token: string | null): Record<string, string> {
-  return authHeaders(token);
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export default function RepositorioAnexos() {
