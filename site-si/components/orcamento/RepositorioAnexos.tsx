@@ -63,8 +63,8 @@ export default function RepositorioAnexos() {
       ]);
       if (resM.ok) setModelos(await resM.json());
       if (resC.ok) setCarimbos(await resC.json());
-    } catch {
-      // silencioso
+    } catch (e) {
+      console.error("Erro ao carregar anexos:", e);
     } finally {
       setCarregando(false);
     }
@@ -89,15 +89,15 @@ export default function RepositorioAnexos() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(err?.error || `Erro ${res.status}`);
+        alert(err?.message ?? err?.error ?? `Erro ${res.status}`);
         return;
       }
       setModeloRotulo("");
       setModeloFile(null);
       if (modeloInputRef.current) modeloInputRef.current.value = "";
       await carregarAnexos();
-    } catch {
-      alert("Erro de rede.");
+    } catch (e) {
+      alert(`Erro de rede: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setEnviandoModelo(false);
     }
@@ -121,14 +121,14 @@ export default function RepositorioAnexos() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(err?.error || `Erro ${res.status}`);
+        alert(err?.message ?? err?.error ?? `Erro ${res.status}`);
         return;
       }
       setCarimboFile(null);
       if (carimboInputRef.current) carimboInputRef.current.value = "";
       await carregarAnexos();
-    } catch {
-      alert("Erro de rede.");
+    } catch (e) {
+      alert(`Erro de rede: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setEnviandoCarimbo(false);
     }

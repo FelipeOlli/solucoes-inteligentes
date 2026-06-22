@@ -17,7 +17,26 @@ const ALLOWED_MIME: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
+  // alguns browsers enviam type vazio ou genérico para esses formatos
+  "application/octet-stream": "", // resolvido pela extensão abaixo
 };
+
+// fallback: extensão do nome do arquivo quando file.type chega vazio ou genérico
+const ALLOWED_EXT: Record<string, string> = {
+  pdf: "pdf", html: "html", htm: "html", txt: "txt", csv: "csv",
+  xlsx: "xlsx", xls: "xls", docx: "docx", doc: "doc",
+  jpg: "jpg", jpeg: "jpg", png: "png", webp: "webp",
+};
+
+function resolveExt(file: File): string | null {
+  // 1. tenta pelo MIME exato
+  const fromMime = ALLOWED_MIME[file.type];
+  if (fromMime !== undefined && fromMime !== "") return fromMime;
+  // 2. fallback pela extensão do nome
+  const nameParts = file.name.split(".");
+  const rawExt = nameParts.length > 1 ? nameParts[nameParts.length - 1].toLowerCase() : "";
+  return ALLOWED_EXT[rawExt] ?? null;
+}
 
 export async function GET(request: NextRequest) {
   const auth = await getAuthFromRequest(request);
@@ -66,8 +85,8 @@ export async function POST(request: NextRequest) {
     tipoCarimbo = tipoRaw as TipoCarimbo;
   }
 
-  const ext = ALLOWED_MIME[file.type];
-  if (!ext) return badRequest("Formato não suportado. Use PDF, imagens ou documentos Office.");
+  const ext = resolveExt(file);
+  if (!ext) return badRequest(`Formato não suportado (${file.type || "tipo desconhecido"}). Use PDF, imagens ou documentos Office.`);
   if (file.size > 20 * 1024 * 1024) return badRequest("Arquivo maior que 20 MB.");
 
   const { url, tamanhoBytes } = await saveAnexoOrcamento(file, ext);
