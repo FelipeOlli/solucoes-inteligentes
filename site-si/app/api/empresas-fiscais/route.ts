@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
   const empresas = await prisma.empresaFiscal.findMany({
     where: { ativo: true },
     orderBy: { razaoSocial: "asc" },
-    select: { id: true, cnpj: true, razaoSocial: true, regime: true, porte: true },
   });
 
   return jsonResponse(empresas);
