@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api, withBasePath } from "@/lib/api";
 import { STATUS_LIST } from "@/lib/status";
@@ -51,6 +51,7 @@ function formatCampoHist(campo: string, anterior: string | null, novo: string | 
     formaPagamento: "Forma de pagamento",
     tecnico: "Técnico responsável",
     convidado: "Convidado",
+    cliente: "Cliente",
   };
   const l = label[campo] ?? campo;
 
@@ -85,6 +86,7 @@ function formatCampoHist(campo: string, anterior: string | null, novo: string | 
 
 type Categoria = { id: string; nome: string };
 type Tecnico = { id: string; nome: string; email?: string | null };
+type ClienteItem = { id: string; nome: string; email: string; telefone: string };
 type CampoHistItem = { id: string; campo: string; valorAnterior: string | null; valorNovo: string | null; createdAt: string };
 
 type ServicoDetail = {
@@ -105,7 +107,7 @@ type ServicoDetail = {
   imagens?: string[] | null;
   formaPagamento?: string | null;
   convidadoEmail?: string | null;
-  cliente: { nome: string; email: string; telefone: string };
+  cliente: { id: string; nome: string; email: string; telefone: string };
   statusHist: { id: string; statusAnterior: string | null; statusNovo: string; idAutor: string; createdAt: string }[];
   notas: { id: string; conteudo: string; visivelCliente: boolean; createdAt: string }[];
   campoHist: CampoHistItem[];
@@ -119,6 +121,7 @@ type PatchBody = {
   categoria_id?: string | null;
   forma_pagamento?: string | null;
   tecnico_id?: string | null;
+  cliente_id?: string;
   convidado_email?: string | null;
   data_conclusao?: string | null;
 };
@@ -153,6 +156,14 @@ export default function ServicoDetailPage() {
   const [editValorMaterial, setEditValorMaterial] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   const [error, setError] = useState("");
+
+  // busca de cliente para troca
+  const [clienteQuery, setClienteQuery] = useState("");
+  const [clienteResultados, setClienteResultados] = useState<ClienteItem[]>([]);
+  const [clienteSelecionado, setClienteSelecionado] = useState<ClienteItem | null>(null);
+  const [showClienteDropdown, setShowClienteDropdown] = useState(false);
+  const clienteDropdownRef = useRef<HTMLDivElement>(null);
+  const clienteFocado = useRef(false);
   const [statusError, setStatusError] = useState("");
 
   // Modal conclusão/cancelamento
@@ -194,11 +205,39 @@ export default function ServicoDetailPage() {
     setEditTecnicoId(servico.tecnico?.id ?? "");
     setNovoStatus(servico.statusAtual);
     setEditDataConclusao(servico.dataConclusao ? new Date(servico.dataConclusao).toISOString().slice(0, 10) : "");
+    setClienteQuery(servico.cliente.nome);
+    setClienteSelecionado(null);
   }, [servico?.id, servico?.dataAgendamento, servico?.valorEstimado, servico?.categoria?.id, servico?.statusAtual, servico?.formaPagamento, servico?.dataConclusao]);
 
   useEffect(() => {
     api<Categoria[]>("/categorias").then(({ data }) => data && setCategorias(data));
     api<Tecnico[]>("/tecnicos").then(({ data }) => data && setTecnicos(data));
+  }, []);
+
+  async function buscarClientes(q: string) {
+    const url = q.trim() ? `/clientes?q=${encodeURIComponent(q.trim())}` : "/clientes";
+    const { data } = await api<ClienteItem[]>(url);
+    if (data) {
+      setClienteResultados(data.slice(0, 8));
+      setShowClienteDropdown(true);
+    }
+  }
+
+  useEffect(() => {
+    if (clienteSelecionado || !clienteFocado.current) return;
+    const timer = setTimeout(() => buscarClientes(clienteQuery), 200);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clienteQuery, clienteSelecionado]);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (clienteDropdownRef.current && !clienteDropdownRef.current.contains(e.target as Node)) {
+        setShowClienteDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   async function executarSalvar(body: PatchBody) {
@@ -219,6 +258,9 @@ export default function ServicoDetailPage() {
       forma_pagamento: editFormaPagamento || null,
       tecnico_id: editTecnicoId || null,
     };
+    if (clienteSelecionado && clienteSelecionado.id !== servico?.cliente?.id) {
+      body.cliente_id = clienteSelecionado.id;
+    }
     if (servico && (servico.statusAtual === "CONCLUIDO" || servico.statusAtual === "CANCELADO") && editDataConclusao) {
       body.data_conclusao = localDateIso(editDataConclusao);
     }
@@ -765,6 +807,58 @@ export default function ServicoDetailPage() {
                 />
               </div>
             )}
+            <div ref={clienteDropdownRef} className="space-y-2 mb-3 relative">
+              <label className="block text-sm font-medium text-theme-muted">Cliente</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={clienteQuery}
+                  onChange={(e) => {
+                    setClienteQuery(e.target.value);
+                    if (clienteSelecionado) setClienteSelecionado(null);
+                  }}
+                  onFocus={() => {
+                    clienteFocado.current = true;
+                    buscarClientes(clienteQuery);
+                  }}
+                  placeholder="Buscar cliente..."
+                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                />
+                {clienteSelecionado && (
+                  <button
+                    type="button"
+                    onClick={() => { setClienteSelecionado(null); setClienteQuery(servico.cliente.nome); }}
+                    className="px-3 py-2 rounded-lg border border-theme text-theme-muted hover:text-theme text-sm"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {showClienteDropdown && clienteResultados.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-theme-card border border-theme rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {clienteResultados.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onMouseDown={() => {
+                        setClienteSelecionado(c);
+                        setClienteQuery(c.nome);
+                        setShowClienteDropdown(false);
+                        setClienteResultados([]);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-theme-hover text-sm"
+                    >
+                      <span className="font-medium text-theme">{c.nome}</span>
+                      <span className="text-theme-muted ml-2">{c.telefone}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {clienteSelecionado && clienteSelecionado.id !== servico.cliente.id && (
+                <p className="text-xs text-yellow-500">Será alterado para: {clienteSelecionado.nome}</p>
+              )}
+            </div>
+
             <button type="submit" disabled={savingEdit} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">Salvar</button>
           </form>
 

@@ -96,12 +96,14 @@ export async function PATCH(
       categoriaId: true,
       formaPagamento: true,
       tecnicoId: true,
+      clienteId: true,
       convidadoEmail: true,
       googleEventId: true,
       googleEtag: true,
       googleUpdatedAt: true,
       categoria: { select: { nome: true } },
       tecnico: { select: { nome: true } },
+      cliente: { select: { nome: true } },
     },
   });
   if (!before) return notFound();
@@ -128,6 +130,12 @@ export async function PATCH(
   }
   if (body.convidado_email !== undefined) {
     data.convidadoEmail = body.convidado_email ? String(body.convidado_email).trim() : null;
+  }
+  if (body.cliente_id !== undefined) {
+    const clienteId = String(body.cliente_id).trim();
+    const clienteExiste = await prisma.cliente.findUnique({ where: { id: clienteId }, select: { id: true } });
+    if (!clienteExiste) return badRequest("Cliente não encontrado.");
+    data.clienteId = clienteId;
   }
   if (body.data_conclusao !== undefined) {
     const statusFinal = ["CONCLUIDO", "CANCELADO"];
@@ -174,7 +182,8 @@ export async function PATCH(
       body.data_agendamento !== undefined ||
       body.descricao !== undefined ||
       body.categoria_id !== undefined ||
-      body.valor_estimado !== undefined;
+      body.valor_estimado !== undefined ||
+      body.cliente_id !== undefined;
     if (touchedSchedule) {
       data.googleSyncState = "PENDING_UPDATE";
       data.googleLastError = null;
@@ -219,6 +228,9 @@ export async function PATCH(
     const ant = before.convidadoEmail ?? null;
     const nov = servico.convidadoEmail ?? null;
     if (ant !== nov) historicoEntries.push({ campo: "convidado", valorAnterior: ant, valorNovo: nov });
+  }
+  if (body.cliente_id !== undefined && (before.clienteId ?? null) !== (servico.clienteId ?? null)) {
+    historicoEntries.push({ campo: "cliente", valorAnterior: before.cliente?.nome ?? null, valorNovo: servico.cliente?.nome ?? null });
   }
 
   if (historicoEntries.length > 0) {
