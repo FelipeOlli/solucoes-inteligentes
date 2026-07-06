@@ -1,6 +1,7 @@
 const TAXA_POR_PAGAMENTO: Record<string, number> = {
   DINHEIRO: 0,
   PIX: 0,
+  CHEQUE: 0,
   DEBITO: 3.99,
   CREDITO: 3.99,
 };

@@ -386,6 +386,7 @@ export default function NovoServicoPage() {
             <option value="">Selecione...</option>
             <option value="DINHEIRO">Dinheiro</option>
             <option value="PIX">PIX</option>
+            <option value="CHEQUE">Cheque</option>
             <option value="CREDITO">Crédito</option>
             <option value="DEBITO">Débito</option>
           </select>
