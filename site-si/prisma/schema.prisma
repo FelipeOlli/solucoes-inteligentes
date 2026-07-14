@@ -12,6 +12,7 @@ enum FormaPagamento {
   PIX
   CREDITO
   DEBITO
+  CHEQUE
 }
 
 enum GoogleSyncState {

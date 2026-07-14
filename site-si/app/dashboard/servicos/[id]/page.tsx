@@ -129,7 +129,8 @@ type PatchBody = {
 
 function localDateIso(dateStr: string): string {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, d, 12, 0, 0).toISOString();
+  const now = new Date();
+  return new Date(y, m - 1, d, now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
 }
 
 export default function ServicoDetailPage() {
