@@ -8,6 +8,19 @@ import { Menu, X } from "lucide-react";
 import { clearToken } from "@/lib/api";
 import { getStoredTheme, setStoredTheme, THEME_LABELS, type ThemeId } from "@/lib/theme";
 
+const NAV_LINKS: { href: string; label: string; prefix?: boolean }[] = [
+  { href: "/dashboard", label: "Serviços" },
+  { href: "/dashboard/agenda", label: "Agenda" },
+  { href: "/dashboard/clientes", label: "Clientes" },
+  { href: "/dashboard/categorias", label: "Categorias" },
+  { href: "/dashboard/usuarios", label: "Usuários" },
+  { href: "/dashboard/tecnicos", label: "Técnicos" },
+  { href: "/dashboard/orcamento", label: "Orçamento" },
+  { href: "/dashboard/documentos-fiscais", label: "Contabilidade" },
+  { href: "/dashboard/financeiro", label: "Financeiro" },
+  { href: "/dashboard/marketing", label: "Marketing", prefix: true },
+];
+
 export default function DashboardLayout({
   children,
 }: {
@@ -53,6 +66,8 @@ export default function DashboardLayout({
 
   const navLinkClass = (active: boolean) =>
     `text-sm transition opacity-90 hover:opacity-100 ${active ? "font-semibold underline" : ""}`;
+  const isActive = (l: (typeof NAV_LINKS)[number]) =>
+    l.prefix ? pathname.startsWith(l.href) : pathname === l.href;
   const darkLikeTheme = theme === "dark" || theme === "brand-blue";
 
   return (
@@ -60,14 +75,14 @@ export default function DashboardLayout({
       {/* Barra fixa estilo pill inspirada no layout de referência */}
       <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-6xl">
         <div
-          className="rounded-2xl md:rounded-full border px-4 md:px-5 py-2.5 shadow-lg backdrop-blur-md transition-colors"
+          className="rounded-2xl lg:rounded-full border px-4 md:px-5 py-2.5 shadow-lg backdrop-blur-md transition-colors"
           style={{
             backgroundColor: "var(--color-navbar)",
             borderColor: "var(--color-navbar-border)",
           }}
         >
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6 min-w-0">
               <Link href="/dashboard" className="flex items-center shrink-0">
                 <Image
                   src={theme === "dark" || theme === "brand-blue" ? "/logo/logo-simbolo-branco.svg" : "/favicon.svg"}
@@ -77,81 +92,21 @@ export default function DashboardLayout({
                   className="h-7 w-7"
                 />
               </Link>
-              <nav className="hidden md:flex gap-5 text-sm shrink-0" style={{ color: "var(--color-navbar-text-muted)" }}>
-                <Link
-                  href="/dashboard"
-                  className={navLinkClass(pathname === "/dashboard")}
-                  style={{ color: pathname === "/dashboard" ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Serviços
-                </Link>
-                <Link
-                  href="/dashboard/agenda"
-                  className={navLinkClass(pathname === "/dashboard/agenda")}
-                  style={{ color: pathname === "/dashboard/agenda" ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Agenda
-                </Link>
-                <Link
-                  href="/dashboard/clientes"
-                  className={navLinkClass(pathname === "/dashboard/clientes")}
-                  style={{ color: pathname === "/dashboard/clientes" ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Clientes
-                </Link>
-                <Link
-                  href="/dashboard/categorias"
-                  className={navLinkClass(pathname === "/dashboard/categorias")}
-                  style={{ color: pathname === "/dashboard/categorias" ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Categorias
-                </Link>
-                <Link
-                  href="/dashboard/usuarios"
-                  className={navLinkClass(pathname === "/dashboard/usuarios")}
-                  style={{ color: pathname === "/dashboard/usuarios" ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Usuários
-                </Link>
-                <Link
-                  href="/dashboard/tecnicos"
-                  className={navLinkClass(pathname === "/dashboard/tecnicos")}
-                  style={{ color: pathname === "/dashboard/tecnicos" ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Técnicos
-                </Link>
-                <Link
-                  href="/dashboard/orcamento"
-                  className={navLinkClass(pathname === "/dashboard/orcamento")}
-                  style={{ color: pathname === "/dashboard/orcamento" ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Orçamento
-                </Link>
-                <Link
-                  href="/dashboard/documentos-fiscais"
-                  className={navLinkClass(pathname === "/dashboard/documentos-fiscais")}
-                  style={{ color: pathname === "/dashboard/documentos-fiscais" ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Contabilidade
-                </Link>
-                <Link
-                  href="/dashboard/financeiro"
-                  className={navLinkClass(pathname === "/dashboard/financeiro")}
-                  style={{ color: pathname === "/dashboard/financeiro" ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Financeiro
-                </Link>
-                <Link
-                  href="/dashboard/marketing"
-                  className={navLinkClass(pathname.startsWith("/dashboard/marketing"))}
-                  style={{ color: pathname.startsWith("/dashboard/marketing") ? "var(--color-navbar-text)" : "inherit" }}
-                >
-                  Marketing
-                </Link>
+              <nav className="hidden lg:flex gap-4 xl:gap-5 text-sm" style={{ color: "var(--color-navbar-text-muted)" }}>
+                {NAV_LINKS.map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    className={navLinkClass(isActive(l))}
+                    style={{ color: isActive(l) ? "var(--color-navbar-text)" : "inherit" }}
+                  >
+                    {l.label}
+                  </Link>
+                ))}
               </nav>
             </div>
             <div className="flex items-center gap-2">
-              <div className="relative hidden md:block">
+              <div className="relative hidden lg:block">
                 <button
                   type="button"
                   onClick={() => setThemeOpen((o) => !o)}
@@ -195,7 +150,7 @@ export default function DashboardLayout({
               <button
                 type="button"
                 onClick={handleSair}
-                className="text-sm font-medium rounded-full px-3 md:px-4 py-2 transition"
+                className="text-sm font-medium rounded-full px-3 lg:px-4 py-2 transition"
                 style={{
                   backgroundColor: "var(--color-cta-bg)",
                   color: "var(--color-cta-text)",
@@ -205,7 +160,7 @@ export default function DashboardLayout({
               </button>
               <button
                 type="button"
-                className="md:hidden p-2 rounded-full border"
+                className="lg:hidden p-2 rounded-full border"
                 style={{ borderColor: "var(--color-navbar-border)", color: "var(--color-navbar-text)" }}
                 onClick={() => setMobileNavOpen((o) => !o)}
                 aria-label="Abrir menu do dashboard"
@@ -215,7 +170,10 @@ export default function DashboardLayout({
             </div>
           </div>
           {mobileNavOpen && (
-            <nav className="md:hidden mt-3 pt-3 border-t grid gap-2" style={{ borderColor: "var(--color-navbar-border)" }}>
+            <nav
+              className="lg:hidden mt-3 pt-3 border-t grid gap-2 max-h-[70vh] overflow-y-auto"
+              style={{ borderColor: "var(--color-navbar-border)" }}
+            >
               <div className="mb-2">
                 <p className="text-xs font-medium mb-2" style={{ color: "var(--color-navbar-text-muted)" }}>
                   Tema
@@ -238,86 +196,17 @@ export default function DashboardLayout({
                   ))}
                 </div>
               </div>
-              <Link
-                href="/dashboard"
-                className={navLinkClass(pathname === "/dashboard")}
-                style={{ color: pathname === "/dashboard" ? "var(--color-navbar-text)" : "inherit" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                Serviços
-              </Link>
-              <Link
-                href="/dashboard/agenda"
-                className={navLinkClass(pathname === "/dashboard/agenda")}
-                style={{ color: pathname === "/dashboard/agenda" ? "var(--color-navbar-text)" : "inherit" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                Agenda
-              </Link>
-              <Link
-                href="/dashboard/clientes"
-                className={navLinkClass(pathname === "/dashboard/clientes")}
-                style={{ color: pathname === "/dashboard/clientes" ? "var(--color-navbar-text)" : "inherit" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                Clientes
-              </Link>
-              <Link
-                href="/dashboard/categorias"
-                className={navLinkClass(pathname === "/dashboard/categorias")}
-                style={{ color: pathname === "/dashboard/categorias" ? "var(--color-navbar-text)" : "inherit" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                Categorias
-              </Link>
-              <Link
-                href="/dashboard/usuarios"
-                className={navLinkClass(pathname === "/dashboard/usuarios")}
-                style={{ color: pathname === "/dashboard/usuarios" ? "var(--color-navbar-text)" : "inherit" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                Usuários
-              </Link>
-              <Link
-                href="/dashboard/tecnicos"
-                className={navLinkClass(pathname === "/dashboard/tecnicos")}
-                style={{ color: pathname === "/dashboard/tecnicos" ? "var(--color-navbar-text)" : "inherit" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                Técnicos
-              </Link>
-              <Link
-                href="/dashboard/orcamento"
-                className={navLinkClass(pathname === "/dashboard/orcamento")}
-                style={{ color: pathname === "/dashboard/orcamento" ? "var(--color-navbar-text)" : "inherit" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                Orçamento
-              </Link>
-              <Link
-                href="/dashboard/documentos-fiscais"
-                className={navLinkClass(pathname === "/dashboard/documentos-fiscais")}
-                style={{ color: pathname === "/dashboard/documentos-fiscais" ? "var(--color-navbar-text)" : "inherit" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                Contabilidade
-              </Link>
-              <Link
-                href="/dashboard/financeiro"
-                className={navLinkClass(pathname === "/dashboard/financeiro")}
-                style={{ color: pathname === "/dashboard/financeiro" ? "var(--color-navbar-text)" : "inherit" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                Financeiro
-              </Link>
-              <Link
-                href="/dashboard/marketing"
-                className={navLinkClass(pathname.startsWith("/dashboard/marketing"))}
-                style={{ color: pathname.startsWith("/dashboard/marketing") ? "var(--color-navbar-text)" : "inherit" }}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                Marketing
-              </Link>
+              {NAV_LINKS.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={navLinkClass(isActive(l))}
+                  style={{ color: isActive(l) ? "var(--color-navbar-text)" : "inherit" }}
+                  onClick={() => setMobileNavOpen(false)}
+                >
+                  {l.label}
+                </Link>
+              ))}
             </nav>
           )}
         </div>
