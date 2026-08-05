@@ -5,6 +5,7 @@ import Link from "next/link";
 import RepositorioAnexos from "@/components/orcamento/RepositorioAnexos";
 
 const FIXO = 50;
+const IMPOSTO_NF_PCT = 5; // imposto por emissão de nota, % em cima do valor final
 
 type MetodoPagamento = "maquininha" | "tap" | "link" | "avista";
 
@@ -68,9 +69,10 @@ export default function OrcamentoPage() {
   const liquidoDesejado = A1 + lucroAplicado;
 
   const taxaPct = metodo === "avista" ? 0 : TAXAS[metodo][parcelas - 1];
-  const coef = 1 - taxaPct / 100;
+  const coef = 1 - (taxaPct + IMPOSTO_NF_PCT) / 100;
   const resultado = liquidoDesejado >= 0 ? liquidoDesejado / coef + FIXO : 0;
   const valorParcela = resultado / parcelas;
+  const valorImposto = resultado * (IMPOSTO_NF_PCT / 100);
 
   const exibirResultado = valorServico !== "" || valorMaterial !== "";
   const metodoAtual = METODOS.find((m) => m.id === metodo)!;
@@ -354,16 +356,19 @@ export default function OrcamentoPage() {
         </div>
 
         {exibirResultado && (
-          <div className="mt-3 space-y-1 text-xs text-theme-muted">
-            <p>
-              Taxa aplicada: <span className="font-medium">{taxaPct.toFixed(2).replace(".", ",")}%</span>
-              {metodo !== "avista" && ` (${metodoAtual.label})`}
+          <div className="mt-3 space-y-1 text-xs text-theme-muted border-t border-theme pt-3">
+            <p className="flex justify-between">
+              <span>Taxa aplicada{metodo !== "avista" ? ` (${metodoAtual.label}, ${parcelas}×)` : ""}</span>
+              <span className="font-medium">{taxaPct.toFixed(2).replace(".", ",")}%</span>
             </p>
-            {parcelas > 1 && (
-              <p>
-                Parcela: <span className="font-medium">{formatBRL(valorParcela)}</span> × {parcelas}
-              </p>
-            )}
+            <p className="flex justify-between">
+              <span>Imposto emissão de NF ({IMPOSTO_NF_PCT}%)</span>
+              <span className="font-medium">{formatBRL(valorImposto)}</span>
+            </p>
+            <p className="flex justify-between">
+              <span>Custo fixo (transporte)</span>
+              <span className="font-medium">{formatBRL(FIXO)}</span>
+            </p>
           </div>
         )}
 
