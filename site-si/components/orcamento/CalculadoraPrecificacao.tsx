@@ -10,31 +10,45 @@ import { useState, useMemo } from "react";
  * regras, independentes da calculadora de orçamento rápido ao lado.
  */
 
-// Taxas SumUp (Visa/Mastercard). "Receba na hora" e "1 dia" são idênticas.
-// Conferido em 11/08/2026.
+// Taxas REAIS da conta da SI, lidas na calculadora do app SumUp em 11/08/2026.
+// Visa/Mastercard, maquininha, recebimento D+1.
+//
+// Não use as tabelas do site da SumUp: elas não batem com esta conta. A
+// fonte de verdade é o app → Calculadora de taxas. Reconfira se o
+// faturamento mensal mudar de faixa.
+//
+// As demais entradas abaixo ("tabela do site") são só simulação por faixa
+// de faturamento, lidas em 11/08/2026. "Receba na hora" e "1 dia" são
+// idênticas nelas.
 const TAXAS = {
-  ate20k: {
-    rotulo: "Até R$ 20 mil/mês",
+  contaSI: {
+    rotulo: "Conta SI (taxas reais — app SumUp, 11/08/2026)",
     pix: 0,
-    debito: 0.0099,
+    debito: null as number | null, // ainda não confirmado no app
+    credito: [0.049, 0.098, 0.111, 0.125, 0.138, 0.151, 0.164, 0.177, 0.19, 0.201],
+  },
+  ate20k: {
+    rotulo: "Até R$ 20 mil/mês (tabela do site)",
+    pix: 0,
+    debito: 0.0099 as number | null,
     credito: [
       0.0349, 0.0649, 0.0749, 0.0799, 0.0849, 0.0949, 0.0999, 0.1049, 0.1099,
       0.1149, 0.1249, 0.1399,
     ],
   },
   de20a50k: {
-    rotulo: "R$ 20 mil a R$ 50 mil/mês",
+    rotulo: "R$ 20 mil a R$ 50 mil/mês (tabela do site)",
     pix: 0,
-    debito: 0.0099,
+    debito: 0.0099 as number | null,
     credito: [
       0.0329, 0.0449, 0.0499, 0.0549, 0.0599, 0.0659, 0.0749, 0.0849, 0.0899,
       0.0879, 0.0949, 0.1049,
     ],
   },
   acima50k: {
-    rotulo: "Acima de R$ 50 mil/mês",
+    rotulo: "Acima de R$ 50 mil/mês (tabela do site)",
     pix: 0,
-    debito: 0.0099,
+    debito: 0.0099 as number | null,
     credito: [
       0.0319, 0.0399, 0.0459, 0.0519, 0.0559, 0.0649, 0.0699, 0.0749, 0.0789,
       0.0849, 0.0899, 0.0999,
@@ -86,13 +100,15 @@ function n(v: string) {
   return Number.isFinite(x) && x > 0 ? x : 0;
 }
 
+const fmt = (v: number) => (Number.isFinite(v) ? brl(v) : "—");
+
 export default function CalculadoraPrecificacao() {
   const [material, setMaterial] = useState("670");
   const [maoDeObra, setMaoDeObra] = useState("180");
   const [custosFixos, setCustosFixos] = useState("50");
   const [markup, setMarkup] = useState(0.3);
   const [garantiaPct, setGarantiaPct] = useState(0.04);
-  const [faixa, setFaixa] = useState<Faixa>("ate20k");
+  const [faixa, setFaixa] = useState<Faixa>("contaSI");
   const [rbt12, setRbt12] = useState("");
   const [forma, setForma] = useState<Forma>("pix");
   const [parcelas, setParcelas] = useState(1);
@@ -107,10 +123,11 @@ export default function CalculadoraPrecificacao() {
     const lucro = (mat + mo) * markup;
     const liquido = mat + mo + fixos + garantia + lucro;
 
+    const t = TAXAS[faixa];
+
     const taxaDe = (f: Forma, p: number) => {
-      const t = TAXAS[faixa];
       if (f === "pix") return t.pix;
-      if (f === "debito") return t.debito;
+      if (f === "debito") return t.debito ?? 0;
       return t.credito[p - 1];
     };
 
@@ -121,8 +138,10 @@ export default function CalculadoraPrecificacao() {
 
     const linhas = [
       { id: "pix", rotulo: "Pix", forma: "pix" as Forma, parcelas: 1 },
-      { id: "debito", rotulo: "Débito", forma: "debito" as Forma, parcelas: 1 },
-      ...Array.from({ length: 12 }, (_, i) => ({
+      ...(t.debito !== null
+        ? [{ id: "debito", rotulo: "Débito", forma: "debito" as Forma, parcelas: 1 }]
+        : []),
+      ...Array.from({ length: t.credito.length }, (_, i) => ({
         id: `credito${i + 1}`,
         rotulo: `Crédito ${i + 1}x`,
         forma: "credito" as Forma,
@@ -244,7 +263,16 @@ export default function CalculadoraPrecificacao() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={label}>Faturamento mensal (faixa SumUp)</label>
-            <select className={campo} value={faixa} onChange={(e) => setFaixa(e.target.value as Faixa)}>
+            <select
+              className={campo}
+              value={faixa}
+              onChange={(e) => {
+                const nova = e.target.value as Faixa;
+                setFaixa(nova);
+                const max = TAXAS[nova].credito.length;
+                if (parcelas > max) setParcelas(1);
+              }}
+            >
               {Object.entries(TAXAS).map(([k, v]) => (
                 <option key={k} value={k}>
                   {v.rotulo}
@@ -268,6 +296,12 @@ export default function CalculadoraPrecificacao() {
           (sem ISS, por retenção) e ISS a {pct(calc.imposto.iss)} na Nota Carioca. As duas já
           estão no preço — não some nada por fora.
         </p>
+        {faixa !== "contaSI" && (
+          <p className="mt-1 text-xs text-amber-600">
+            Faixa de simulação (tabela do site) — as taxas reais da conta da SI estão em
+            &quot;Conta SI&quot;.
+          </p>
+        )}
       </div>
 
       <div className="rounded-lg border border-theme bg-theme-card p-5">
@@ -276,16 +310,16 @@ export default function CalculadoraPrecificacao() {
             Cobrar no {calc.sel.rotulo.toLowerCase()}
           </p>
           <p className="mt-1 text-4xl font-semibold tabular-nums tracking-tight text-theme">
-            {brl(calc.sel.preco)}
+            {fmt(calc.sel.preco)}
           </p>
           {calc.sel.parcela && (
             <p className="mt-1 text-sm text-theme-muted tabular-nums">
-              {calc.sel.parcelas}× de {brl(calc.sel.parcela)}
+              {calc.sel.parcelas}× de {fmt(calc.sel.parcela)}
             </p>
           )}
-          {calc.desconto > 0.005 && (
+          {Number.isFinite(calc.sel.preco) && calc.desconto > 0.005 && (
             <p className="mt-2 text-sm text-emerald-600 tabular-nums">
-              No Pix: {brl(calc.precoPix)} — pode dar {brl(calc.desconto)} de desconto sem
+              No Pix: {fmt(calc.precoPix)} — pode dar {fmt(calc.desconto)} de desconto sem
               perder margem.
             </p>
           )}
@@ -366,12 +400,12 @@ export default function CalculadoraPrecificacao() {
                       </span>
                       <span className="ml-2 text-xs text-theme-muted">{pct(l.taxa)}</span>
                     </td>
-                    <td className="px-4 py-2.5 text-right font-medium text-theme">{brl(l.preco)}</td>
+                    <td className="px-4 py-2.5 text-right font-medium text-theme">{fmt(l.preco)}</td>
                     <td className="px-4 py-2.5 text-right text-theme-muted">
-                      {l.parcela ? brl(l.parcela) : "—"}
+                      {l.parcela ? fmt(l.parcela) : "—"}
                     </td>
                     <td className="px-4 py-2.5 text-right text-emerald-600">
-                      {l.preco - calc.precoPix > 0.005 ? "−" + brl(l.preco - calc.precoPix) : "—"}
+                      {l.preco - calc.precoPix > 0.005 ? "−" + fmt(l.preco - calc.precoPix) : "—"}
                     </td>
                   </tr>
                 );
