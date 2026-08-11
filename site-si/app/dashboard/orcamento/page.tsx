@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import RepositorioAnexos from "@/components/orcamento/RepositorioAnexos";
+import CalculadoraPrecificacao from "@/components/orcamento/CalculadoraPrecificacao";
 
 const FIXO = 50;
 const IMPOSTO_NF_PCT = 5; // imposto por emissão de nota, % em cima do valor final
@@ -175,9 +176,12 @@ export default function OrcamentoPage() {
   return (
     <div className="text-theme">
       <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-2">Orçamento</h1>
-      <p className="text-body text-theme-muted mb-6">Informe os valores para calcular o valor final e gerar o PDF do orçamento.</p>
+      <p className="text-body text-theme-muted mb-6">Duas formas de calcular o valor do serviço, lado a lado.</p>
 
-      <div className="bg-theme-card p-6 rounded-lg border border-theme max-w-md">
+      <div className="grid gap-6 items-start lg:grid-cols-[28rem_minmax(0,1fr)]">
+      <div>
+      <h2 className="font-heading text-lg font-semibold text-theme mb-3">Orçamento rápido</h2>
+      <div className="bg-theme-card p-6 rounded-lg border border-theme">
         <div className="space-y-4">
 
           <div>
@@ -389,6 +393,13 @@ export default function OrcamentoPage() {
             </Link>
           </div>
         )}
+      </div>
+      </div>
+
+      <div>
+        <h2 className="font-heading text-lg font-semibold text-theme mb-3">Precificação detalhada</h2>
+        <CalculadoraPrecificacao />
+      </div>
       </div>
 
       <RepositorioAnexos />
