@@ -114,11 +114,6 @@ export default function CalculadoraPrecificacao() {
   const [forma, setForma] = useState<Forma>("pix");
   const [parcelas, setParcelas] = useState(1);
 
-  // texto de WhatsApp
-  const [produto, setProduto] = useState("");
-  const [marca, setMarca] = useState("");
-  const [modelo, setModelo] = useState("");
-  const [servico, setServico] = useState("");
   const [copiado, setCopiado] = useState(false);
 
   const calc = useMemo(() => {
@@ -217,17 +212,11 @@ export default function CalculadoraPrecificacao() {
   )?.preco;
 
   const textoWhatsapp = useMemo(() => {
-    const cabecalho = [produto, marca, modelo].filter((v) => v.trim()).join(" ");
-    const blocos = [cabecalho, servico.trim()].filter(Boolean);
-    if (Number.isFinite(precoCartaoTexto) && Number.isFinite(calc.precoPix)) {
-      blocos.push(
-        `${fmt(precoCartaoTexto as number)} em até ${parcelasCartao}x no cartão\n${fmt(
-          calc.precoPix
-        )} em dinheiro ou PIX`
-      );
-    }
-    return blocos.join("\n\n");
-  }, [produto, marca, modelo, servico, precoCartaoTexto, calc.precoPix, parcelasCartao]);
+    if (!Number.isFinite(precoCartaoTexto) || !Number.isFinite(calc.precoPix)) return "";
+    return `${fmt(precoCartaoTexto as number)} em até ${parcelasCartao}x no cartão\n${fmt(
+      calc.precoPix
+    )} em dinheiro ou PIX`;
+  }, [precoCartaoTexto, calc.precoPix, parcelasCartao]);
 
   async function copiarTexto() {
     if (!textoWhatsapp) return;
@@ -238,6 +227,14 @@ export default function CalculadoraPrecificacao() {
 
   return (
     <div className="space-y-4">
+      <button
+        onClick={copiarTexto}
+        disabled={!textoWhatsapp}
+        className="w-full rounded-lg border border-primary bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {copiado ? "Copiado!" : "Copiar texto do WhatsApp"}
+      </button>
+
       <div className="rounded-lg border border-theme bg-theme-card p-5">
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
@@ -462,66 +459,6 @@ export default function CalculadoraPrecificacao() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-theme bg-theme-card p-5">
-        <p className={label}>Texto para o WhatsApp</p>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <label className={label}>Produto</label>
-            <input
-              className={campo}
-              placeholder="Notebook"
-              value={produto}
-              onChange={(e) => setProduto(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className={label}>Marca</label>
-            <input
-              className={campo}
-              placeholder="Dell"
-              value={marca}
-              onChange={(e) => setMarca(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className={label}>Modelo</label>
-            <input
-              className={campo}
-              placeholder="Inspiron 15 3000"
-              value={modelo}
-              onChange={(e) => setModelo(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <label className={label}>Serviço executado</label>
-          <input
-            className={campo}
-            placeholder="Troca de tela"
-            value={servico}
-            onChange={(e) => setServico(e.target.value)}
-          />
-        </div>
-
-        <p className="mt-3 text-xs text-theme-muted">
-          Cartão em {parcelasCartao}x — conforme a linha selecionada na tabela acima.
-        </p>
-
-        {textoWhatsapp && (
-          <pre className="mt-4 whitespace-pre-wrap rounded-lg border border-dashed border-theme bg-theme p-3 text-sm text-theme">
-            {textoWhatsapp}
-          </pre>
-        )}
-
-        <button
-          onClick={copiarTexto}
-          disabled={!textoWhatsapp}
-          className="mt-4 rounded-lg border border-primary bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {copiado ? "Copiado!" : "Copiar texto do WhatsApp"}
-        </button>
-      </div>
     </div>
   );
 }
