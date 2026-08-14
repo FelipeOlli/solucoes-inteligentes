@@ -114,6 +114,14 @@ export default function CalculadoraPrecificacao() {
   const [forma, setForma] = useState<Forma>("pix");
   const [parcelas, setParcelas] = useState(1);
 
+  // texto de WhatsApp
+  const [produto, setProduto] = useState("");
+  const [marca, setMarca] = useState("");
+  const [modelo, setModelo] = useState("");
+  const [servico, setServico] = useState("");
+  const [parcelasTexto, setParcelasTexto] = useState(5);
+  const [copiado, setCopiado] = useState(false);
+
   const calc = useMemo(() => {
     const mat = n(material);
     const mo = n(maoDeObra);
@@ -203,6 +211,30 @@ export default function CalculadoraPrecificacao() {
         : "border-theme text-theme-muted hover:opacity-80"
     }`;
 
+  const precoCartaoTexto = calc.linhas.find(
+    (l) => l.forma === "credito" && l.parcelas === parcelasTexto
+  )?.preco;
+
+  const textoWhatsapp = useMemo(() => {
+    const cabecalho = [produto, marca, modelo].filter((v) => v.trim()).join(" ");
+    const blocos = [cabecalho, servico.trim()].filter(Boolean);
+    if (Number.isFinite(precoCartaoTexto) && Number.isFinite(calc.precoPix)) {
+      blocos.push(
+        `${fmt(precoCartaoTexto as number)} em até ${parcelasTexto}x no cartão\n${fmt(
+          calc.precoPix
+        )} em dinheiro ou PIX`
+      );
+    }
+    return blocos.join("\n\n");
+  }, [produto, marca, modelo, servico, precoCartaoTexto, calc.precoPix, parcelasTexto]);
+
+  async function copiarTexto() {
+    if (!textoWhatsapp) return;
+    await navigator.clipboard.writeText(textoWhatsapp);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  }
+
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-theme bg-theme-card p-5">
@@ -285,6 +317,7 @@ export default function CalculadoraPrecificacao() {
                 setFaixa(nova);
                 const max = TAXAS[nova].credito.length;
                 if (parcelas > max) setParcelas(1);
+                if (parcelasTexto > max) setParcelasTexto(max);
               }}
             >
               {Object.entries(TAXAS).map(([k, v]) => (
@@ -427,6 +460,78 @@ export default function CalculadoraPrecificacao() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="rounded-lg border border-theme bg-theme-card p-5">
+        <p className={label}>Texto para o WhatsApp</p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className={label}>Produto</label>
+            <input
+              className={campo}
+              placeholder="Notebook"
+              value={produto}
+              onChange={(e) => setProduto(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={label}>Marca</label>
+            <input
+              className={campo}
+              placeholder="Dell"
+              value={marca}
+              onChange={(e) => setMarca(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={label}>Modelo</label>
+            <input
+              className={campo}
+              placeholder="Inspiron 15 3000"
+              value={modelo}
+              onChange={(e) => setModelo(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <label className={label}>Serviço executado</label>
+          <input
+            className={campo}
+            placeholder="Troca de tela"
+            value={servico}
+            onChange={(e) => setServico(e.target.value)}
+          />
+        </div>
+
+        <div className="mt-4 max-w-[10rem]">
+          <label className={label}>Parcelas no texto</label>
+          <select
+            className={campo}
+            value={parcelasTexto}
+            onChange={(e) => setParcelasTexto(Number(e.target.value))}
+          >
+            {Array.from({ length: TAXAS[faixa].credito.length }, (_, i) => i + 1).map((p) => (
+              <option key={p} value={p}>
+                {p}x
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {textoWhatsapp && (
+          <pre className="mt-4 whitespace-pre-wrap rounded-lg border border-dashed border-theme bg-theme p-3 text-sm text-theme">
+            {textoWhatsapp}
+          </pre>
+        )}
+
+        <button
+          onClick={copiarTexto}
+          disabled={!textoWhatsapp}
+          className="mt-4 rounded-lg border border-primary bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {copiado ? "Copiado!" : "Copiar texto do WhatsApp"}
+        </button>
       </div>
     </div>
   );
