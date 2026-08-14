@@ -122,6 +122,7 @@ export async function POST(request: NextRequest) {
         prazoEstimado: body.prazo_estimado ? new Date(body.prazo_estimado) : null,
         valorEstimado: body.valor_estimado != null ? Number(body.valor_estimado) : null,
         valorMaterial: body.valor_material != null ? Number(body.valor_material) : null,
+        valorRepasse: body.valor_repasse != null ? Number(body.valor_repasse) : null,
         enderecoServico: body.endereco != null ? String(body.endereco).trim() || null : null,
         contatoPreferencial: body.contato != null ? String(body.contato).trim() || null : null,
         imagens: imagensStr,

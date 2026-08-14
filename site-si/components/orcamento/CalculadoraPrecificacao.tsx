@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 
 /**
  * Calculadora de precificação alternativa — modelo Simples Nacional Anexo III.
@@ -225,15 +226,41 @@ export default function CalculadoraPrecificacao() {
     setTimeout(() => setCopiado(false), 2000);
   }
 
+  const FORMA_ENUM: Record<Forma, string> = { pix: "PIX", debito: "DEBITO", credito: "CREDITO" };
+
+  const criarServicoHref = Number.isFinite(calc.sel.preco)
+    ? `/dashboard/servicos/novo?valor=${encodeURIComponent(calc.sel.preco.toFixed(2))}` +
+      `&material=${encodeURIComponent(calc.mat.toFixed(2))}` +
+      `&repasse=${encodeURIComponent(calc.mo.toFixed(2))}` +
+      `&forma=${FORMA_ENUM[calc.sel.forma]}`
+    : null;
+
   return (
     <div className="space-y-4">
-      <button
-        onClick={copiarTexto}
-        disabled={!textoWhatsapp}
-        className="w-full rounded-lg border border-primary bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {copiado ? "Copiado!" : "Copiar texto do WhatsApp"}
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={copiarTexto}
+          disabled={!textoWhatsapp}
+          className="flex-1 rounded-lg border border-primary bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {copiado ? "Copiado!" : "Copiar texto do WhatsApp"}
+        </button>
+        {criarServicoHref ? (
+          <Link
+            href={criarServicoHref}
+            className="flex-1 rounded-lg border border-theme px-4 py-2.5 text-center text-sm font-medium text-theme transition-colors hover:opacity-90"
+          >
+            Criar serviço com este orçamento
+          </Link>
+        ) : (
+          <button
+            disabled
+            className="flex-1 rounded-lg border border-theme px-4 py-2.5 text-sm font-medium text-theme opacity-40 cursor-not-allowed"
+          >
+            Criar serviço com este orçamento
+          </button>
+        )}
+      </div>
 
       <div className="rounded-lg border border-theme bg-theme-card p-5">
         <div className="grid gap-4 sm:grid-cols-3">

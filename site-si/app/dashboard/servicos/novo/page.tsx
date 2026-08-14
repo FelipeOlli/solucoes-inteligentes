@@ -45,7 +45,11 @@ export default function NovoServicoPage() {
   const [convidadoOutroEmail, setConvidadoOutroEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [valorRepasseQuery, setValorRepasseQuery] = useState<number | null>(null);
   const valorFromQuery = searchParams.get("valor");
+  const materialFromQuery = searchParams.get("material");
+  const formaFromQuery = searchParams.get("forma");
+  const repasseFromQuery = searchParams.get("repasse");
 
   useEffect(() => {
     api<Cliente[]>("/clientes").then(({ data, status }) => {
@@ -67,6 +71,32 @@ export default function NovoServicoPage() {
       })
     );
   }, [valorFromQuery, valorEstimado]);
+
+  useEffect(() => {
+    if (!materialFromQuery || valorMaterial.trim() !== "") return;
+    const n = Number(materialFromQuery.replace(",", "."));
+    if (!Number.isFinite(n) || n <= 0) return;
+    setValorMaterial(
+      n.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    );
+  }, [materialFromQuery, valorMaterial]);
+
+  useEffect(() => {
+    if (!formaFromQuery || formaPagamento !== "") return;
+    const formasValidas = ["DINHEIRO", "PIX", "CREDITO", "DEBITO", "CHEQUE"];
+    if (!formasValidas.includes(formaFromQuery)) return;
+    setFormaPagamento(formaFromQuery);
+  }, [formaFromQuery, formaPagamento]);
+
+  useEffect(() => {
+    if (!repasseFromQuery) return;
+    const n = Number(repasseFromQuery.replace(",", "."));
+    if (!Number.isFinite(n) || n < 0) return;
+    setValorRepasseQuery(n);
+  }, [repasseFromQuery]);
 
   function mergeUniqueFiles(current: File[], incoming: File[]) {
     const merged = [...current];
@@ -98,6 +128,7 @@ export default function NovoServicoPage() {
       data_agendamento: dataAgendamento ? new Date(dataAgendamento).toISOString() : null,
       valor_estimado: valorEstimado ? Number(valorEstimado.trim().replace(",", ".")) || null : null,
       valor_material: valorMaterial ? Number(valorMaterial.trim().replace(",", ".")) || null : null,
+      valor_repasse: valorRepasseQuery,
       forma_pagamento: formaPagamento || null,
       tecnico_id: tecnicoId || null,
       convidado_email: convidadoEmail,
