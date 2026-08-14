@@ -106,7 +106,8 @@ export default function CalculadoraPrecificacao() {
   const [material, setMaterial] = useState("670");
   const [maoDeObra, setMaoDeObra] = useState("180");
   const [custosFixos, setCustosFixos] = useState("50");
-  const [markup, setMarkup] = useState(0.3);
+  const [markup, setMarkup] = useState<number | null>(0.3);
+  const [markupValor, setMarkupValor] = useState("");
   const [garantiaPct, setGarantiaPct] = useState(0.04);
   const [faixa, setFaixa] = useState<Faixa>("contaSI");
   const [rbt12, setRbt12] = useState("");
@@ -120,7 +121,7 @@ export default function CalculadoraPrecificacao() {
     const imposto = simples(n(rbt12));
 
     const garantia = mat * garantiaPct;
-    const lucro = (mat + mo) * markup;
+    const lucro = markup === null ? n(markupValor) : (mat + mo) * markup;
     const liquido = mat + mo + fixos + garantia + lucro;
 
     const t = TAXAS[faixa];
@@ -189,7 +190,7 @@ export default function CalculadoraPrecificacao() {
       margem: sel.preco > 0 ? lucroReal / sel.preco : 0,
       desconto: sel.preco - precoPix,
     };
-  }, [material, maoDeObra, custosFixos, markup, garantiaPct, faixa, rbt12, forma, parcelas]);
+  }, [material, maoDeObra, custosFixos, markup, markupValor, garantiaPct, faixa, rbt12, forma, parcelas]);
 
   const campo =
     "w-full rounded-lg border border-theme bg-theme-card px-3 py-2.5 text-lg text-theme tabular-nums outline-none focus:border-primary";
@@ -244,7 +245,20 @@ export default function CalculadoraPrecificacao() {
                   {m * 100}%
                 </button>
               ))}
+              <button onClick={() => setMarkup(null)} className={chip(markup === null)}>
+                R$
+              </button>
             </div>
+            {markup === null && (
+              <input
+                className={`${campo} mt-2`}
+                inputMode="decimal"
+                placeholder="Quanto você quer ganhar"
+                autoFocus
+                value={markupValor}
+                onChange={(e) => setMarkupValor(e.target.value)}
+              />
+            )}
           </div>
           <div>
             <label className={label}>Provisão de garantia</label>
@@ -327,7 +341,7 @@ export default function CalculadoraPrecificacao() {
 
         <dl className="space-y-2 text-sm tabular-nums">
           <Linha rotulo="Peça" valor={-calc.mat} />
-          <Linha rotulo="Mão de obra" valor={-calc.mo} />
+          {calc.mo > 0 && <Linha rotulo="Mão de obra" valor={-calc.mo} />}
           <Linha rotulo="Deslocamento" valor={-calc.fixos} />
           {calc.garantia > 0 && (
             <Linha rotulo={`Garantia (${pct(garantiaPct)} da peça)`} valor={-calc.garantia} />
