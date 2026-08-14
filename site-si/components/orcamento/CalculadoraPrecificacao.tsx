@@ -119,7 +119,6 @@ export default function CalculadoraPrecificacao() {
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
   const [servico, setServico] = useState("");
-  const [parcelasTexto, setParcelasTexto] = useState(5);
   const [copiado, setCopiado] = useState(false);
 
   const calc = useMemo(() => {
@@ -211,8 +210,10 @@ export default function CalculadoraPrecificacao() {
         : "border-theme text-theme-muted hover:opacity-80"
     }`;
 
+  // linha selecionada na tabela define o cartão; fora do crédito, cai em 1x
+  const parcelasCartao = forma === "credito" ? parcelas : 1;
   const precoCartaoTexto = calc.linhas.find(
-    (l) => l.forma === "credito" && l.parcelas === parcelasTexto
+    (l) => l.forma === "credito" && l.parcelas === parcelasCartao
   )?.preco;
 
   const textoWhatsapp = useMemo(() => {
@@ -220,13 +221,13 @@ export default function CalculadoraPrecificacao() {
     const blocos = [cabecalho, servico.trim()].filter(Boolean);
     if (Number.isFinite(precoCartaoTexto) && Number.isFinite(calc.precoPix)) {
       blocos.push(
-        `${fmt(precoCartaoTexto as number)} em até ${parcelasTexto}x no cartão\n${fmt(
+        `${fmt(precoCartaoTexto as number)} em até ${parcelasCartao}x no cartão\n${fmt(
           calc.precoPix
         )} em dinheiro ou PIX`
       );
     }
     return blocos.join("\n\n");
-  }, [produto, marca, modelo, servico, precoCartaoTexto, calc.precoPix, parcelasTexto]);
+  }, [produto, marca, modelo, servico, precoCartaoTexto, calc.precoPix, parcelasCartao]);
 
   async function copiarTexto() {
     if (!textoWhatsapp) return;
@@ -317,7 +318,6 @@ export default function CalculadoraPrecificacao() {
                 setFaixa(nova);
                 const max = TAXAS[nova].credito.length;
                 if (parcelas > max) setParcelas(1);
-                if (parcelasTexto > max) setParcelasTexto(max);
               }}
             >
               {Object.entries(TAXAS).map(([k, v]) => (
@@ -504,20 +504,9 @@ export default function CalculadoraPrecificacao() {
           />
         </div>
 
-        <div className="mt-4 max-w-[10rem]">
-          <label className={label}>Parcelas no texto</label>
-          <select
-            className={campo}
-            value={parcelasTexto}
-            onChange={(e) => setParcelasTexto(Number(e.target.value))}
-          >
-            {Array.from({ length: TAXAS[faixa].credito.length }, (_, i) => i + 1).map((p) => (
-              <option key={p} value={p}>
-                {p}x
-              </option>
-            ))}
-          </select>
-        </div>
+        <p className="mt-3 text-xs text-theme-muted">
+          Cartão em {parcelasCartao}x — conforme a linha selecionada na tabela acima.
+        </p>
 
         {textoWhatsapp && (
           <pre className="mt-4 whitespace-pre-wrap rounded-lg border border-dashed border-theme bg-theme p-3 text-sm text-theme">
