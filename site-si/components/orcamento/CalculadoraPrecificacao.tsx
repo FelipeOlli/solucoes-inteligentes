@@ -226,8 +226,6 @@ export default function CalculadoraPrecificacao() {
     setTimeout(() => setCopiado(false), 2000);
   }
 
-  const FORMA_ENUM: Record<Forma, string> = { pix: "PIX", debito: "DEBITO", credito: "CREDITO" };
-
   // Linha de crédito correspondente ao texto de WhatsApp (parcelasCartao) — é o
   // valor de crédito que acompanha o PIX no orçamento passado ao serviço.
   const linhaCreditoServico = calc.linhas.find(
@@ -242,7 +240,10 @@ export default function CalculadoraPrecificacao() {
         `&parcelasCredito=${encodeURIComponent(String(linhaCreditoServico.parcelas))}` +
         `&material=${encodeURIComponent(calc.mat.toFixed(2))}` +
         `&repasse=${encodeURIComponent(calc.mo.toFixed(2))}` +
-        `&forma=${FORMA_ENUM[calc.sel.forma]}` +
+        // Forma inicial sempre PIX no serviço, independente do rádio deixado
+        // selecionado na calculadora — reflete o valor à vista por padrão; o
+        // valor troca para o crédito se a forma for alterada no formulário.
+        `&forma=PIX` +
         `&fixo=${encodeURIComponent(calc.fixos.toFixed(2))}` +
         `&garantia=${encodeURIComponent(calc.garantia.toFixed(2))}` +
         `&imposto=${encodeURIComponent((calc.imposto.total * 100).toFixed(4))}`

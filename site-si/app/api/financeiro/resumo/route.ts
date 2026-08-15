@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
         taxaPercentual: true,
         impostoPercentual: true,
         formaPagamento: true,
+        tecnico: { select: { nome: true } },
       },
     }),
 
@@ -86,6 +87,7 @@ export async function GET(request: NextRequest) {
       valorGarantia: s.valorGarantia,
       taxaPercentual: s.taxaPercentual,
       impostoPercentual: s.impostoPercentual,
+      tecnicoNome: s.tecnico?.nome,
     });
     if (!c) continue;
     meses[mesIdx].receita += c.receita;

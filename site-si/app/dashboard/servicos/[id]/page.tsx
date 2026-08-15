@@ -646,7 +646,7 @@ export default function ServicoDetailPage() {
 
       {/* Card de lucro real — visível quando há valor cobrado */}
       {servico.valorEstimado != null && (() => {
-        const c = composicaoLucro(servico);
+        const c = composicaoLucro({ ...servico, tecnicoNome: servico.tecnico?.nome });
         if (!c) return null;
         const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
         return (
@@ -655,7 +655,11 @@ export default function ServicoDetailPage() {
             <div className="flex flex-wrap gap-4 text-sm items-center">
               <span>Receita <strong>{fmt(c.receita)}</strong></span>
               {c.repasse > 0 && (
-                <span className="text-red-400">− Repasse <strong>{fmt(c.repasse)}</strong></span>
+                c.repasseRetido ? (
+                  <span className="text-green-400">+ Repasse retido (técnico é você) <strong>{fmt(c.repasse)}</strong></span>
+                ) : (
+                  <span className="text-red-400">− Repasse <strong>{fmt(c.repasse)}</strong></span>
+                )
               )}
               {c.material > 0 && (
                 <span className="text-orange-400">− Material <strong>{fmt(c.material)}</strong></span>

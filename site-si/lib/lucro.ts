@@ -6,6 +6,14 @@ const TAXA_POR_PAGAMENTO: Record<string, number> = {
   CREDITO: 3.99,
 };
 
+// Técnico que é o próprio dono: o repasse fica com ele, então não é um custo
+// de fato — entra de volta no lucro final.
+const TECNICO_PROPRIO_NOME = "felipe oliveira";
+
+export function ehTecnicoProprio(nomeTecnico: string | null | undefined): boolean {
+  return (nomeTecnico ?? "").trim().toLowerCase() === TECNICO_PROPRIO_NOME;
+}
+
 type ServicoLucro = {
   valorEstimado?: number | null | undefined;
   valorRepasse?: number | null | undefined;
@@ -15,6 +23,7 @@ type ServicoLucro = {
   valorGarantia?: number | null | undefined;
   taxaPercentual?: number | null | undefined;
   impostoPercentual?: number | null | undefined;
+  tecnicoNome?: string | null | undefined;
 };
 
 export type ComposicaoLucro = {
@@ -24,6 +33,7 @@ export type ComposicaoLucro = {
   impostoPct: number;
   imposto: number;
   repasse: number;
+  repasseRetido: boolean;
   material: number;
   custoFixo: number;
   garantia: number;
@@ -41,6 +51,10 @@ const round2 = (v: number) => Math.round(v * 100) / 100;
  * taxa real por parcelas e o imposto do Simples (DAS+ISS). Serviços criados à
  * mão (sem snapshot) caem no fallback: taxa fixa por forma de pagamento e
  * sem imposto, preservando o cálculo antigo.
+ *
+ * Quando o técnico responsável é o próprio dono ([[ehTecnicoProprio]]), o
+ * repasse não é descontado — ele fica com quem executou o serviço, então o
+ * lucro final é a soma do repasse com o lucro (`repasseRetido: true`).
  */
 export function composicaoLucro(s: ServicoLucro): ComposicaoLucro | null {
   if (s.valorEstimado == null) return null;
@@ -52,10 +66,12 @@ export function composicaoLucro(s: ServicoLucro): ComposicaoLucro | null {
   const material = s.valorMaterial ?? 0;
   const custoFixo = s.custoFixo ?? 0;
   const garantia = s.valorGarantia ?? 0;
+  const repasseRetido = ehTecnicoProprio(s.tecnicoNome);
+  const repasseDeduzido = repasseRetido ? 0 : repasse;
 
   const taxa = receita * (taxaPct / 100);
   const imposto = receita * (impostoPct / 100);
-  const lucro = receita - taxa - imposto - repasse - material - custoFixo - garantia;
+  const lucro = receita - taxa - imposto - repasseDeduzido - material - custoFixo - garantia;
 
   return {
     receita: round2(receita),
@@ -64,6 +80,7 @@ export function composicaoLucro(s: ServicoLucro): ComposicaoLucro | null {
     impostoPct,
     imposto: round2(imposto),
     repasse: round2(repasse),
+    repasseRetido,
     material: round2(material),
     custoFixo: round2(custoFixo),
     garantia: round2(garantia),
