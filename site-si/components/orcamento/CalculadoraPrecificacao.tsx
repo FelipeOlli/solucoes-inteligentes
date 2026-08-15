@@ -228,17 +228,25 @@ export default function CalculadoraPrecificacao() {
 
   const FORMA_ENUM: Record<Forma, string> = { pix: "PIX", debito: "DEBITO", credito: "CREDITO" };
 
-  const criarServicoHref = Number.isFinite(calc.sel.preco)
-    ? `/dashboard/servicos/novo?valor=${encodeURIComponent(calc.sel.preco.toFixed(2))}` +
-      `&material=${encodeURIComponent(calc.mat.toFixed(2))}` +
-      `&repasse=${encodeURIComponent(calc.mo.toFixed(2))}` +
-      `&forma=${FORMA_ENUM[calc.sel.forma]}` +
-      `&fixo=${encodeURIComponent(calc.fixos.toFixed(2))}` +
-      `&garantia=${encodeURIComponent(calc.garantia.toFixed(2))}` +
-      `&taxa=${encodeURIComponent((calc.sel.taxa * 100).toFixed(4))}` +
-      `&imposto=${encodeURIComponent((calc.imposto.total * 100).toFixed(4))}` +
-      `&parcelas=${encodeURIComponent(String(calc.sel.parcelas))}`
-    : null;
+  // Linha de crédito correspondente ao texto de WhatsApp (parcelasCartao) — é o
+  // valor de crédito que acompanha o PIX no orçamento passado ao serviço.
+  const linhaCreditoServico = calc.linhas.find(
+    (l) => l.forma === "credito" && l.parcelas === parcelasCartao
+  );
+
+  const criarServicoHref =
+    Number.isFinite(calc.precoPix) && linhaCreditoServico && Number.isFinite(linhaCreditoServico.preco)
+      ? `/dashboard/servicos/novo?pix=${encodeURIComponent(calc.precoPix.toFixed(2))}` +
+        `&credito=${encodeURIComponent(linhaCreditoServico.preco.toFixed(2))}` +
+        `&taxaCredito=${encodeURIComponent((linhaCreditoServico.taxa * 100).toFixed(4))}` +
+        `&parcelasCredito=${encodeURIComponent(String(linhaCreditoServico.parcelas))}` +
+        `&material=${encodeURIComponent(calc.mat.toFixed(2))}` +
+        `&repasse=${encodeURIComponent(calc.mo.toFixed(2))}` +
+        `&forma=${FORMA_ENUM[calc.sel.forma]}` +
+        `&fixo=${encodeURIComponent(calc.fixos.toFixed(2))}` +
+        `&garantia=${encodeURIComponent(calc.garantia.toFixed(2))}` +
+        `&imposto=${encodeURIComponent((calc.imposto.total * 100).toFixed(4))}`
+      : null;
 
   return (
     <div className="space-y-4">

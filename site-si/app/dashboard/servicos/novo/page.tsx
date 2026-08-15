@@ -51,15 +51,22 @@ export default function NovoServicoPage() {
   const [taxaPercentualQuery, setTaxaPercentualQuery] = useState<number | null>(null);
   const [impostoPercentualQuery, setImpostoPercentualQuery] = useState<number | null>(null);
   const [parcelasQuery, setParcelasQuery] = useState<number | null>(null);
-  const valorFromQuery = searchParams.get("valor");
+  // Valores do orçamento por forma de pagamento — o formulário troca o valor
+  // cobrado automaticamente conforme a forma escolhida (PIX x Crédito).
+  const [valorPixQuery, setValorPixQuery] = useState<number | null>(null);
+  const [valorCreditoQuery, setValorCreditoQuery] = useState<number | null>(null);
+  const [taxaCreditoQuery, setTaxaCreditoQuery] = useState<number | null>(null);
+  const [parcelasCreditoQuery, setParcelasCreditoQuery] = useState<number | null>(null);
   const materialFromQuery = searchParams.get("material");
   const formaFromQuery = searchParams.get("forma");
   const repasseFromQuery = searchParams.get("repasse");
   const fixoFromQuery = searchParams.get("fixo");
   const garantiaFromQuery = searchParams.get("garantia");
-  const taxaFromQuery = searchParams.get("taxa");
   const impostoFromQuery = searchParams.get("imposto");
-  const parcelasFromQuery = searchParams.get("parcelas");
+  const pixFromQuery = searchParams.get("pix");
+  const creditoFromQuery = searchParams.get("credito");
+  const taxaCreditoFromQuery = searchParams.get("taxaCredito");
+  const parcelasCreditoFromQuery = searchParams.get("parcelasCredito");
 
   useEffect(() => {
     api<Cliente[]>("/clientes").then(({ data, status }) => {
@@ -71,16 +78,55 @@ export default function NovoServicoPage() {
   }, [router]);
 
   useEffect(() => {
-    if (!valorFromQuery || valorEstimado.trim() !== "") return;
-    const n = Number(valorFromQuery.replace(",", "."));
+    if (!pixFromQuery) return;
+    const n = Number(pixFromQuery.replace(",", "."));
     if (!Number.isFinite(n) || n <= 0) return;
-    setValorEstimado(
-      n.toLocaleString("pt-BR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
-    );
-  }, [valorFromQuery, valorEstimado]);
+    setValorPixQuery(n);
+  }, [pixFromQuery]);
+
+  useEffect(() => {
+    if (!creditoFromQuery) return;
+    const n = Number(creditoFromQuery.replace(",", "."));
+    if (!Number.isFinite(n) || n <= 0) return;
+    setValorCreditoQuery(n);
+  }, [creditoFromQuery]);
+
+  useEffect(() => {
+    if (!taxaCreditoFromQuery) return;
+    const n = Number(taxaCreditoFromQuery.replace(",", "."));
+    if (!Number.isFinite(n) || n < 0) return;
+    setTaxaCreditoQuery(n);
+  }, [taxaCreditoFromQuery]);
+
+  useEffect(() => {
+    if (!parcelasCreditoFromQuery) return;
+    const n = Number(parcelasCreditoFromQuery);
+    if (!Number.isFinite(n) || n < 1) return;
+    setParcelasCreditoQuery(n);
+  }, [parcelasCreditoFromQuery]);
+
+  // Troca o valor cobrado (e a taxa/parcelas gravadas) conforme a forma de
+  // pagamento escolhida — reflete a decisão real do cliente entre PIX e
+  // Crédito, ambos vindos do orçamento.
+  useEffect(() => {
+    if (!formaPagamento) return;
+    const ehPix = ["PIX", "DINHEIRO", "CHEQUE"].includes(formaPagamento);
+    const ehCredito = ["CREDITO", "DEBITO"].includes(formaPagamento);
+
+    if (ehPix && valorPixQuery != null) {
+      setValorEstimado(
+        valorPixQuery.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      );
+      setTaxaPercentualQuery(0);
+      setParcelasQuery(null);
+    } else if (ehCredito && valorCreditoQuery != null) {
+      setValorEstimado(
+        valorCreditoQuery.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      );
+      setTaxaPercentualQuery(taxaCreditoQuery);
+      setParcelasQuery(parcelasCreditoQuery);
+    }
+  }, [formaPagamento, valorPixQuery, valorCreditoQuery, taxaCreditoQuery, parcelasCreditoQuery]);
 
   useEffect(() => {
     if (!materialFromQuery || valorMaterial.trim() !== "") return;
@@ -123,25 +169,11 @@ export default function NovoServicoPage() {
   }, [garantiaFromQuery]);
 
   useEffect(() => {
-    if (!taxaFromQuery) return;
-    const n = Number(taxaFromQuery.replace(",", "."));
-    if (!Number.isFinite(n) || n < 0) return;
-    setTaxaPercentualQuery(n);
-  }, [taxaFromQuery]);
-
-  useEffect(() => {
     if (!impostoFromQuery) return;
     const n = Number(impostoFromQuery.replace(",", "."));
     if (!Number.isFinite(n) || n < 0) return;
     setImpostoPercentualQuery(n);
   }, [impostoFromQuery]);
-
-  useEffect(() => {
-    if (!parcelasFromQuery) return;
-    const n = Number(parcelasFromQuery);
-    if (!Number.isFinite(n) || n < 1) return;
-    setParcelasQuery(n);
-  }, [parcelasFromQuery]);
 
   function mergeUniqueFiles(current: File[], incoming: File[]) {
     const merged = [...current];
