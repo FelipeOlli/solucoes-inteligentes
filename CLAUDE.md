@@ -76,21 +76,23 @@ Se já houver 3 entradas, REMOVA a mais antiga antes de adicionar.
 Commits detalhados vão no git, não aqui.
 
 ## Módulo Painel Financeiro
-- Campos no model `Servico`: `valorRepasse Float?` (migration `20260522`), `valorMaterial Float?` (migration `20260524`)
-- Fórmula de lucro em `lib/lucro.ts`: `receita × (1 − taxa_cartão%) − repasse − material` — custo fixo R$50 NÃO entra (é só auxiliar de precificação na calculadora de orçamento)
-- API `app/api/financeiro/resumo/route.ts` — agrega 12 meses: receita, repasse, material, taxa cartão, lucro operacional + gasto contábil (DocumentoFiscal pago) → lucro líquido
-- Página `app/dashboard/financeiro/page.tsx` — KPIs (receita, lucro operacional, contabilidade, lucro líquido, concluídos, abertos), gráfico de barras, gráfico de linha, tabela 12 meses
+- Campos no model `Servico`: `valorRepasse Float?` (migration `20260522`), `valorMaterial Float?` (migration `20260524`), `custoFixo`, `valorGarantia`, `taxaPercentual`, `impostoPercentual`, `parcelas` (todos `Float?`/`Int?`, migration `20260814000000_add_snapshot_precificacao`)
+- Fórmula de lucro em `lib/lucro.ts` (`composicaoLucro`): `receita − receita×taxa% − receita×imposto% − repasse − material − custoFixo − garantia`
+- **Snapshot**: serviço criado a partir da calculadora de orçamento (`/dashboard/orcamento` → botão "Criar serviço com este orçamento") grava `taxaPercentual` (taxa real da forma/parcelas, tabela SumUp) e `impostoPercentual` (DAS+ISS, Simples Anexo III) no momento da criação — não recalcula depois, mesmo se a tabela de taxas mudar
+- **Fallback**: serviço criado à mão (sem snapshot) usa taxa fixa por forma de pagamento (`taxaPorPagamento`, ainda em `lib/lucro.ts`) e imposto = 0 — comportamento antigo preservado
+- `custoFixo` (deslocamento) e `valorGarantia` são editáveis no detalhe do serviço; `taxaPercentual`/`impostoPercentual`/`parcelas` só vêm do orçamento
+- API `app/api/financeiro/resumo/route.ts` — agrega 12 meses via `composicaoLucro`: receita, repasse, material, deslocamento, garantia, taxa cartão, imposto, lucro operacional + gasto contábil (DocumentoFiscal pago) → lucro líquido
+- Página `app/dashboard/financeiro/page.tsx` — KPIs (receita, lucro operacional, contabilidade, lucro líquido, concluídos, abertos), breakdown com 8 componentes, gráfico de barras, gráfico de linha, tabela 12 meses
 - Badges de status: CONCLUIDO=verde, CANCELADO=vermelho, demais=amarelo (dashboard + detalhe)
-- Calculadora de orçamento (`/dashboard/orcamento`) usa FIXO=R$50 localmente apenas para precificação
 
 ## Módulo Técnicos
 - Campos bancários opcionais: `chavePix`, `banco`, `agencia`, `conta` (migration `20260524300000_add_tecnico_dados_bancarios`)
 - Tabela exibe PIX com prioridade; se não tiver, mostra banco/agência/conta
 
 ## Sessões recentes
-### 2026-05-22 — Painel Financeiro
-Estado atual: campo `valorRepasse` no serviço; painel `/dashboard/financeiro` com KPIs do mês (receita, repasse, lucro, concluídos, abertos), gráfico de barras e linha (Recharts), tabela resumo 12 meses | Armadilha: migration `20260522000000_add_valor_repasse` precisa rodar no EasyPanel antes do deploy; lucro calculado só nos CONCLUIDOS com dataConclusao preenchida
-### 2026-05-24 — Financeiro refinado + Técnicos bancários
-Estado atual: lucro real sem custo fixo arbitrário; gasto contabilidade integrado ao painel via DocumentoFiscal; técnicos com dados bancários (PIX/conta); badges de status coloridos; calculadora de orçamento separada da fórmula de lucro | Migrations: add_valor_material, add_tecnico_dados_bancarios, remove_emite_nota_fiscal
-### 2026-05-26 — Gerador de Stories
-Estado atual: PNG pixel-perfect via `foreignObjectRendering:true` + inline de imagens e fontes Google Fonts no clone; etiqueta superior 50% maior (69px, nowrap); safe zones do Instagram (logo top:200px, rodapé bottom:240px); risco vermelho e selo -40% alinhados; bloco de sugestão de título com IA removido | Armadilha: `foreignObjectRendering` exige que todas as `<img>` e fontes sejam data URLs antes da captura — funções `inlinarImagens` e `inlinarFontes` fazem isso em `baixarStory()`
+### 2026-06-02 — Stories: área de link de afiliado
+Estado atual: bloco "Achou na @solucoesinteligentes_si" movido para o fundo da arte (bottom: 45px); área invisível reservada acima (bottom: 130px, height: 96px) para sticker de link do Instagram (Mercado Livre afiliado) — sem borda, sem texto, área limpa | Arquivos: `app/dashboard/marketing/gerador-stories/page.tsx`, `gerador-stories.module.css`
+### 2026-06-16 — Vídeos na seção de fotos do serviço
+Estado atual: seção "Fotos / imagens / vídeos" aceita mp4, mov, webm e outros formatos de vídeo; vídeos renderizam como `<video controls>` na galeria (imagens continuam como `<img>`); vídeos não caem na lista de "Anexar Documentos"; API de upload não foi alterada | Arquivo: `app/dashboard/servicos/[id]/page.tsx` (helper `isVideoFileName`, filtros nos handlers e no render)
+### 2026-07-14 — Fix cheque no enum + data de conclusão no futuro
+Estado atual: `FormaPagamento` ganhou valor `CHEQUE` (schema + migration `20260714000000_add_cheque_forma_pagamento`) — commit anterior só adicionou na UI, faltava enum/migration; `localDateIso` agora usa hora atual em vez de meio-dia fixo, corrigindo bloqueio falso de "data_conclusao não pode ser no futuro" ao concluir serviço no mesmo dia antes do meio-dia | Arquivos: `prisma/schema.prisma`, `prisma/migrations/20260714000000_add_cheque_forma_pagamento/migration.sql`, `app/dashboard/servicos/[id]/page.tsx`

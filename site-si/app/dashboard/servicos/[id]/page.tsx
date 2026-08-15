@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api, withBasePath } from "@/lib/api";
 import { STATUS_LIST } from "@/lib/status";
-import { calcularLucroReal, taxaPorPagamento } from "@/lib/lucro";
+import { composicaoLucro } from "@/lib/lucro";
 
 const STATUS_LABEL: Record<string, string> = {
   ABERTO: "Aberto",
@@ -105,6 +105,11 @@ type ServicoDetail = {
   valorEstimado?: number | null;
   valorRepasse?: number | null;
   valorMaterial?: number | null;
+  custoFixo?: number | null;
+  valorGarantia?: number | null;
+  taxaPercentual?: number | null;
+  impostoPercentual?: number | null;
+  parcelas?: number | null;
   imagens?: string[] | null;
   formaPagamento?: string | null;
   convidadoEmail?: string | null;
@@ -119,6 +124,8 @@ type PatchBody = {
   valor_estimado?: number | null;
   valor_repasse?: number | null;
   valor_material?: number | null;
+  custo_fixo?: number | null;
+  valor_garantia?: number | null;
   categoria_id?: string | null;
   forma_pagamento?: string | null;
   tecnico_id?: string | null;
@@ -156,6 +163,8 @@ export default function ServicoDetailPage() {
   const [editTecnicoId, setEditTecnicoId] = useState("");
   const [editValorRepasse, setEditValorRepasse] = useState("");
   const [editValorMaterial, setEditValorMaterial] = useState("");
+  const [editCustoFixo, setEditCustoFixo] = useState("");
+  const [editValorGarantia, setEditValorGarantia] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   const [error, setError] = useState("");
 
@@ -202,6 +211,8 @@ export default function ServicoDetailPage() {
     setEditValor(servico.valorEstimado != null ? String(servico.valorEstimado) : "");
     setEditValorRepasse(servico.valorRepasse != null ? String(servico.valorRepasse) : "");
     setEditValorMaterial(servico.valorMaterial != null ? String(servico.valorMaterial) : "");
+    setEditCustoFixo(servico.custoFixo != null ? String(servico.custoFixo) : "");
+    setEditValorGarantia(servico.valorGarantia != null ? String(servico.valorGarantia) : "");
     setEditCategoriaId(servico.categoria?.id ?? "");
     setEditFormaPagamento(servico.formaPagamento ?? "");
     setEditTecnicoId(servico.tecnico?.id ?? "");
@@ -256,6 +267,8 @@ export default function ServicoDetailPage() {
       valor_estimado: editValor.trim() ? Number(editValor.trim().replace(",", ".")) || null : null,
       valor_repasse: editValorRepasse.trim() ? Number(editValorRepasse.trim().replace(",", ".")) || null : null,
       valor_material: editValorMaterial.trim() ? Number(editValorMaterial.trim().replace(",", ".")) || null : null,
+      custo_fixo: editCustoFixo.trim() ? Number(editCustoFixo.trim().replace(",", ".")) || null : null,
+      valor_garantia: editValorGarantia.trim() ? Number(editValorGarantia.trim().replace(",", ".")) || null : null,
       categoria_id: editCategoriaId || null,
       forma_pagamento: editFormaPagamento || null,
       tecnico_id: editTecnicoId || null,
@@ -633,31 +646,34 @@ export default function ServicoDetailPage() {
 
       {/* Card de lucro real — visível quando há valor cobrado */}
       {servico.valorEstimado != null && (() => {
-        const lucro = calcularLucroReal({
-          valorEstimado: servico.valorEstimado,
-          valorRepasse: servico.valorRepasse,
-          valorMaterial: servico.valorMaterial,
-          formaPagamento: servico.formaPagamento,
-        });
-        const taxa = taxaPorPagamento(servico.formaPagamento);
-        const taxaValor = servico.valorEstimado * taxa / 100;
+        const c = composicaoLucro(servico);
+        if (!c) return null;
         const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
         return (
           <div className="bg-theme-card border border-theme rounded-xl p-4 mb-6">
             <h2 className="font-heading font-semibold text-theme-primary text-sm mb-3">Composição do lucro</h2>
             <div className="flex flex-wrap gap-4 text-sm items-center">
-              <span>Receita <strong>{fmt(servico.valorEstimado)}</strong></span>
-              {(servico.valorRepasse ?? 0) > 0 && (
-                <span className="text-red-400">− Repasse <strong>{fmt(servico.valorRepasse!)}</strong></span>
+              <span>Receita <strong>{fmt(c.receita)}</strong></span>
+              {c.repasse > 0 && (
+                <span className="text-red-400">− Repasse <strong>{fmt(c.repasse)}</strong></span>
               )}
-              {(servico.valorMaterial ?? 0) > 0 && (
-                <span className="text-orange-400">− Material <strong>{fmt(servico.valorMaterial!)}</strong></span>
+              {c.material > 0 && (
+                <span className="text-orange-400">− Material <strong>{fmt(c.material)}</strong></span>
               )}
-              {taxaValor > 0 && (
-                <span className="text-yellow-500">− Taxa ({taxa.toFixed(2)}%) <strong>{fmt(taxaValor)}</strong></span>
+              {c.custoFixo > 0 && (
+                <span className="text-orange-400">− Deslocamento <strong>{fmt(c.custoFixo)}</strong></span>
               )}
-              <span className={`font-bold text-base border-l border-theme pl-4 ${(lucro ?? 0) >= 0 ? "text-green-400" : "text-red-400"}`}>
-                = Lucro {lucro != null ? fmt(lucro) : "—"}
+              {c.garantia > 0 && (
+                <span className="text-orange-400">− Garantia <strong>{fmt(c.garantia)}</strong></span>
+              )}
+              {c.taxa > 0 && (
+                <span className="text-yellow-500">− Taxa ({c.taxaPct.toFixed(2)}%) <strong>{fmt(c.taxa)}</strong></span>
+              )}
+              {c.imposto > 0 && (
+                <span className="text-yellow-500">− Imposto ({c.impostoPct.toFixed(2)}%) <strong>{fmt(c.imposto)}</strong></span>
+              )}
+              <span className={`font-bold text-base border-l border-theme pl-4 ${c.lucro >= 0 ? "text-green-400" : "text-red-400"}`}>
+                = Lucro {fmt(c.lucro)} <span className="font-normal text-xs text-theme-muted">({(c.margem * 100).toFixed(1)}%)</span>
               </span>
             </div>
           </div>
@@ -756,6 +772,26 @@ export default function ServicoDetailPage() {
                 value={editValorMaterial}
                 onChange={(e) => setEditValorMaterial(e.target.value)}
                 placeholder="0,00 (peças, insumos, etc.)"
+                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+              />
+            </div>
+            <div className="space-y-2 mb-3">
+              <label className="block text-sm font-medium text-theme-muted">Deslocamento (R$)</label>
+              <input
+                type="text"
+                value={editCustoFixo}
+                onChange={(e) => setEditCustoFixo(e.target.value)}
+                placeholder="0,00"
+                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+              />
+            </div>
+            <div className="space-y-2 mb-3">
+              <label className="block text-sm font-medium text-theme-muted">Provisão de garantia (R$)</label>
+              <input
+                type="text"
+                value={editValorGarantia}
+                onChange={(e) => setEditValorGarantia(e.target.value)}
+                placeholder="0,00"
                 className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
               />
             </div>

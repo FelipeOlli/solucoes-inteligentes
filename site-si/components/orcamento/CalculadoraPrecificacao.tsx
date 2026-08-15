@@ -232,7 +232,12 @@ export default function CalculadoraPrecificacao() {
     ? `/dashboard/servicos/novo?valor=${encodeURIComponent(calc.sel.preco.toFixed(2))}` +
       `&material=${encodeURIComponent(calc.mat.toFixed(2))}` +
       `&repasse=${encodeURIComponent(calc.mo.toFixed(2))}` +
-      `&forma=${FORMA_ENUM[calc.sel.forma]}`
+      `&forma=${FORMA_ENUM[calc.sel.forma]}` +
+      `&fixo=${encodeURIComponent(calc.fixos.toFixed(2))}` +
+      `&garantia=${encodeURIComponent(calc.garantia.toFixed(2))}` +
+      `&taxa=${encodeURIComponent((calc.sel.taxa * 100).toFixed(4))}` +
+      `&imposto=${encodeURIComponent((calc.imposto.total * 100).toFixed(4))}` +
+      `&parcelas=${encodeURIComponent(String(calc.sel.parcelas))}`
     : null;
 
   return (

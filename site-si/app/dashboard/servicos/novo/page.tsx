@@ -46,10 +46,20 @@ export default function NovoServicoPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [valorRepasseQuery, setValorRepasseQuery] = useState<number | null>(null);
+  const [custoFixoQuery, setCustoFixoQuery] = useState<number | null>(null);
+  const [valorGarantiaQuery, setValorGarantiaQuery] = useState<number | null>(null);
+  const [taxaPercentualQuery, setTaxaPercentualQuery] = useState<number | null>(null);
+  const [impostoPercentualQuery, setImpostoPercentualQuery] = useState<number | null>(null);
+  const [parcelasQuery, setParcelasQuery] = useState<number | null>(null);
   const valorFromQuery = searchParams.get("valor");
   const materialFromQuery = searchParams.get("material");
   const formaFromQuery = searchParams.get("forma");
   const repasseFromQuery = searchParams.get("repasse");
+  const fixoFromQuery = searchParams.get("fixo");
+  const garantiaFromQuery = searchParams.get("garantia");
+  const taxaFromQuery = searchParams.get("taxa");
+  const impostoFromQuery = searchParams.get("imposto");
+  const parcelasFromQuery = searchParams.get("parcelas");
 
   useEffect(() => {
     api<Cliente[]>("/clientes").then(({ data, status }) => {
@@ -98,6 +108,41 @@ export default function NovoServicoPage() {
     setValorRepasseQuery(n);
   }, [repasseFromQuery]);
 
+  useEffect(() => {
+    if (!fixoFromQuery) return;
+    const n = Number(fixoFromQuery.replace(",", "."));
+    if (!Number.isFinite(n) || n < 0) return;
+    setCustoFixoQuery(n);
+  }, [fixoFromQuery]);
+
+  useEffect(() => {
+    if (!garantiaFromQuery) return;
+    const n = Number(garantiaFromQuery.replace(",", "."));
+    if (!Number.isFinite(n) || n < 0) return;
+    setValorGarantiaQuery(n);
+  }, [garantiaFromQuery]);
+
+  useEffect(() => {
+    if (!taxaFromQuery) return;
+    const n = Number(taxaFromQuery.replace(",", "."));
+    if (!Number.isFinite(n) || n < 0) return;
+    setTaxaPercentualQuery(n);
+  }, [taxaFromQuery]);
+
+  useEffect(() => {
+    if (!impostoFromQuery) return;
+    const n = Number(impostoFromQuery.replace(",", "."));
+    if (!Number.isFinite(n) || n < 0) return;
+    setImpostoPercentualQuery(n);
+  }, [impostoFromQuery]);
+
+  useEffect(() => {
+    if (!parcelasFromQuery) return;
+    const n = Number(parcelasFromQuery);
+    if (!Number.isFinite(n) || n < 1) return;
+    setParcelasQuery(n);
+  }, [parcelasFromQuery]);
+
   function mergeUniqueFiles(current: File[], incoming: File[]) {
     const merged = [...current];
     for (const file of incoming) {
@@ -129,6 +174,11 @@ export default function NovoServicoPage() {
       valor_estimado: valorEstimado ? Number(valorEstimado.trim().replace(",", ".")) || null : null,
       valor_material: valorMaterial ? Number(valorMaterial.trim().replace(",", ".")) || null : null,
       valor_repasse: valorRepasseQuery,
+      custo_fixo: custoFixoQuery,
+      valor_garantia: valorGarantiaQuery,
+      taxa_percentual: taxaPercentualQuery,
+      imposto_percentual: impostoPercentualQuery,
+      parcelas: parcelasQuery,
       forma_pagamento: formaPagamento || null,
       tecnico_id: tecnicoId || null,
       convidado_email: convidadoEmail,

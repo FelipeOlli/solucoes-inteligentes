@@ -145,6 +145,11 @@ model Servico {
   valorEstimado       Float?
   valorRepasse        Float?
   valorMaterial       Float?
+  custoFixo           Float?
+  valorGarantia       Float?
+  taxaPercentual      Float?
+  impostoPercentual   Float?
+  parcelas            Int?
   enderecoServico     String?
   contatoPreferencial String?
   imagens             String?

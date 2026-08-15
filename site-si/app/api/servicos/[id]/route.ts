@@ -114,6 +114,8 @@ export async function PATCH(
   if (body.valor_estimado !== undefined) data.valorEstimado = body.valor_estimado != null ? Number(body.valor_estimado) : null;
   if (body.valor_repasse !== undefined) data.valorRepasse = body.valor_repasse != null ? Number(body.valor_repasse) : null;
   if (body.valor_material !== undefined) data.valorMaterial = body.valor_material != null ? Number(body.valor_material) : null;
+  if (body.custo_fixo !== undefined) data.custoFixo = body.custo_fixo != null ? Number(body.custo_fixo) : null;
+  if (body.valor_garantia !== undefined) data.valorGarantia = body.valor_garantia != null ? Number(body.valor_garantia) : null;
   if (body.data_agendamento !== undefined) data.dataAgendamento = body.data_agendamento ? new Date(body.data_agendamento) : null;
   if (body.descricao !== undefined) data.descricao = String(body.descricao).trim();
   if (body.endereco_servico !== undefined) data.enderecoServico = body.endereco_servico ? String(body.endereco_servico).trim() : null;
