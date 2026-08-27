@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
@@ -8,17 +8,19 @@ import { Menu, X } from "lucide-react";
 import { clearToken } from "@/lib/api";
 import { getStoredTheme, setStoredTheme, THEME_LABELS, type ThemeId } from "@/lib/theme";
 
-const NAV_LINKS: { href: string; label: string; prefix?: boolean; primary?: boolean }[] = [
-  { href: "/dashboard", label: "Serviços", primary: true },
-  { href: "/dashboard/agenda", label: "Agenda", primary: true },
-  { href: "/dashboard/clientes", label: "Clientes", primary: true },
-  { href: "/dashboard/categorias", label: "Categorias" },
-  { href: "/dashboard/usuarios", label: "Usuários" },
-  { href: "/dashboard/tecnicos", label: "Técnicos" },
-  { href: "/dashboard/orcamento", label: "Orçamento", primary: true },
-  { href: "/dashboard/documentos-fiscais", label: "Contabilidade" },
+// Ordem = prioridade de exibição na barra: os últimos são os primeiros a
+// cair no menu hamburguer quando a janela encolhe (ver medição em NavBar).
+const NAV_LINKS: { href: string; label: string; prefix?: boolean }[] = [
+  { href: "/dashboard", label: "Serviços" },
+  { href: "/dashboard/agenda", label: "Agenda" },
+  { href: "/dashboard/clientes", label: "Clientes" },
+  { href: "/dashboard/orcamento", label: "Orçamento" },
   { href: "/dashboard/financeiro", label: "Financeiro" },
+  { href: "/dashboard/documentos-fiscais", label: "Contabilidade" },
   { href: "/dashboard/marketing", label: "Marketing", prefix: true },
+  { href: "/dashboard/tecnicos", label: "Técnicos" },
+  { href: "/dashboard/usuarios", label: "Usuários" },
+  { href: "/dashboard/categorias", label: "Categorias" },
 ];
 
 export default function DashboardLayout({
@@ -31,6 +33,10 @@ export default function DashboardLayout({
   const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState<ThemeId>("default");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(0);
+
+  const navContainerRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -60,6 +66,43 @@ export default function DashboardLayout({
   useEffect(() => {
     setMobileNavOpen(false);
   }, [pathname]);
+
+  // Mede quantos itens de NAV_LINKS cabem na largura disponível e move o
+  // resto para o drawer. A camada de medição (measureRef) fica oculta e
+  // renderiza todos os itens em negrito (largura máxima) pra o cálculo ser
+  // conservador e não estourar quando o item ativo ganha font-semibold.
+  useLayoutEffect(() => {
+    if (!mounted) return;
+    const container = navContainerRef.current;
+    const measure = measureRef.current;
+    if (!container || !measure) return;
+
+    function recalc() {
+      const container = navContainerRef.current;
+      const measure = measureRef.current;
+      if (!container || !measure) return;
+      const available = container.clientWidth;
+      const items = Array.from(measure.children) as HTMLElement[];
+      const gap = parseFloat(getComputedStyle(measure).columnGap || "0") || 0;
+
+      let total = 0;
+      let count = 0;
+      for (const item of items) {
+        const width = item.offsetWidth;
+        const next = total + (count > 0 ? gap : 0) + width;
+        if (next > available) break;
+        total = next;
+        count++;
+      }
+      setVisibleCount((prev) => (prev === count ? prev : count));
+    }
+
+    recalc();
+    const observer = new ResizeObserver(recalc);
+    observer.observe(container);
+    document.fonts?.ready.then(recalc);
+    return () => observer.disconnect();
+  }, [mounted, theme]);
 
   function handleThemeChange(t: ThemeId) {
     setStoredTheme(t);
@@ -98,7 +141,7 @@ export default function DashboardLayout({
           }}
         >
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-6 min-w-0">
+            <div className="flex items-center gap-6 min-w-0 flex-1">
               <Link href="/dashboard" className="flex items-center shrink-0">
                 <Image
                   src={theme === "dark" || theme === "brand-blue" ? "/logo/logo-simbolo-branco.svg" : "/favicon.svg"}
@@ -108,20 +151,33 @@ export default function DashboardLayout({
                   className="h-7 w-7"
                 />
               </Link>
-              <nav className="hidden sm:flex gap-4 lg:gap-5 text-sm" style={{ color: "var(--color-navbar-text-muted)" }}>
-                {NAV_LINKS.filter((l) => l.primary).map((l) => (
-                  <Link
-                    key={l.href}
-                    href={l.href}
-                    className={navLinkClass(isActive(l))}
-                    style={{ color: isActive(l) ? "var(--color-navbar-text)" : "inherit" }}
-                  >
-                    {l.label}
-                  </Link>
-                ))}
-              </nav>
+              <div ref={navContainerRef} className="flex-1 min-w-0 overflow-hidden">
+                <nav className="flex gap-4 whitespace-nowrap text-sm" style={{ color: "var(--color-navbar-text-muted)" }}>
+                  {NAV_LINKS.slice(0, visibleCount).map((l) => (
+                    <Link
+                      key={l.href}
+                      href={l.href}
+                      className={navLinkClass(isActive(l))}
+                      style={{ color: isActive(l) ? "var(--color-navbar-text)" : "inherit" }}
+                    >
+                      {l.label}
+                    </Link>
+                  ))}
+                </nav>
+                {/* Camada de medição: invisível, renderiza todos os itens em negrito
+                    (largura máxima) pra calcular quantos cabem de verdade. */}
+                <div
+                  ref={measureRef}
+                  aria-hidden
+                  className="absolute invisible pointer-events-none flex gap-4 whitespace-nowrap text-sm font-semibold"
+                >
+                  {NAV_LINKS.map((l) => (
+                    <span key={l.href}>{l.label}</span>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={handleSair}
@@ -209,7 +265,7 @@ export default function DashboardLayout({
             </div>
           </div>
           <nav className="grid gap-1">
-            {NAV_LINKS.map((l) => (
+            {NAV_LINKS.slice(visibleCount).map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
