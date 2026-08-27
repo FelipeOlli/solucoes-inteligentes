@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { api } from "@/lib/api";
 
 /**
  * Calculadora de precificação alternativa — modelo Simples Nacional Anexo III.
@@ -106,16 +107,33 @@ const fmt = (v: number) => (Number.isFinite(v) ? brl(v) : "—");
 export default function CalculadoraPrecificacao() {
   const [material, setMaterial] = useState("670");
   const [maoDeObra, setMaoDeObra] = useState("180");
-  const [custosFixos, setCustosFixos] = useState("50");
+  const [custosFixos, setCustosFixos] = useState("60");
   const [markup, setMarkup] = useState<number | null>(0.3);
   const [markupValor, setMarkupValor] = useState("");
   const [garantiaPct, setGarantiaPct] = useState(0.04);
   const [faixa, setFaixa] = useState<Faixa>("contaSI");
   const [rbt12, setRbt12] = useState("");
+  const [rbt12Tocado, setRbt12Tocado] = useState(false);
+  const [rbt12Origem, setRbt12Origem] = useState<{ fonte: "PGDAS_D" | "FINANCEIRO"; competencia: string | null } | null>(null);
   const [forma, setForma] = useState<Forma>("pix");
   const [parcelas, setParcelas] = useState(1);
 
   const [copiado, setCopiado] = useState(false);
+
+  // Pré-preenche o RBT12: prioriza o valor oficial do PGDAS-D mais recente e cai
+  // na estimativa do financeiro (soma de serviços concluídos) quando não houver
+  // documento. Nunca sobrescreve se o usuário já digitou algo.
+  useEffect(() => {
+    if (rbt12Tocado) return;
+    api<{ valor: number | null; fonte: "PGDAS_D" | "FINANCEIRO" | null; competencia: string | null }>(
+      "/financeiro/rbt12"
+    ).then(({ data }) => {
+      if (!data?.valor || rbt12Tocado) return;
+      setRbt12(String(data.valor));
+      if (data.fonte) setRbt12Origem({ fonte: data.fonte, competencia: data.competencia });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const calc = useMemo(() => {
     const mat = n(material);
@@ -372,8 +390,18 @@ export default function CalculadoraPrecificacao() {
               inputMode="decimal"
               placeholder="Em branco = 1ª faixa (6%)"
               value={rbt12}
-              onChange={(e) => setRbt12(e.target.value)}
+              onChange={(e) => {
+                setRbt12Tocado(true);
+                setRbt12(e.target.value);
+              }}
             />
+            {rbt12Origem && !rbt12Tocado && (
+              <p className="mt-1 text-xs text-theme-muted">
+                {rbt12Origem.fonte === "PGDAS_D"
+                  ? `Preenchido a partir do PGDAS-D${rbt12Origem.competencia ? ` de ${new Date(rbt12Origem.competencia).toLocaleDateString("pt-BR", { month: "2-digit", year: "numeric" })}` : ""}.`
+                  : "Estimado a partir dos serviços concluídos nos últimos 12 meses."}
+              </p>
+            )}
           </div>
         </div>
         <p className="mt-3 text-xs text-theme-muted">

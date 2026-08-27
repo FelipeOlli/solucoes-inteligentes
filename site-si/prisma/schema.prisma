@@ -436,6 +436,7 @@ model DocumentoFiscal {
   vencimento          DateTime?
   valorTotal          Decimal?                  @db.Decimal(12, 2)
   numeroDocumento     String?
+  rbt12               Decimal?                  @db.Decimal(14, 2)
   obrigacaoId              String?                    @unique
   obrigacao                ObrigacaoFiscal?           @relation(fields: [obrigacaoId], references: [id])
   // Pagamento

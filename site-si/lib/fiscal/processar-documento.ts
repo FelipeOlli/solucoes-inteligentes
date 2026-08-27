@@ -119,6 +119,7 @@ async function processarComIA(
         vencimento: vencimento ?? undefined,
         valorTotal: valorTotal ?? undefined,
         numeroDocumento: ext.numeroDocumento ?? undefined,
+        rbt12: ext.rbt12 ?? undefined,
         obrigacaoId: obrigacaoId ?? undefined,
       },
     });
@@ -202,6 +203,7 @@ export async function processarDocumento(
     let obrigacaoId: string | null = null;
     let obrigacoesGeradas = 0;
     let confidence = 0;
+    let rbt12: number | null = null;
 
     if (tipo === TipoDocumentoFiscal.DAS) {
       const ext = extrairDas(texto);
@@ -257,6 +259,7 @@ export async function processarDocumento(
       competencia = ext.competencia;
       numeroDocumento = ext.numeroRecibo;
       razaoSocial = ext.razaoSocial;
+      rbt12 = ext.rbt12;
       confidence = ext.confidence;
 
       if (competencia) {
@@ -372,6 +375,7 @@ export async function processarDocumento(
         vencimento: vencimento ?? undefined,
         valorTotal: valorTotal ?? undefined,
         numeroDocumento: numeroDocumento ?? undefined,
+        rbt12: rbt12 ?? undefined,
         obrigacaoId: obrigacaoId ?? undefined,
       },
     });

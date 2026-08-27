@@ -5,6 +5,7 @@ import {
   extractData,
   extractMesAno,
   extractRazaoSocial,
+  extractValor,
 } from "./utils";
 
 export type PgdasReciboExtraido = {
@@ -13,6 +14,7 @@ export type PgdasReciboExtraido = {
   competencia: Date | null;
   dataTransmissao: Date | null;
   numeroRecibo: string | null;
+  rbt12: number | null;
   confidence: number;
 };
 
@@ -44,6 +46,16 @@ export function extrairPgdasRecibo(texto: string): PgdasReciboExtraido {
     "Recibo",
   ]);
 
+  // RBT12 — receita bruta acumulada nos 12 meses anteriores ao PA. Campo extra:
+  // não entra no cálculo de confiança pra não penalizar recibos antigos sem ele.
+  const rbt12 = extractValor(texto, [
+    "RBT12",
+    "RBA12",
+    "Receita Bruta Acumulada nos Doze Meses Anteriores",
+    "Receita Bruta dos Últimos 12",
+    "Receita Bruta Total nos Últimos 12 Meses",
+  ]);
+
   // Para PGDAS-D recibo, competência e recibo têm peso de "vencimento" e "valor"
   const confidence = calcularConfianca({
     cnpj,
@@ -53,5 +65,5 @@ export function extrairPgdasRecibo(texto: string): PgdasReciboExtraido {
     valor: numeroRecibo,
   });
 
-  return { cnpj, razaoSocial, competencia, dataTransmissao, numeroRecibo, confidence };
+  return { cnpj, razaoSocial, competencia, dataTransmissao, numeroRecibo, rbt12, confidence };
 }

@@ -11,6 +11,7 @@ export type DadosExtradosIA = {
   valorTotal: number | null;
   numeroDocumento: string | null;
   observacoes: string | null;
+  rbt12: number | null;         // receita bruta acumulada nos 12 meses anteriores ao PA
   confidence: number;           // 0..1 estimado pelo modelo
 };
 
@@ -37,6 +38,7 @@ Formato de saída:
   "valorTotal": número decimal ou null,
   "numeroDocumento": "número do documento/recibo ou null",
   "observacoes": "informações adicionais relevantes ou null",
+  "rbt12": número decimal com a receita bruta acumulada nos 12 meses anteriores ao período de apuração (campo "RBT12"/"RBA12", só existe em PGDAS_D_RECIBO) ou null,
   "confidence": número entre 0 e 1 indicando sua confiança na extração
 }`;
 
@@ -73,6 +75,7 @@ export async function extrairComIA(texto: string): Promise<DadosExtradosIA> {
       valorTotal: null,
       numeroDocumento: null,
       observacoes: "Resposta cortada por limite de tokens.",
+      rbt12: null,
       confidence: 0,
     };
   }
@@ -94,6 +97,7 @@ export async function extrairComIA(texto: string): Promise<DadosExtradosIA> {
       valorTotal: null,
       numeroDocumento: null,
       observacoes: conteudo.slice(0, 200),
+      rbt12: null,
       confidence: 0,
     };
   }
