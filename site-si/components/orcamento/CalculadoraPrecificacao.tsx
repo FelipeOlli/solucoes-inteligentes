@@ -264,7 +264,10 @@ export default function CalculadoraPrecificacao() {
         `&forma=PIX` +
         `&fixo=${encodeURIComponent(calc.fixos.toFixed(2))}` +
         `&garantia=${encodeURIComponent(calc.garantia.toFixed(2))}` +
-        `&imposto=${encodeURIComponent((calc.imposto.total * 100).toFixed(4))}`
+        `&imposto=${encodeURIComponent((calc.imposto.total * 100).toFixed(4))}` +
+        // Markup pretendido no orçamento — grava como lucroPretendido no
+        // serviço, pra comparar depois com o lucro real apurado.
+        `&lucro=${encodeURIComponent(calc.lucro.toFixed(2))}`
       : null;
 
   return (

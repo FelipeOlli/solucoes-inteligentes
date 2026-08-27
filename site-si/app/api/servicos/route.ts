@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
         taxaPercentual: body.taxa_percentual != null ? Number(body.taxa_percentual) : null,
         impostoPercentual: body.imposto_percentual != null ? Number(body.imposto_percentual) : null,
         parcelas: body.parcelas != null ? Number(body.parcelas) : null,
+        lucroPretendido: body.lucro_pretendido != null ? Number(body.lucro_pretendido) : null,
         enderecoServico: body.endereco != null ? String(body.endereco).trim() || null : null,
         contatoPreferencial: body.contato != null ? String(body.contato).trim() || null : null,
         imagens: imagensStr,

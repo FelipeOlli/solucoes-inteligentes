@@ -1,0 +1,1 @@
+ALTER TABLE "Servico" ADD COLUMN "lucroPretendido" DOUBLE PRECISION;

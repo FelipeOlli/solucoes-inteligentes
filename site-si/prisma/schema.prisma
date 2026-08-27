@@ -150,6 +150,7 @@ model Servico {
   taxaPercentual      Float?
   impostoPercentual   Float?
   parcelas            Int?
+  lucroPretendido     Float?
   enderecoServico     String?
   contatoPreferencial String?
   imagens             String?

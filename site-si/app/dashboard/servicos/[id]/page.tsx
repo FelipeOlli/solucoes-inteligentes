@@ -110,6 +110,7 @@ type ServicoDetail = {
   taxaPercentual?: number | null;
   impostoPercentual?: number | null;
   parcelas?: number | null;
+  lucroPretendido?: number | null;
   imagens?: string[] | null;
   formaPagamento?: string | null;
   convidadoEmail?: string | null;
@@ -679,6 +680,11 @@ export default function ServicoDetailPage() {
               <span className={`font-bold text-base border-l border-theme pl-4 ${c.lucro >= 0 ? "text-green-400" : "text-red-400"}`}>
                 = Lucro {fmt(c.lucro)} <span className="font-normal text-xs text-theme-muted">({(c.margem * 100).toFixed(1)}%)</span>
               </span>
+              {servico.lucroPretendido != null && (
+                <span className="text-xs text-theme-muted border-l border-theme pl-4">
+                  Lucro pretendido no orçamento: <strong>{fmt(servico.lucroPretendido)}</strong>
+                </span>
+              )}
             </div>
           </div>
         );

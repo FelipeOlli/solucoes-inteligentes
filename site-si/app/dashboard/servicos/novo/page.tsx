@@ -8,6 +8,8 @@ type Cliente = { id: string; nome: string; email: string; telefone: string };
 type Categoria = { id: string; nome: string };
 type Tecnico = { id: string; nome: string; email?: string | null };
 
+const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 export default function NovoServicoPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,6 +35,7 @@ export default function NovoServicoPage() {
   const [descricao, setDescricao] = useState("");
   const [dataAgendamento, setDataAgendamento] = useState("");
   const [valorEstimado, setValorEstimado] = useState("");
+  const [valorEstimadoTocado, setValorEstimadoTocado] = useState(false);
   const [valorMaterial, setValorMaterial] = useState("");
   const [formaPagamento, setFormaPagamento] = useState("");
   const [imagens, setImagens] = useState<File[]>([]);
@@ -40,6 +43,8 @@ export default function NovoServicoPage() {
   const [draggingImagens, setDraggingImagens] = useState(false);
   const [draggingOrcamento, setDraggingOrcamento] = useState(false);
   const [showModalConvidado, setShowModalConvidado] = useState(false);
+  const [showModalOrcamento, setShowModalOrcamento] = useState(false);
+  const [orcamentoConfirmado, setOrcamentoConfirmado] = useState(false);
   const [convidadoTipo, setConvidadoTipo] = useState<"sem" | "tecnico" | "outro">("sem");
   const [convidadoTecnicoEmail, setConvidadoTecnicoEmail] = useState("");
   const [convidadoOutroEmail, setConvidadoOutroEmail] = useState("");
@@ -51,12 +56,14 @@ export default function NovoServicoPage() {
   const [taxaPercentualQuery, setTaxaPercentualQuery] = useState<number | null>(null);
   const [impostoPercentualQuery, setImpostoPercentualQuery] = useState<number | null>(null);
   const [parcelasQuery, setParcelasQuery] = useState<number | null>(null);
-  // Valores do orçamento por forma de pagamento — o formulário troca o valor
-  // cobrado automaticamente conforme a forma escolhida (PIX x Crédito).
+  // Valores do orçamento: o valor gravado no serviço é sempre o PIX (ver
+  // efeito abaixo); o crédito só fica disponível pra exibição informativa no
+  // modal de confirmação do orçamento.
   const [valorPixQuery, setValorPixQuery] = useState<number | null>(null);
   const [valorCreditoQuery, setValorCreditoQuery] = useState<number | null>(null);
   const [taxaCreditoQuery, setTaxaCreditoQuery] = useState<number | null>(null);
   const [parcelasCreditoQuery, setParcelasCreditoQuery] = useState<number | null>(null);
+  const [lucroPretendidoQuery, setLucroPretendidoQuery] = useState<number | null>(null);
   const materialFromQuery = searchParams.get("material");
   const formaFromQuery = searchParams.get("forma");
   const repasseFromQuery = searchParams.get("repasse");
@@ -67,6 +74,10 @@ export default function NovoServicoPage() {
   const creditoFromQuery = searchParams.get("credito");
   const taxaCreditoFromQuery = searchParams.get("taxaCredito");
   const parcelasCreditoFromQuery = searchParams.get("parcelasCredito");
+  const lucroFromQuery = searchParams.get("lucro");
+  // Presença do pix = veio do link "Criar serviço com este orçamento" da
+  // calculadora — dispara a exigência de confirmação antes de criar.
+  const vieDoOrcamento = pixFromQuery != null;
 
   useEffect(() => {
     api<Cliente[]>("/clientes").then(({ data, status }) => {
@@ -105,28 +116,18 @@ export default function NovoServicoPage() {
     setParcelasCreditoQuery(n);
   }, [parcelasCreditoFromQuery]);
 
-  // Troca o valor cobrado (e a taxa/parcelas gravadas) conforme a forma de
-  // pagamento escolhida — reflete a decisão real do cliente entre PIX e
-  // Crédito, ambos vindos do orçamento.
+  // O valor gravado no serviço é sempre o PIX do orçamento — é a base de
+  // recebimento, independente da forma de pagamento escolhida no formulário
+  // (que é só registro administrativo de como o cliente pagou). Não
+  // sobrescreve se o usuário já editou o campo à mão.
   useEffect(() => {
-    if (!formaPagamento) return;
-    const ehPix = ["PIX", "DINHEIRO", "CHEQUE"].includes(formaPagamento);
-    const ehCredito = ["CREDITO", "DEBITO"].includes(formaPagamento);
-
-    if (ehPix && valorPixQuery != null) {
-      setValorEstimado(
-        valorPixQuery.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      );
-      setTaxaPercentualQuery(0);
-      setParcelasQuery(null);
-    } else if (ehCredito && valorCreditoQuery != null) {
-      setValorEstimado(
-        valorCreditoQuery.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      );
-      setTaxaPercentualQuery(taxaCreditoQuery);
-      setParcelasQuery(parcelasCreditoQuery);
-    }
-  }, [formaPagamento, valorPixQuery, valorCreditoQuery, taxaCreditoQuery, parcelasCreditoQuery]);
+    if (valorPixQuery == null || valorEstimadoTocado) return;
+    setValorEstimado(
+      valorPixQuery.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    );
+    setTaxaPercentualQuery(0);
+    setParcelasQuery(null);
+  }, [valorPixQuery, valorEstimadoTocado]);
 
   useEffect(() => {
     if (!materialFromQuery || valorMaterial.trim() !== "") return;
@@ -175,6 +176,13 @@ export default function NovoServicoPage() {
     setImpostoPercentualQuery(n);
   }, [impostoFromQuery]);
 
+  useEffect(() => {
+    if (!lucroFromQuery) return;
+    const n = Number(lucroFromQuery.replace(",", "."));
+    if (!Number.isFinite(n)) return;
+    setLucroPretendidoQuery(n);
+  }, [lucroFromQuery]);
+
   function mergeUniqueFiles(current: File[], incoming: File[]) {
     const merged = [...current];
     for (const file of incoming) {
@@ -211,6 +219,7 @@ export default function NovoServicoPage() {
       taxa_percentual: taxaPercentualQuery,
       imposto_percentual: impostoPercentualQuery,
       parcelas: parcelasQuery,
+      lucro_pretendido: lucroPretendidoQuery,
       forma_pagamento: formaPagamento || null,
       tecnico_id: tecnicoId || null,
       convidado_email: convidadoEmail,
@@ -266,6 +275,17 @@ export default function NovoServicoPage() {
     await executarCriacao(email);
   }
 
+  function prosseguirAposConfirmacoes() {
+    if (dataAgendamento) {
+      setConvidadoTipo("sem");
+      setConvidadoTecnicoEmail("");
+      setConvidadoOutroEmail("");
+      setShowModalConvidado(true);
+      return;
+    }
+    executarCriacao(null);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -275,21 +295,66 @@ export default function NovoServicoPage() {
       return;
     }
 
-    if (dataAgendamento) {
-      setConvidadoTipo("sem");
-      setConvidadoTecnicoEmail("");
-      setConvidadoOutroEmail("");
-      setShowModalConvidado(true);
+    // Serviço veio do orçamento: os valores de repasse, deslocamento,
+    // garantia, imposto e lucro pretendido chegaram ocultos pela query
+    // string — exige uma conferência explícita antes de gravar.
+    if (vieDoOrcamento && !orcamentoConfirmado) {
+      setShowModalOrcamento(true);
       return;
     }
 
-    await executarCriacao(null);
+    prosseguirAposConfirmacoes();
   }
 
   const tecnicosComEmail = tecnicos.filter((t) => t.email);
 
   return (
     <div className="text-theme">
+      {showModalOrcamento && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-theme-card rounded-lg border border-theme p-6 w-full max-w-md shadow-xl">
+            <h2 className="font-heading font-bold text-theme-primary text-lg mb-1">Confirme os valores do orçamento</h2>
+            <p className="text-sm text-theme-muted mb-4">
+              Estes valores vieram da calculadora e não aparecem no formulário. Confira antes de criar o serviço.
+            </p>
+            <div className="space-y-1.5 text-sm mb-5">
+              <div className="flex justify-between"><span className="text-theme-muted">Valor cobrado (PIX)</span><span className="font-medium">{valorPixQuery != null ? fmt(valorPixQuery) : "—"}</span></div>
+              <div className="flex justify-between"><span className="text-theme-muted">Material</span><span className="font-medium">{valorMaterial ? fmt(Number(valorMaterial.replace(",", "."))) : "—"}</span></div>
+              <div className="flex justify-between"><span className="text-theme-muted">Repasse (mão de obra)</span><span className="font-medium">{valorRepasseQuery != null ? fmt(valorRepasseQuery) : "—"}</span></div>
+              <div className="flex justify-between"><span className="text-theme-muted">Deslocamento</span><span className="font-medium">{custoFixoQuery != null ? fmt(custoFixoQuery) : "—"}</span></div>
+              <div className="flex justify-between"><span className="text-theme-muted">Garantia</span><span className="font-medium">{valorGarantiaQuery != null ? fmt(valorGarantiaQuery) : "—"}</span></div>
+              <div className="flex justify-between"><span className="text-theme-muted">Imposto</span><span className="font-medium">{impostoPercentualQuery != null ? `${impostoPercentualQuery.toFixed(2).replace(".", ",")}%` : "—"}</span></div>
+              <div className="flex justify-between border-t border-theme pt-1.5 mt-1.5"><span className="text-theme-muted">Lucro pretendido</span><span className="font-semibold">{lucroPretendidoQuery != null ? fmt(lucroPretendidoQuery) : "—"}</span></div>
+              {valorCreditoQuery != null && parcelasCreditoQuery != null && (
+                <p className="text-xs text-theme-muted pt-1">
+                  Se pago no crédito {parcelasCreditoQuery}x: {fmt(valorCreditoQuery)}. O valor gravado no serviço continua sendo o PIX.
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowModalOrcamento(false)}
+                className="px-4 py-2 border border-theme rounded-lg text-sm text-theme-muted hover:opacity-80"
+              >
+                Revisar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOrcamentoConfirmado(true);
+                  setShowModalOrcamento(false);
+                  prosseguirAposConfirmacoes();
+                }}
+                className="px-4 py-2 bg-primary text-white rounded-lg text-sm"
+              >
+                Confirmar e continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showModalConvidado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-theme-card rounded-lg border border-theme p-6 w-full max-w-md shadow-xl">
@@ -483,7 +548,17 @@ export default function NovoServicoPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-theme-muted mb-1">Valor do serviço (R$)</label>
-          <input type="text" inputMode="decimal" placeholder="0,00" value={valorEstimado} onChange={(e) => setValorEstimado(e.target.value)} className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" />
+          <input
+            type="text"
+            inputMode="decimal"
+            placeholder="0,00"
+            value={valorEstimado}
+            onChange={(e) => {
+              setValorEstimadoTocado(true);
+              setValorEstimado(e.target.value);
+            }}
+            className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-theme-muted mb-1">Material gasto (R$)</label>
