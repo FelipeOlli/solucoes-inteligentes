@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { brl } from "@/lib/format";
 import {
   BarChart,
   Bar,
@@ -49,9 +50,7 @@ type ResumoResponse = {
   };
 };
 
-function fmt(v: number) {
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
+const fmt = brl;
 
 const TooltipCustom = ({
   active,

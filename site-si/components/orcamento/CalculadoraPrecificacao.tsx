@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { brl } from "@/lib/format";
 
 /**
  * Calculadora de precificação alternativa — modelo Simples Nacional Anexo III.
@@ -93,8 +94,6 @@ function simples(rbt12: number) {
   return { total, das: total - iss, iss };
 }
 
-const brl = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pct = (v: number) => (v * 100).toFixed(2).replace(".", ",") + "%";
 
 function n(v: string) {

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import type { ValidacaoComprovante } from "@/lib/fiscal/validar-comprovante";
 import { TipoDocumentoFiscal, StatusProcessamentoFiscal, StatusObrigacaoFiscal, StatusPagamentoFiscal } from "@prisma/client";
 import { api } from "@/lib/api";
+import { brl } from "@/lib/format";
 
 export type DocumentoDetalhe = {
   id: string;
@@ -71,7 +72,7 @@ function toInputMonth(iso: string | null): string {
 
 function formatBrl(valor: string | null): string {
   if (!valor) return "—";
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(parseFloat(valor));
+  return brl(parseFloat(valor));
 }
 
 type Props = {

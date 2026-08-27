@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { api, withBasePath } from "@/lib/api";
 import { STATUS_LIST } from "@/lib/status";
 import { composicaoLucro } from "@/lib/lucro";
+import { brl, pct } from "@/lib/format";
 
 const STATUS_LABEL: Record<string, string> = {
   ABERTO: "Aberto",
@@ -63,7 +64,7 @@ function formatCampoHist(campo: string, anterior: string | null, novo: string | 
     return `${l}: ${fmtDate(anterior)} → ${fmtDate(novo)}`;
   }
   if (campo === "valor") {
-    const fmtVal = (v: string | null) => v != null ? `R$ ${Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—";
+    const fmtVal = (v: string | null) => v != null ? brl(Number(v)) : "—";
     if (!anterior) return `${l} definido: ${fmtVal(novo)}`;
     if (!novo) return `${l} removido`;
     return `${l}: ${fmtVal(anterior)} → ${fmtVal(novo)}`;
@@ -628,7 +629,7 @@ export default function ServicoDetailPage() {
             <p className="text-sm text-white mt-1">Agendado: {new Date(servico.dataAgendamento).toLocaleString("pt-BR")}</p>
           )}
           {servico.valorEstimado != null && (
-            <p className="text-sm font-medium mt-1">Valor cobrado: R$ {Number(servico.valorEstimado).toLocaleString("pt-BR")}</p>
+            <p className="text-sm font-medium mt-1">Valor cobrado: {brl(servico.valorEstimado)}</p>
           )}
         </div>
         <div className="flex items-start gap-2 self-start">
@@ -649,7 +650,7 @@ export default function ServicoDetailPage() {
       {servico.valorEstimado != null && (() => {
         const c = composicaoLucro({ ...servico, tecnicoNome: servico.tecnico?.nome });
         if (!c) return null;
-        const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        const fmt = brl;
         return (
           <div className="bg-theme-card border border-theme rounded-xl p-4 mb-6">
             <h2 className="font-heading font-semibold text-theme-primary text-sm mb-3">Composição do lucro</h2>
@@ -672,13 +673,13 @@ export default function ServicoDetailPage() {
                 <span className="text-orange-400">− Garantia <strong>{fmt(c.garantia)}</strong></span>
               )}
               {c.taxa > 0 && (
-                <span className="text-yellow-500">− Taxa ({c.taxaPct.toFixed(2)}%) <strong>{fmt(c.taxa)}</strong></span>
+                <span className="text-yellow-500">− Taxa ({pct(c.taxaPct)}) <strong>{fmt(c.taxa)}</strong></span>
               )}
               {c.imposto > 0 && (
-                <span className="text-yellow-500">− Imposto ({c.impostoPct.toFixed(2)}%) <strong>{fmt(c.imposto)}</strong></span>
+                <span className="text-yellow-500">− Imposto ({pct(c.impostoPct)}) <strong>{fmt(c.imposto)}</strong></span>
               )}
               <span className={`font-bold text-base border-l border-theme pl-4 ${c.lucro >= 0 ? "text-green-400" : "text-red-400"}`}>
-                = Lucro {fmt(c.lucro)} <span className="font-normal text-xs text-theme-muted">({(c.margem * 100).toFixed(1)}%)</span>
+                = Lucro {fmt(c.lucro)} <span className="font-normal text-xs text-theme-muted">({(c.margem * 100).toFixed(1).replace(".", ",")}%)</span>
               </span>
               {servico.lucroPretendido != null && (
                 <span className="text-xs text-theme-muted border-l border-theme pl-4">

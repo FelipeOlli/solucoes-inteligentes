@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { brl } from "@/lib/format";
 import s from "./gerador-stories.module.css";
 
 declare global {
@@ -277,11 +278,11 @@ export default function GeradorStoriesPage() {
               <div className={s.stInfo}>
                 {precoDe && (
                   <span className={s.stDeWrap}>
-                    <span className={s.stDeTexto}>R$ {precoDe}</span>
+                    <span className={s.stDeTexto}>{brl(num(precoDe))}</span>
                   </span>
                 )}
                 <span className={s.stPorLabel}>por apenas</span>
-                <span className={s.stPor}>R$ {precoPor}</span>
+                <span className={s.stPor}>{brl(num(precoPor))}</span>
               </div>
 
               <div className={s.stRespiro} />

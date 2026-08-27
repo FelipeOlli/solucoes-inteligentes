@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api, withBasePath } from "@/lib/api";
+import { brl as fmt } from "@/lib/format";
 
 type Cliente = { id: string; nome: string; email: string; telefone: string };
 type Categoria = { id: string; nome: string };
 type Tecnico = { id: string; nome: string; email?: string | null };
-
-const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function NovoServicoPage() {
   const router = useRouter();

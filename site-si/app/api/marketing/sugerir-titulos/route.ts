@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { jsonResponse, unauthorized, forbidden, badRequest } from "@/lib/api-response";
+import { brl } from "@/lib/format";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -58,8 +59,8 @@ export async function POST(request: NextRequest) {
   const contexto = [
     titulo ? "Nome cru do produto: " + titulo : "",
     conteudoPagina || (link ? "Link da oferta: " + link : ""),
-    precoDe ? "Preço original: R$ " + precoDe : "",
-    "Preço atual: R$ " + precoPor,
+    !isNaN(nDe) && nDe > 0 ? "Preço original: " + brl(nDe) : "",
+    "Preço atual: " + brl(nPor),
     desconto ? "Desconto: " + desconto : "",
   ]
     .filter(Boolean)

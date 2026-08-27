@@ -1,5 +1,7 @@
 "use client";
 
+import { brl as formatBrl } from "@/lib/format";
+
 type ProximoVencimento = {
   vencimento: string;
   tipo: string;
@@ -15,10 +17,6 @@ type Props = {
   atrasadosCount: number;
   totalPagoMes: number;
 };
-
-function formatBrl(valor: number): string {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor);
-}
 
 function KpiCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (

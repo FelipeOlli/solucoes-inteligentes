@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import { parsePdfBuffer } from "./pdf-parser";
+import { brl } from "@/lib/format";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -22,7 +23,7 @@ function formatBrl(valor: unknown): string | null {
   if (valor == null) return null;
   const n = parseFloat(String(valor));
   if (isNaN(n)) return null;
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
+  return brl(n);
 }
 
 function formatData(iso: unknown): string | null {

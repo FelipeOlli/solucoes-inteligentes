@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatDuracaoAbertaDesde } from "@/lib/duration-pt-br";
+import { brl } from "@/lib/format";
 
 type Servico = {
   id: string;
@@ -135,7 +136,7 @@ export default function DashboardPage() {
                   <span className="ml-2 text-white">Agendado: {new Date(s.dataAgendamento).toLocaleDateString("pt-BR")}</span>
                 )}
                 {s.valorEstimado != null && (
-                  <span className="ml-2 font-medium">R$ {Number(s.valorEstimado).toLocaleString("pt-BR")}</span>
+                  <span className="ml-2 font-medium">{brl(Number(s.valorEstimado))}</span>
                 )}
               </p>
             </Link>

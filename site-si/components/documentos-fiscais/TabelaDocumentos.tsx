@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { TipoDocumentoFiscal, StatusProcessamentoFiscal, StatusPagamentoFiscal } from "@prisma/client";
+import { brl } from "@/lib/format";
 
 export type DocumentoRow = {
   id: string;
@@ -86,9 +87,7 @@ function statusPagamentoEfetivo(doc: DocumentoRow): StatusPagamentoFiscal {
 
 function formatBrl(valor: string | null): string {
   if (!valor) return "—";
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
-    parseFloat(valor)
-  );
+  return brl(parseFloat(valor));
 }
 
 function formatCompetencia(data: string | null): string {
