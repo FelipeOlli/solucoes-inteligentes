@@ -128,7 +128,7 @@ export default function CalculadoraPrecificacao() {
       "/financeiro/rbt12"
     ).then(({ data }) => {
       if (!data?.valor || rbt12Tocado) return;
-      setRbt12(String(data.valor));
+      setRbt12(data.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
       if (data.fonte) setRbt12Origem({ fonte: data.fonte, competencia: data.competencia });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
