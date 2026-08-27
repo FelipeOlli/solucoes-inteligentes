@@ -387,16 +387,21 @@ export default function CalculadoraPrecificacao() {
           </div>
           <div>
             <label className={label}>RBT12 — receita dos últimos 12 meses</label>
-            <input
-              className={campo}
-              inputMode="decimal"
-              placeholder="Em branco = 1ª faixa (6%)"
-              value={rbt12}
-              onChange={(e) => {
-                setRbt12Tocado(true);
-                setRbt12(e.target.value);
-              }}
-            />
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg text-theme-muted">
+                R$
+              </span>
+              <input
+                className={`${campo} pl-10`}
+                inputMode="decimal"
+                placeholder="Em branco = 1ª faixa (6%)"
+                value={rbt12}
+                onChange={(e) => {
+                  setRbt12Tocado(true);
+                  setRbt12(e.target.value);
+                }}
+              />
+            </div>
             {rbt12Origem && !rbt12Tocado && (
               <p className="mt-1 text-xs text-theme-muted">
                 {rbt12Origem.fonte === "PGDAS_D"
