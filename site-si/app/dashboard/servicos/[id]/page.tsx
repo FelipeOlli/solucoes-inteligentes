@@ -3,20 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api, withBasePath } from "@/lib/api";
-import { STATUS_LIST } from "@/lib/status";
+import { STATUS_LIST, STATUS_LABEL, getStatusBadgeClass } from "@/lib/status";
 import { composicaoLucro } from "@/lib/lucro";
 import { brl, pct } from "@/lib/format";
-
-const STATUS_LABEL: Record<string, string> = {
-  ABERTO: "Aberto",
-  AGENDADO: "Agendado",
-  EM_ANDAMENTO: "Em andamento",
-  AGUARDANDO_PECA: "Aguardando peça",
-  AGUARDANDO_CLIENTE: "Aguardando cliente",
-  AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
-  CONCLUIDO: "Concluído",
-  CANCELADO: "Cancelado",
-};
 
 const FORMA_PAGAMENTO_LABEL: Record<string, string> = {
   DINHEIRO: "Dinheiro",
@@ -37,12 +26,6 @@ function isImageFileName(urlOrName: string): boolean {
 function isVideoFileName(urlOrName: string): boolean {
   const pathOnly = urlOrName.split("?")[0];
   return VIDEO_FILE_RE.test(pathOnly);
-}
-
-function getStatusBadgeClass(status: string): string {
-  if (status === "CONCLUIDO") return "bg-green-100 text-green-800";
-  if (status === "CANCELADO") return "bg-red-100 text-red-800";
-  return "bg-yellow-100 text-yellow-800";
 }
 
 function formatCampoHist(campo: string, anterior: string | null, novo: string | null): string {

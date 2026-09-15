@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { brl } from "@/lib/format";
+import { STATUS_LABEL, getStatusBadgeClass } from "@/lib/status";
 
 type ServicoTecnico = {
   id: string;
@@ -21,24 +22,6 @@ type ServicoTecnico = {
   cliente: { nome: string; nomeContato: string | null; telefone: string | null };
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  ABERTO: "Aberto",
-  AGENDADO: "Agendado",
-  EM_ANDAMENTO: "Em andamento",
-  AGUARDANDO_PECA: "Aguardando peça",
-  AGUARDANDO_CLIENTE: "Aguardando cliente",
-  AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
-  CONCLUIDO: "Concluído",
-  CANCELADO: "Cancelado",
-};
-
-function getStatusBadgeClass(status: string): string {
-  if (status === "CONCLUIDO") return "bg-green-100 text-green-800";
-  if (status === "CANCELADO") return "bg-red-100 text-red-800";
-  if (status === "EM_ANDAMENTO") return "bg-blue-100 text-blue-800";
-  return "bg-yellow-100 text-yellow-800";
-}
-
 function formatDataHora(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -56,6 +39,8 @@ export default function TecnicoPage() {
   const [loading, setLoading] = useState(true);
   const [acaoPendenteId, setAcaoPendenteId] = useState<string | null>(null);
   const [erro, setErro] = useState("");
+  const [concluindoId, setConcluindoId] = useState<string | null>(null);
+  const [comentario, setComentario] = useState("");
 
   const carregar = useCallback(() => {
     setLoading(true);
@@ -92,6 +77,23 @@ export default function TecnicoPage() {
       alert(error.message);
       return;
     }
+    carregar();
+  }
+
+  async function handleConcluir(id: string) {
+    if (!comentario.trim()) return;
+    setAcaoPendenteId(id);
+    const { error } = await api(`/tecnicos/me/servicos/${id}/concluir`, {
+      method: "POST",
+      body: { comentario },
+    });
+    setAcaoPendenteId(null);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    setConcluindoId(null);
+    setComentario("");
     carregar();
   }
 
@@ -162,17 +164,31 @@ export default function TecnicoPage() {
                 )}
               </dl>
 
-              {s.statusAtual !== "CONCLUIDO" && s.statusAtual !== "CANCELADO" && (
-                <div className="flex gap-2">
+              {s.statusAtual === "AGUARDANDO_CONFIRMACAO" && (
+                <p className="text-sm text-theme-muted italic">Aguardando o dono confirmar a conclusão.</p>
+              )}
+
+              {s.statusAtual !== "CONCLUIDO" && s.statusAtual !== "CANCELADO" && s.statusAtual !== "AGUARDANDO_CONFIRMACAO" && (
+                <div className="flex flex-col gap-2">
                   {s.statusAtual === "EM_ANDAMENTO" ? (
-                    <button
-                      type="button"
-                      disabled={acaoPendenteId === s.id}
-                      onClick={() => handleCheckout(s.id)}
-                      className="flex-1 py-2 rounded-lg font-medium bg-theme-cta disabled:opacity-50"
-                    >
-                      {acaoPendenteId === s.id ? "Registrando…" : "Finalizar visita"}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={acaoPendenteId === s.id}
+                        onClick={() => handleCheckout(s.id)}
+                        className="flex-1 py-2 rounded-lg font-medium border border-theme text-theme disabled:opacity-50"
+                      >
+                        {acaoPendenteId === s.id ? "Registrando…" : "Sair sem concluir"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={acaoPendenteId === s.id}
+                        onClick={() => { setConcluindoId(s.id); setComentario(""); }}
+                        className="flex-1 py-2 rounded-lg font-medium bg-theme-cta disabled:opacity-50"
+                      >
+                        Concluir atendimento
+                      </button>
+                    </div>
                   ) : (
                     <button
                       type="button"
@@ -183,6 +199,39 @@ export default function TecnicoPage() {
                       {acaoPendenteId === s.id ? "Registrando…" : "Cheguei / iniciar atendimento"}
                     </button>
                   )}
+                </div>
+              )}
+
+              {concluindoId === s.id && (
+                <div className="mt-3 pt-3 border-t border-theme">
+                  <label className="block text-sm font-medium text-theme mb-1">
+                    O que foi feito? <span className="text-red-600">*</span>
+                  </label>
+                  <textarea
+                    value={comentario}
+                    onChange={(e) => setComentario(e.target.value)}
+                    rows={3}
+                    autoFocus
+                    placeholder="Ex.: troquei a placa-mãe, testei e o cliente aprovou"
+                    className="w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm mb-2"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setConcluindoId(null); setComentario(""); }}
+                      className="flex-1 py-2 rounded-lg font-medium border border-theme text-theme"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!comentario.trim() || acaoPendenteId === s.id}
+                      onClick={() => handleConcluir(s.id)}
+                      className="flex-1 py-2 rounded-lg font-medium bg-theme-cta disabled:opacity-50"
+                    >
+                      {acaoPendenteId === s.id ? "Enviando…" : "Enviar para confirmação"}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

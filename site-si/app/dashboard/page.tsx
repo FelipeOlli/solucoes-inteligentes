@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatDuracaoAbertaDesde } from "@/lib/duration-pt-br";
 import { brl } from "@/lib/format";
+import { STATUS_LABEL, getStatusBadgeClass } from "@/lib/status";
 import AoVivoWidget from "@/components/dashboard/AoVivoWidget";
 
 type Servico = {
@@ -18,17 +19,6 @@ type Servico = {
   dataAgendamento: string | null;
   valorEstimado: number | null;
   cliente: { nome: string; email: string };
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  ABERTO: "Aberto",
-  AGENDADO: "Agendado",
-  EM_ANDAMENTO: "Em andamento",
-  AGUARDANDO_PECA: "Aguardando peça",
-  AGUARDANDO_CLIENTE: "Aguardando cliente",
-  AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
-  CONCLUIDO: "Concluído",
-  CANCELADO: "Cancelado",
 };
 
 export default function DashboardPage() {
@@ -115,15 +105,7 @@ export default function DashboardPage() {
                   <span className="font-semibold text-theme-primary">{s.codigo}</span>
                   <span className="ml-2 break-words">{s.cliente.nome}</span>
                 </div>
-                <span
-                  className={`px-2 py-1 rounded text-sm ${
-                    s.statusAtual === "CONCLUIDO"
-                      ? "bg-green-100 text-green-800"
-                      : s.statusAtual === "CANCELADO"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
+                <span className={`px-2 py-1 rounded text-sm ${getStatusBadgeClass(s.statusAtual)}`}>
                   {STATUS_LABEL[s.statusAtual] || s.statusAtual}
                 </span>
               </div>
