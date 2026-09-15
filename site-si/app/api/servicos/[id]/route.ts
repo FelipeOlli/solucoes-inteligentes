@@ -38,7 +38,7 @@ export async function GET(
         },
       },
       categoria: { select: { id: true, nome: true } },
-      tecnico: { select: { id: true, nome: true } },
+      tecnico: { select: { id: true, nome: true, ehProprio: true } },
       statusHist: { orderBy: { createdAt: "asc" } },
       notas: { orderBy: { createdAt: "asc" } },
       campoHist: { orderBy: { createdAt: "asc" } },
@@ -47,9 +47,11 @@ export async function GET(
   if (!servico) return notFound();
 
   const imagens = servico.imagens ? (JSON.parse(servico.imagens) as string[]) : null;
+  const comprovantesMaterial = servico.comprovantesMaterial ? (JSON.parse(servico.comprovantesMaterial) as string[]) : null;
   return jsonResponse({
     ...servico,
     imagens,
+    comprovantesMaterial,
     statusHist: servico.statusHist.map((h) => ({
       id: h.id,
       statusAnterior: h.statusAnterior,

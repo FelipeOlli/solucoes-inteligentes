@@ -170,6 +170,10 @@ model Servico {
   prazoEstimado       DateTime?
   dataReagendamentoProposta DateTime? // proposta do técnico, aguardando aprovação do dono
   motivoReagendamento String?
+  comprovanteRepasseUrl         String?
+  comprovanteRepasseNomeArquivo String?
+  comprovanteRepasseEnviadoEm   DateTime?
+  comprovantesMaterial          String? // JSON array de URLs — comprovantes de material enviados pelo técnico
   valorEstimado       Float?
   valorRepasse        Float?
   valorMaterial       Float?

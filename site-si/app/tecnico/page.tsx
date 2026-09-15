@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { api } from "@/lib/api";
+import { api, withBasePath } from "@/lib/api";
 import { brl } from "@/lib/format";
 import { STATUS_LABEL, getStatusBadgeClass } from "@/lib/status";
 
@@ -17,6 +17,9 @@ type ServicoTecnico = {
   dataConclusao: string | null;
   dataReagendamentoProposta: string | null;
   motivoReagendamento: string | null;
+  comprovanteRepasseUrl: string | null;
+  comprovanteRepasseNomeArquivo: string | null;
+  comprovantesMaterial: string[];
   enderecoServico: string | null;
   contatoPreferencial: string | null;
   valorRepasse: number | null;
@@ -33,6 +36,7 @@ const FILTROS = [
   { id: "abertos", label: "Em aberto" },
   { id: "hoje", label: "Hoje" },
   { id: "semana", label: "Semana" },
+  { id: "concluidos", label: "Concluídos" },
 ] as const;
 
 export default function TecnicoPage() {
@@ -46,6 +50,7 @@ export default function TecnicoPage() {
   const [reagendandoId, setReagendandoId] = useState<string | null>(null);
   const [novaData, setNovaData] = useState("");
   const [motivoReagendamento, setMotivoReagendamento] = useState("");
+  const [enviandoMaterialId, setEnviandoMaterialId] = useState<string | null>(null);
 
   const carregar = useCallback(() => {
     setLoading(true);
@@ -120,6 +125,37 @@ export default function TecnicoPage() {
     carregar();
   }
 
+  async function uploadComprovantesMaterial(id: string, files: FileList | null) {
+    if (!files || !files.length) return;
+    setEnviandoMaterialId(id);
+    setErro("");
+    const formData = new FormData();
+    Array.from(files).forEach((f) => formData.append("file", f));
+    const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
+    const res = await fetch(withBasePath(`/api/tecnicos/me/servicos/${id}/comprovantes-material`), {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    setEnviandoMaterialId(null);
+    if (res.ok) {
+      carregar();
+    } else {
+      const j = await res.json().catch(() => ({}));
+      setErro(typeof (j as { message?: string }).message === "string" ? (j as { message: string }).message : "Não foi possível enviar o comprovante.");
+    }
+  }
+
+  async function removerComprovanteMaterial(id: string, url: string) {
+    if (!confirm("Remover este comprovante?")) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
+    const res = await fetch(
+      withBasePath(`/api/tecnicos/me/servicos/${id}/comprovantes-material?url=${encodeURIComponent(url)}`),
+      { method: "DELETE", headers: token ? { Authorization: `Bearer ${token}` } : {} }
+    );
+    if (res.ok) carregar();
+  }
+
   return (
     <div>
       <h1 className="font-heading text-xl font-bold text-theme-primary mb-4">Meus serviços</h1>
@@ -187,13 +223,67 @@ export default function TecnicoPage() {
                 )}
               </dl>
 
+              {s.statusAtual !== "CONCLUIDO" && s.statusAtual !== "CANCELADO" && (
+                <div className="mb-3 pb-3 border-b border-theme">
+                  <p className="text-sm font-medium text-theme mb-1">Comprovantes de material</p>
+                  {s.comprovantesMaterial.length > 0 && (
+                    <ul className="space-y-1 mb-2">
+                      {s.comprovantesMaterial.map((url) => (
+                        <li key={url} className="flex items-center gap-2 text-sm">
+                          <a
+                            href={withBasePath(url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-theme-primary underline truncate"
+                          >
+                            {url.split("/").pop()}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => removerComprovanteMaterial(s.id, url)}
+                            className="text-red-600 text-xs underline shrink-0"
+                          >
+                            Remover
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <label className="inline-block text-sm underline cursor-pointer text-theme-primary">
+                    {enviandoMaterialId === s.id ? "Enviando…" : "+ Anexar comprovante de peça/material"}
+                    <input
+                      type="file"
+                      accept=".pdf,image/*"
+                      multiple
+                      className="hidden"
+                      disabled={enviandoMaterialId === s.id}
+                      onChange={(e) => {
+                        uploadComprovantesMaterial(s.id, e.target.files);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+              )}
+
               {s.statusAtual === "AGUARDANDO_CONFIRMACAO" && (
-                <p className="text-sm text-theme-muted italic">Aguardando o dono confirmar a conclusão.</p>
+                <p className="text-sm text-theme-muted italic">Aguardando a gestão confirmar a conclusão.</p>
+              )}
+
+              {s.statusAtual === "CONCLUIDO" && s.comprovanteRepasseUrl && (
+                <a
+                  href={withBasePath(s.comprovanteRepasseUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-sm text-theme-primary underline"
+                >
+                  Ver comprovante do pagamento
+                </a>
               )}
 
               {s.statusAtual === "AGUARDANDO_REAGENDAMENTO" && (
                 <p className="text-sm text-theme-muted italic">
-                  Aguardando o dono aprovar o reagendamento
+                  Aguardando a gestão aprovar o reagendamento
                   {s.dataReagendamentoProposta && <> para {formatDataHora(s.dataReagendamentoProposta)}</>}.
                 </p>
               )}

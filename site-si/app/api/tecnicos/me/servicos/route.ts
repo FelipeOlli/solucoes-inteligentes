@@ -29,6 +29,8 @@ export async function GET(request: NextRequest) {
       const fim = new Date(inicio);
       fim.setDate(fim.getDate() + 7);
       where.dataAgendamento = { gte: inicio, lt: fim };
+    } else if (filtro === "concluidos") {
+      where.statusAtual = "CONCLUIDO";
     } else {
       where.statusAtual = { notIn: ["CONCLUIDO", "CANCELADO"] };
     }
@@ -36,7 +38,7 @@ export async function GET(request: NextRequest) {
     const servicos = await prisma.servico.findMany({
       where,
       select: SELECT_SERVICO_TECNICO,
-      orderBy: { dataAgendamento: "asc" },
+      orderBy: filtro === "concluidos" ? { dataConclusao: "desc" } : { dataAgendamento: "asc" },
     });
 
     return jsonResponse(servicos.map(serializeServicoParaTecnico));

@@ -70,7 +70,7 @@ function formatCampoHist(campo: string, anterior: string | null, novo: string | 
 }
 
 type Categoria = { id: string; nome: string };
-type Tecnico = { id: string; nome: string; email?: string | null };
+type Tecnico = { id: string; nome: string; email?: string | null; ehProprio?: boolean };
 type ClienteItem = { id: string; nome: string; email: string; telefone: string };
 type CampoHistItem = { id: string; campo: string; valorAnterior: string | null; valorNovo: string | null; createdAt: string };
 
@@ -88,6 +88,8 @@ type ServicoDetail = {
   prazoEstimado?: string | null;
   dataReagendamentoProposta?: string | null;
   motivoReagendamento?: string | null;
+  comprovanteRepasseUrl?: string | null;
+  comprovanteRepasseNomeArquivo?: string | null;
   valorEstimado?: number | null;
   valorRepasse?: number | null;
   valorMaterial?: number | null;
@@ -98,6 +100,7 @@ type ServicoDetail = {
   parcelas?: number | null;
   lucroPretendido?: number | null;
   imagens?: string[] | null;
+  comprovantesMaterial?: string[] | null;
   formaPagamento?: string | null;
   convidadoEmail?: string | null;
   cliente: { id: string; nome: string; email: string; telefone: string };
@@ -135,6 +138,8 @@ export default function ServicoDetailPage() {
   const [loading, setLoading] = useState(true);
   const [novoStatus, setNovoStatus] = useState("");
   const [reagendamentoPendente, setReagendamentoPendente] = useState(false);
+  const [uploadingComprovante, setUploadingComprovante] = useState(false);
+  const [reabrindoAtendimento, setReabrindoAtendimento] = useState(false);
   const [notaConteudo, setNotaConteudo] = useState("");
   const [notaVisivel, setNotaVisivel] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
@@ -355,6 +360,43 @@ export default function ServicoDetailPage() {
     if (status === 401) router.push("/login");
     if (status === 200) load();
     else alert(err?.message ?? "Não foi possível recusar o reagendamento.");
+  }
+
+  async function uploadComprovanteRepasse(file: File) {
+    if (!file) return;
+    setUploadingComprovante(true);
+    setError("");
+    const formData = new FormData();
+    formData.append("file", file);
+    const token = typeof window !== "undefined" ? localStorage.getItem("si_token") : null;
+    const res = await fetch(withBasePath(`/api/servicos/${id}/comprovante-repasse`), {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    setUploadingComprovante(false);
+    if (res.status === 401) router.push("/login");
+    if (res.ok) {
+      load();
+    } else {
+      const j = await res.json().catch(() => ({}));
+      setError(typeof (j as { message?: string }).message === "string" ? (j as { message: string }).message : "Não foi possível enviar o comprovante.");
+    }
+  }
+
+  function handleAbrirConfirmarConclusao() {
+    setNovoStatus("CONCLUIDO");
+    setDataConclusaoInput(new Date().toISOString().slice(0, 10));
+    setShowModalConclusao(true);
+  }
+
+  async function handleReabrirAtendimento() {
+    setReabrindoAtendimento(true);
+    const { status, error: err } = await api(`/servicos/${id}/status`, { method: "PATCH", body: { status_novo: "EM_ANDAMENTO" } });
+    setReabrindoAtendimento(false);
+    if (status === 401) router.push("/login");
+    if (status === 200) load();
+    else alert(err?.message ?? "Não foi possível reabrir o atendimento.");
   }
 
   async function handleNota(e: React.FormEvent) {
@@ -678,6 +720,69 @@ export default function ServicoDetailPage() {
         </div>
       )}
 
+      {servico.statusAtual === "AGUARDANDO_CONFIRMACAO" && (() => {
+        const precisaComprovante =
+          !!servico.tecnico && !servico.tecnico.ehProprio && (servico.valorRepasse ?? 0) > 0;
+        const comentarioTecnico = servico.notas[servico.notas.length - 1]?.conteudo;
+        return (
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6 text-purple-900">
+            <h2 className="font-heading font-semibold text-sm mb-1">Técnico concluiu o atendimento</h2>
+            {comentarioTecnico && <p className="text-sm mb-3">Comentário: {comentarioTecnico}</p>}
+
+            {precisaComprovante && (
+              <div className="mb-3">
+                <p className="text-sm font-medium mb-1">Comprovante do repasse ao técnico</p>
+                {servico.comprovanteRepasseUrl ? (
+                  <a
+                    href={withBasePath(servico.comprovanteRepasseUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm underline"
+                  >
+                    {servico.comprovanteRepasseNomeArquivo ?? "Ver comprovante enviado"}
+                  </a>
+                ) : (
+                  <p className="text-sm text-purple-700">Nenhum comprovante enviado ainda.</p>
+                )}
+                <label className="inline-block mt-2 text-sm underline cursor-pointer">
+                  {uploadingComprovante ? "Enviando…" : servico.comprovanteRepasseUrl ? "Trocar arquivo" : "Anexar comprovante"}
+                  <input
+                    type="file"
+                    accept=".pdf,image/*"
+                    className="hidden"
+                    disabled={uploadingComprovante}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadComprovanteRepasse(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={reabrindoAtendimento}
+                onClick={handleReabrirAtendimento}
+                className="px-3 py-1.5 rounded-lg border border-purple-300 text-purple-900 text-sm disabled:opacity-50"
+              >
+                {reabrindoAtendimento ? "Enviando…" : "Reabrir atendimento"}
+              </button>
+              <button
+                type="button"
+                disabled={precisaComprovante && !servico.comprovanteRepasseUrl}
+                onClick={handleAbrirConfirmarConclusao}
+                className="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-sm disabled:opacity-50"
+              >
+                Confirmar conclusão
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Card de lucro real — visível quando há valor cobrado */}
       {servico.valorEstimado != null && (() => {
         const c = composicaoLucro({ ...servico, tecnicoNome: servico.tecnico?.nome });
@@ -961,6 +1066,26 @@ export default function ServicoDetailPage() {
             </button>
             {linkUrl && <p className="mt-2 text-sm text-theme-muted">Copiado!</p>}
           </div>
+
+          {servico.comprovantesMaterial != null && servico.comprovantesMaterial.length > 0 && (
+            <div className="bg-theme-card p-4 rounded-lg border border-theme">
+              <h2 className="font-heading font-bold text-theme-primary mb-2">Comprovantes de material (enviados pelo técnico)</h2>
+              <ul className="space-y-1">
+                {servico.comprovantesMaterial.map((url) => (
+                  <li key={url}>
+                    <a
+                      href={withBasePath(url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-theme-primary underline"
+                    >
+                      {url.split("/").pop()}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="bg-theme-card p-4 rounded-lg border border-theme">
             <h2 className="font-heading font-bold text-theme-primary mb-2">Fotos / imagens / vídeos</h2>

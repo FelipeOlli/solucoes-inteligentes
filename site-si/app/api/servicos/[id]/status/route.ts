@@ -39,6 +39,16 @@ export async function PATCH(
     return badRequest(`Transição de ${servico.statusAtual} para ${statusNovo} não permitida.`);
   }
 
+  if (statusNovo === "CONCLUIDO" && servico.tecnicoId && (servico.valorRepasse ?? 0) > 0) {
+    const tecnico = await prisma.tecnico.findUnique({
+      where: { id: servico.tecnicoId },
+      select: { ehProprio: true },
+    });
+    if (!tecnico?.ehProprio && !servico.comprovanteRepasseUrl) {
+      return badRequest("Anexe o comprovante do repasse ao técnico antes de concluir o serviço.");
+    }
+  }
+
   let dataConclusao: Date | null = null;
   if (statusNovo === "CONCLUIDO" || statusNovo === "CANCELADO") {
     if (body.data_conclusao) {
