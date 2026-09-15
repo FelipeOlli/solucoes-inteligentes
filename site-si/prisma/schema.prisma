@@ -168,6 +168,8 @@ model Servico {
   dataAgendamento     DateTime?
   dataConclusao       DateTime?
   prazoEstimado       DateTime?
+  dataReagendamentoProposta DateTime? // proposta do técnico, aguardando aprovação do dono
+  motivoReagendamento String?
   valorEstimado       Float?
   valorRepasse        Float?
   valorMaterial       Float?

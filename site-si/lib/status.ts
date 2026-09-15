@@ -6,6 +6,7 @@ export const STATUS_LIST = [
   "AGUARDANDO_CLIENTE",
   "AGUARDANDO_PAGAMENTO",
   "AGUARDANDO_CONFIRMACAO",
+  "AGUARDANDO_REAGENDAMENTO",
   "CONCLUIDO",
   "CANCELADO",
 ] as const;
@@ -26,6 +27,7 @@ export const STATUS_LABEL: Record<string, string> = {
   AGUARDANDO_CLIENTE: "Aguardando cliente",
   AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
   AGUARDANDO_CONFIRMACAO: "Aguardando confirmação",
+  AGUARDANDO_REAGENDAMENTO: "Aguardando reagendamento",
   CONCLUIDO: "Concluído",
   CANCELADO: "Cancelado",
 };
@@ -39,6 +41,7 @@ export const STATUS_COLOR: Record<string, string> = {
   AGUARDANDO_CLIENTE: "bg-amber-100 text-amber-800",
   AGUARDANDO_PAGAMENTO: "bg-yellow-100 text-yellow-800",
   AGUARDANDO_CONFIRMACAO: "bg-purple-100 text-purple-800",
+  AGUARDANDO_REAGENDAMENTO: "bg-pink-100 text-pink-800",
   CONCLUIDO: "bg-green-100 text-green-800",
   CANCELADO: "bg-red-100 text-red-800",
 };

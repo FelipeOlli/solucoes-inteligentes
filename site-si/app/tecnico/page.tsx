@@ -15,6 +15,8 @@ type ServicoTecnico = {
   dataAgendamento: string | null;
   prazoEstimado: string | null;
   dataConclusao: string | null;
+  dataReagendamentoProposta: string | null;
+  motivoReagendamento: string | null;
   enderecoServico: string | null;
   contatoPreferencial: string | null;
   valorRepasse: number | null;
@@ -41,6 +43,9 @@ export default function TecnicoPage() {
   const [erro, setErro] = useState("");
   const [concluindoId, setConcluindoId] = useState<string | null>(null);
   const [comentario, setComentario] = useState("");
+  const [reagendandoId, setReagendandoId] = useState<string | null>(null);
+  const [novaData, setNovaData] = useState("");
+  const [motivoReagendamento, setMotivoReagendamento] = useState("");
 
   const carregar = useCallback(() => {
     setLoading(true);
@@ -94,6 +99,24 @@ export default function TecnicoPage() {
     }
     setConcluindoId(null);
     setComentario("");
+    carregar();
+  }
+
+  async function handleReagendar(id: string) {
+    if (!novaData || !motivoReagendamento.trim()) return;
+    setAcaoPendenteId(id);
+    const { error } = await api(`/tecnicos/me/servicos/${id}/reagendar`, {
+      method: "POST",
+      body: { novaData: new Date(novaData).toISOString(), comentario: motivoReagendamento },
+    });
+    setAcaoPendenteId(null);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    setReagendandoId(null);
+    setNovaData("");
+    setMotivoReagendamento("");
     carregar();
   }
 
@@ -168,17 +191,27 @@ export default function TecnicoPage() {
                 <p className="text-sm text-theme-muted italic">Aguardando o dono confirmar a conclusão.</p>
               )}
 
-              {s.statusAtual !== "CONCLUIDO" && s.statusAtual !== "CANCELADO" && s.statusAtual !== "AGUARDANDO_CONFIRMACAO" && (
+              {s.statusAtual === "AGUARDANDO_REAGENDAMENTO" && (
+                <p className="text-sm text-theme-muted italic">
+                  Aguardando o dono aprovar o reagendamento
+                  {s.dataReagendamentoProposta && <> para {formatDataHora(s.dataReagendamentoProposta)}</>}.
+                </p>
+              )}
+
+              {s.statusAtual !== "CONCLUIDO" &&
+                s.statusAtual !== "CANCELADO" &&
+                s.statusAtual !== "AGUARDANDO_CONFIRMACAO" &&
+                s.statusAtual !== "AGUARDANDO_REAGENDAMENTO" && (
                 <div className="flex flex-col gap-2">
                   {s.statusAtual === "EM_ANDAMENTO" ? (
                     <div className="flex gap-2">
                       <button
                         type="button"
                         disabled={acaoPendenteId === s.id}
-                        onClick={() => handleCheckout(s.id)}
+                        onClick={() => { setReagendandoId(s.id); setNovaData(""); setMotivoReagendamento(""); }}
                         className="flex-1 py-2 rounded-lg font-medium border border-theme text-theme disabled:opacity-50"
                       >
-                        {acaoPendenteId === s.id ? "Registrando…" : "Sair sem concluir"}
+                        Reagendar
                       </button>
                       <button
                         type="button"
@@ -230,6 +263,48 @@ export default function TecnicoPage() {
                       className="flex-1 py-2 rounded-lg font-medium bg-theme-cta disabled:opacity-50"
                     >
                       {acaoPendenteId === s.id ? "Enviando…" : "Enviar para confirmação"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {reagendandoId === s.id && (
+                <div className="mt-3 pt-3 border-t border-theme">
+                  <label className="block text-sm font-medium text-theme mb-1">
+                    Nova data/hora <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={novaData}
+                    onChange={(e) => setNovaData(e.target.value)}
+                    autoFocus
+                    className="w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm mb-2"
+                  />
+                  <label className="block text-sm font-medium text-theme mb-1">
+                    Motivo <span className="text-red-600">*</span>
+                  </label>
+                  <textarea
+                    value={motivoReagendamento}
+                    onChange={(e) => setMotivoReagendamento(e.target.value)}
+                    rows={3}
+                    placeholder="Ex.: cliente não estava no endereço, remarcamos por telefone"
+                    className="w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm mb-2"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setReagendandoId(null); setNovaData(""); setMotivoReagendamento(""); }}
+                      className="flex-1 py-2 rounded-lg font-medium border border-theme text-theme"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!novaData || !motivoReagendamento.trim() || acaoPendenteId === s.id}
+                      onClick={() => handleReagendar(s.id)}
+                      className="flex-1 py-2 rounded-lg font-medium bg-theme-cta disabled:opacity-50"
+                    >
+                      {acaoPendenteId === s.id ? "Enviando…" : "Enviar para aprovação"}
                     </button>
                   </div>
                 </div>

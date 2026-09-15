@@ -86,6 +86,8 @@ type ServicoDetail = {
   dataAgendamento?: string | null;
   dataConclusao?: string | null;
   prazoEstimado?: string | null;
+  dataReagendamentoProposta?: string | null;
+  motivoReagendamento?: string | null;
   valorEstimado?: number | null;
   valorRepasse?: number | null;
   valorMaterial?: number | null;
@@ -132,6 +134,7 @@ export default function ServicoDetailPage() {
   const [servico, setServico] = useState<ServicoDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [novoStatus, setNovoStatus] = useState("");
+  const [reagendamentoPendente, setReagendamentoPendente] = useState(false);
   const [notaConteudo, setNotaConteudo] = useState("");
   const [notaVisivel, setNotaVisivel] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
@@ -334,6 +337,24 @@ export default function ServicoDetailPage() {
     if (status === 401) router.push("/login");
     if (status === 200) { setStatusError(""); load(); }
     else setStatusError(err?.message ?? "Não foi possível atualizar o status.");
+  }
+
+  async function handleAprovarReagendamento() {
+    setReagendamentoPendente(true);
+    const { status, error: err } = await api(`/servicos/${id}/reagendamento/aprovar`, { method: "POST" });
+    setReagendamentoPendente(false);
+    if (status === 401) router.push("/login");
+    if (status === 200) load();
+    else alert(err?.message ?? "Não foi possível aprovar o reagendamento.");
+  }
+
+  async function handleRecusarReagendamento() {
+    setReagendamentoPendente(true);
+    const { status, error: err } = await api(`/servicos/${id}/reagendamento/recusar`, { method: "POST" });
+    setReagendamentoPendente(false);
+    if (status === 401) router.push("/login");
+    if (status === 200) load();
+    else alert(err?.message ?? "Não foi possível recusar o reagendamento.");
   }
 
   async function handleNota(e: React.FormEvent) {
@@ -628,6 +649,34 @@ export default function ServicoDetailPage() {
           </button>
         </div>
       </div>
+
+      {servico.dataReagendamentoProposta && (
+        <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 mb-6 text-pink-900">
+          <h2 className="font-heading font-semibold text-sm mb-1">Pedido de reagendamento do técnico</h2>
+          <p className="text-sm mb-1">
+            Nova data proposta: <strong>{new Date(servico.dataReagendamentoProposta).toLocaleString("pt-BR")}</strong>
+          </p>
+          {servico.motivoReagendamento && <p className="text-sm mb-3">Motivo: {servico.motivoReagendamento}</p>}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={reagendamentoPendente}
+              onClick={handleRecusarReagendamento}
+              className="px-3 py-1.5 rounded-lg border border-pink-300 text-pink-900 text-sm disabled:opacity-50"
+            >
+              Recusar
+            </button>
+            <button
+              type="button"
+              disabled={reagendamentoPendente}
+              onClick={handleAprovarReagendamento}
+              className="px-3 py-1.5 rounded-lg bg-pink-600 text-white text-sm disabled:opacity-50"
+            >
+              {reagendamentoPendente ? "Enviando…" : "Aprovar novo agendamento"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Card de lucro real — visível quando há valor cobrado */}
       {servico.valorEstimado != null && (() => {
