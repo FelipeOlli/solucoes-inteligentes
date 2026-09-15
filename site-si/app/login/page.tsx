@@ -28,7 +28,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const { data, error: err, status } = await api<{ token: string }>("/auth/login", {
+    const { data, error: err, status } = await api<{ token: string; role: "dono" | "tecnico" }>("/auth/login", {
       method: "POST",
       body: { email, password },
     });
@@ -38,7 +38,7 @@ export default function LoginPage() {
       return;
     }
     setToken(data.token);
-    router.push("/dashboard");
+    router.push(data.role === "tecnico" ? "/tecnico" : "/dashboard");
     router.refresh();
   }
 

@@ -3,6 +3,8 @@ import { createReadStream } from "fs";
 import { stat } from "fs/promises";
 import path from "path";
 import { Readable } from "stream";
+import { prisma } from "@/lib/db";
+import { getAuthFromRequest, isDono, isCliente, isTecnico } from "@/lib/auth";
 
 const MIME: Record<string, string> = {
   ".pdf": "application/pdf",
@@ -30,11 +32,48 @@ function mimeFor(filePath: string): string {
 }
 
 /**
+ * Só o dono acessa documentos administrativos (fiscal, contabilidade,
+ * orçamento, base de conhecimento). Uploads de serviço também liberam o
+ * cliente dono daquele serviço e o técnico responsável por ele.
+ */
+async function isAuthorized(
+  segments: string[],
+  request: NextRequest
+): Promise<boolean> {
+  const auth = await getAuthFromRequest(request);
+  if (!auth) return false;
+  if (isDono(auth)) return true;
+
+  const [top, servicoId] = segments;
+
+  if (top === "servicos" && servicoId) {
+    if (isCliente(auth)) {
+      const servico = await prisma.servico.findUnique({
+        where: { id: servicoId },
+        select: { clienteId: true },
+      });
+      return servico?.clienteId === auth.id_cliente;
+    }
+    if (isTecnico(auth)) {
+      const servico = await prisma.servico.findUnique({
+        where: { id: servicoId },
+        select: { tecnicoId: true },
+      });
+      return servico?.tecnicoId === auth.tecnicoId;
+    }
+    return false;
+  }
+
+  // documentos-fiscais, empresas-fiscais, orcamento-anexos, conhecimento, etc.
+  return false;
+}
+
+/**
  * Next.js App Router nao serve de forma fiavel em producao ficheiros criados
  * em runtime em public/uploads; esta rota faz stream a partir do disco.
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ path?: string[] }> }
 ) {
   const { path: segments } = await params;
@@ -45,6 +84,10 @@ export async function GET(
 
   const relativeToRoot = path.relative(uploadsRoot, filepath);
   if (relativeToRoot.startsWith("..") || path.isAbsolute(relativeToRoot)) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
+  if (!(await isAuthorized(segments, request))) {
     return new Response("Forbidden", { status: 403 });
   }
 

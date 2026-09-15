@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { createTokenCliente } from "@/lib/auth";
+import { createTokenCliente, setAuthCookie } from "@/lib/auth";
 import { jsonResponse, errorResponse } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
@@ -19,9 +19,11 @@ export async function GET(request: NextRequest) {
   }
 
   const jwt = await createTokenCliente(clientToken.clienteId);
-  return jsonResponse({
+  const res = jsonResponse({
     token: jwt,
     role: "cliente",
     cliente: { id: clientToken.cliente.id, nome: clientToken.cliente.nome },
   });
+  setAuthCookie(res, jwt, 90 * 24 * 60 * 60); // 90d, igual à expiração do JWT do cliente
+  return res;
 }

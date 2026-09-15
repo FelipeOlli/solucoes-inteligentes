@@ -53,15 +53,23 @@ enum CategoriaDocumentoContabil {
   OUTRO
 }
 
+enum UserRole {
+  DONO
+  TECNICO
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  role         UserRole @default(DONO)
+  ativo        Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   passwordResets PasswordResetToken[]
   comentariosContabeis ComentarioContabil[]
   documentosContabeis DocumentoContabil[]
+  tecnico      Tecnico?
 }
 
 model PasswordResetToken {
@@ -121,9 +129,27 @@ model Tecnico {
   agencia   String?
   conta     String?
   ativo     Boolean   @default(true)
+  ehProprio Boolean   @default(false) // técnico é o próprio dono — ver lib/lucro.ts
+  userId    String?   @unique
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   servicos  Servico[]
+  visitas   VisitaTecnico[]
+}
+
+model VisitaTecnico {
+  id         String    @id @default(cuid())
+  servicoId  String
+  servico    Servico   @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  tecnicoId  String
+  tecnico    Tecnico   @relation(fields: [tecnicoId], references: [id], onDelete: Cascade)
+  inicioEm   DateTime  @default(now())
+  fimEm      DateTime?
+  observacao String?
+
+  @@index([tecnicoId, inicioEm])
+  @@index([servicoId, inicioEm])
 }
 
 model Servico {
@@ -168,6 +194,7 @@ model Servico {
   agendaSyncJobs      AgendaSyncQueue[]
   campoHist           CampoHist[]
   eventoHist          ServicoEventoHist[]
+  visitas             VisitaTecnico[]
 }
 
 model GoogleCalendarIntegration {
@@ -223,6 +250,7 @@ model Nota {
   servico         Servico  @relation(fields: [servicoId], references: [id], onDelete: Cascade)
   conteudo        String
   visivelCliente  Boolean
+  visivelTecnico  Boolean  @default(true)
   idAutor         String
   createdAt       DateTime @default(now())
 }

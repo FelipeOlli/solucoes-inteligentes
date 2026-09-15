@@ -46,4 +46,6 @@ export function setToken(token: string) {
 
 export function clearToken() {
   if (typeof window !== "undefined") localStorage.removeItem("si_token");
+  // fire-and-forget: expira o cookie httpOnly si_token no servidor
+  fetch(withBasePath("/api/auth/logout"), { method: "POST" }).catch(() => {});
 }

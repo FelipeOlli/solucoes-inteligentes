@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatDuracaoAbertaDesde } from "@/lib/duration-pt-br";
 import { brl } from "@/lib/format";
+import AoVivoWidget from "@/components/dashboard/AoVivoWidget";
 
 type Servico = {
   id: string;
@@ -61,6 +62,7 @@ export default function DashboardPage() {
 
   return (
     <div className="text-theme">
+      <AoVivoWidget />
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary">Serviços</h1>
         <Link

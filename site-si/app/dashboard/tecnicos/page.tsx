@@ -14,6 +14,7 @@ type Tecnico = {
   agencia: string | null;
   conta: string | null;
   ativo: boolean;
+  userId: string | null;
 };
 
 const EMPTY_FORM = { nome: "", endereco: "", telefone: "", email: "", chavePix: "", banco: "", agencia: "", conta: "" };
@@ -25,6 +26,8 @@ export default function TecnicosPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState(EMPTY_FORM);
   const [error, setError] = useState("");
+  const [credencialId, setCredencialId] = useState<string | null>(null);
+  const [credencialForm, setCredencialForm] = useState({ email: "", password: "" });
 
   function load() {
     api<Tecnico[]>("/tecnicos").then(({ data }) => {
@@ -57,6 +60,27 @@ export default function TecnicosPage() {
     } else {
       setError("Não foi possível salvar.");
     }
+  }
+
+  async function handleCriarCredencial(id: string) {
+    if (!credencialForm.email.trim() || credencialForm.password.length < 8) return;
+    setError("");
+    const { status, error: err } = await api(`/tecnicos/${id}/credencial`, { method: "POST", body: credencialForm });
+    if (status === 201) {
+      setCredencialId(null);
+      setCredencialForm({ email: "", password: "" });
+      load();
+    } else {
+      setError(err?.message || "Não foi possível criar a credencial.");
+    }
+  }
+
+  async function handleRemoverCredencial(id: string, nome: string) {
+    if (!confirm(`Remover o login de "${nome}"? O técnico não conseguirá mais acessar pelo celular.`)) return;
+    setError("");
+    const { status } = await api(`/tecnicos/${id}/credencial`, { method: "DELETE" });
+    if (status === 200) load();
+    else setError("Não foi possível remover a credencial.");
   }
 
   async function handleExcluir(id: string, nome: string) {
@@ -163,20 +187,21 @@ export default function TecnicosPage() {
       </form>
 
       <div className="bg-theme-card rounded-lg border border-theme overflow-hidden overflow-x-auto">
-        <table className="w-full text-left text-theme min-w-[700px]">
+        <table className="w-full text-left text-theme min-w-[820px]">
           <thead className="border-b border-theme" style={{ backgroundColor: "var(--color-navbar)" }}>
             <tr>
               <th className="px-4 py-3 font-heading font-bold text-theme-primary">Nome</th>
               <th className="px-4 py-3 font-heading font-bold text-theme-primary">Telefone</th>
               <th className="px-4 py-3 font-heading font-bold text-theme-primary">E-mail</th>
               <th className="px-4 py-3 font-heading font-bold text-theme-primary">Dados bancários</th>
+              <th className="px-4 py-3 font-heading font-bold text-theme-primary">Acesso ao app</th>
               <th className="px-4 py-3 font-heading font-bold text-theme-primary w-32">Ações</th>
             </tr>
           </thead>
           <tbody>
             {tecnicos.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-theme-muted text-center">Nenhum técnico cadastrado.</td>
+                <td colSpan={6} className="px-4 py-6 text-theme-muted text-center">Nenhum técnico cadastrado.</td>
               </tr>
             ) : (
               tecnicos.map((t) => (
@@ -234,6 +259,7 @@ export default function TecnicosPage() {
                           />
                         </div>
                       </td>
+                      <td className="px-4 py-3 text-theme-muted text-sm">—</td>
                       <td className="px-4 py-3 flex gap-2">
                         <button type="button" onClick={() => handleSalvar(t.id)} className="text-sm text-theme-primary underline">Salvar</button>
                         <button type="button" onClick={() => setEditId(null)} className="text-sm text-theme-muted underline">Cancelar</button>
@@ -245,6 +271,58 @@ export default function TecnicosPage() {
                       <td className="px-4 py-3 text-theme-muted">{t.telefone ?? "—"}</td>
                       <td className="px-4 py-3 text-theme-muted">{t.email ?? "—"}</td>
                       <td className="px-4 py-3 text-sm text-theme-muted">{dadosBancariosLabel(t)}</td>
+                      <td className="px-4 py-3 text-sm">
+                        {t.userId ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-700">Login ativo</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoverCredencial(t.id, t.nome)}
+                              className="text-red-600 underline"
+                            >
+                              Remover
+                            </button>
+                          </div>
+                        ) : credencialId === t.id ? (
+                          <div className="space-y-1 min-w-[220px]">
+                            <input
+                              type="email"
+                              placeholder="E-mail de login"
+                              value={credencialForm.email}
+                              onChange={(e) => setCredencialForm((f) => ({ ...f, email: e.target.value }))}
+                              className="w-full px-2 py-1 border rounded bg-theme-card border-theme text-theme text-sm"
+                              autoFocus
+                            />
+                            <input
+                              type="password"
+                              placeholder="Senha (mín. 8 caracteres)"
+                              value={credencialForm.password}
+                              onChange={(e) => setCredencialForm((f) => ({ ...f, password: e.target.value }))}
+                              className="w-full px-2 py-1 border rounded bg-theme-card border-theme text-theme text-sm"
+                            />
+                            <div className="flex gap-2">
+                              <button type="button" onClick={() => handleCriarCredencial(t.id)} className="text-theme-primary underline">
+                                Criar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setCredencialId(null); setCredencialForm({ email: "", password: "" }); }}
+                                className="text-theme-muted underline"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setCredencialId(t.id)}
+                            className="text-theme-primary underline"
+                          >
+                            Criar login
+                          </button>
+                        )}
+                      </td>
                       <td className="px-4 py-3 flex gap-2">
                         <button
                           type="button"

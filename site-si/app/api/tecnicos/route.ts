@@ -3,7 +3,10 @@ import { prisma } from "@/lib/db";
 import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { jsonResponse, unauthorized, forbidden, badRequest, errorResponse } from "@/lib/api-response";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await getAuthFromRequest(request);
+  if (!auth || !isDono(auth)) return auth ? forbidden() : unauthorized();
+
   try {
     const tecnicos = await prisma.tecnico.findMany({
       where: { ativo: true },

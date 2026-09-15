@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import type { NextResponse } from "next/server";
 
 const DEFAULT_SECRET = "default-secret-change-in-production-min-32-chars";
 
@@ -15,7 +16,8 @@ const SECRET = getSecret();
 
 export type PayloadDono = { role: "dono"; userId: string };
 export type PayloadCliente = { role: "cliente"; id_cliente: string };
-export type Payload = PayloadDono | PayloadCliente;
+export type PayloadTecnico = { role: "tecnico"; userId: string; tecnicoId: string };
+export type Payload = PayloadDono | PayloadCliente | PayloadTecnico;
 
 export async function createTokenDono(userId: string): Promise<string> {
   return new SignJWT({ role: "dono", userId })
@@ -29,6 +31,14 @@ export async function createTokenCliente(id_cliente: string): Promise<string> {
   return new SignJWT({ role: "cliente", id_cliente })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("90d")
+    .setIssuedAt()
+    .sign(SECRET);
+}
+
+export async function createTokenTecnico(userId: string, tecnicoId: string): Promise<string> {
+  return new SignJWT({ role: "tecnico", userId, tecnicoId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("30d")
     .setIssuedAt()
     .sign(SECRET);
 }
@@ -60,4 +70,33 @@ export function isDono(p: Payload): p is PayloadDono {
 
 export function isCliente(p: Payload): p is PayloadCliente {
   return p.role === "cliente";
+}
+
+export function isTecnico(p: Payload): p is PayloadTecnico {
+  return p.role === "tecnico";
+}
+
+/**
+ * Popula o cookie httpOnly `si_token` na resposta, para que rotas que não
+ * podem levar header Authorization (ex.: <img src="/uploads/...">) consigam
+ * autenticar via getAuthFromRequest (que já faz fallback para este cookie).
+ */
+export function setAuthCookie(res: NextResponse, token: string, maxAgeSeconds: number) {
+  res.cookies.set("si_token", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: maxAgeSeconds,
+  });
+}
+
+export function clearAuthCookie(res: NextResponse) {
+  res.cookies.set("si_token", "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
 }
