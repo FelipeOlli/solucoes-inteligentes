@@ -5,6 +5,8 @@ import { gerarCodigoServico } from "@/lib/codigo-servico";
 import { jsonResponse, unauthorized, forbidden, badRequest, conflict, errorResponse } from "@/lib/api-response";
 import { enqueueServicoSync, processAgendaSyncQueue } from "@/lib/agenda-sync";
 import { parseClienteAddressFromBody } from "@/lib/cliente-address";
+import { normalizarParcelas, taxaCartaoPct } from "@/lib/taxas";
+import { impostoAtualPct } from "@/lib/rbt12";
 
 export async function GET(request: NextRequest) {
   const auth = await getAuthFromRequest(request);
@@ -103,7 +105,14 @@ export async function POST(request: NextRequest) {
         ? JSON.stringify(imagensJson.map((u: unknown) => String(u)))
         : null;
 
-    const formaPagamento = (body.forma_pagamento ?? body.formaPagamento ?? "").trim() || null;
+    const formaPagamento = (body.forma_pagamento ?? body.formaPagamento ?? "").trim().toUpperCase() || null;
+    // Taxa sempre derivada da forma + parcelas (tabela real SumUp) e gravada
+    // como snapshot; imposto vem do orçamento ou, se ausente, da alíquota
+    // efetiva atual do Simples.
+    const parcelas = formaPagamento === "CREDITO" ? normalizarParcelas(body.parcelas) : null;
+    const taxaPercentual = formaPagamento ? taxaCartaoPct(formaPagamento, parcelas) : null;
+    const impostoPercentual =
+      body.imposto_percentual != null ? Number(body.imposto_percentual) : await impostoAtualPct();
 
     const tecnicoId = body.tecnico_id ? String(body.tecnico_id).trim() || null : null;
     const convidadoEmail = body.convidado_email ? String(body.convidado_email).trim() || null : null;
@@ -125,9 +134,9 @@ export async function POST(request: NextRequest) {
         valorRepasse: body.valor_repasse != null ? Number(body.valor_repasse) : null,
         custoFixo: body.custo_fixo != null ? Number(body.custo_fixo) : null,
         valorGarantia: body.valor_garantia != null ? Number(body.valor_garantia) : null,
-        taxaPercentual: body.taxa_percentual != null ? Number(body.taxa_percentual) : null,
-        impostoPercentual: body.imposto_percentual != null ? Number(body.imposto_percentual) : null,
-        parcelas: body.parcelas != null ? Number(body.parcelas) : null,
+        taxaPercentual,
+        impostoPercentual,
+        parcelas,
         lucroPretendido: body.lucro_pretendido != null ? Number(body.lucro_pretendido) : null,
         enderecoServico: body.endereco != null ? String(body.endereco).trim() || null : null,
         contatoPreferencial: body.contato != null ? String(body.contato).trim() || null : null,

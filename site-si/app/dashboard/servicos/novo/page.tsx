@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api, withBasePath } from "@/lib/api";
-import { brl as fmt } from "@/lib/format";
+import { brl as fmt, pct } from "@/lib/format";
+import { MAX_PARCELAS, normalizarParcelas, taxaCartaoPct } from "@/lib/taxas";
 
 type Cliente = { id: string; nome: string; email: string; telefone: string };
 type Categoria = { id: string; nome: string };
@@ -52,15 +53,15 @@ export default function NovoServicoPage() {
   const [valorRepasseQuery, setValorRepasseQuery] = useState<number | null>(null);
   const [custoFixoQuery, setCustoFixoQuery] = useState<number | null>(null);
   const [valorGarantiaQuery, setValorGarantiaQuery] = useState<number | null>(null);
-  const [taxaPercentualQuery, setTaxaPercentualQuery] = useState<number | null>(null);
   const [impostoPercentualQuery, setImpostoPercentualQuery] = useState<number | null>(null);
-  const [parcelasQuery, setParcelasQuery] = useState<number | null>(null);
+  // Parcelas do crédito — a taxa da maquininha é calculada no servidor a
+  // partir da forma de pagamento + parcelas (tabela real SumUp).
+  const [parcelas, setParcelas] = useState(1);
   // Valores do orçamento: o valor gravado no serviço é sempre o PIX (ver
   // efeito abaixo); o crédito só fica disponível pra exibição informativa no
   // modal de confirmação do orçamento.
   const [valorPixQuery, setValorPixQuery] = useState<number | null>(null);
   const [valorCreditoQuery, setValorCreditoQuery] = useState<number | null>(null);
-  const [taxaCreditoQuery, setTaxaCreditoQuery] = useState<number | null>(null);
   const [parcelasCreditoQuery, setParcelasCreditoQuery] = useState<number | null>(null);
   const [lucroPretendidoQuery, setLucroPretendidoQuery] = useState<number | null>(null);
   const materialFromQuery = searchParams.get("material");
@@ -71,7 +72,6 @@ export default function NovoServicoPage() {
   const impostoFromQuery = searchParams.get("imposto");
   const pixFromQuery = searchParams.get("pix");
   const creditoFromQuery = searchParams.get("credito");
-  const taxaCreditoFromQuery = searchParams.get("taxaCredito");
   const parcelasCreditoFromQuery = searchParams.get("parcelasCredito");
   const lucroFromQuery = searchParams.get("lucro");
   // Presença do pix = veio do link "Criar serviço com este orçamento" da
@@ -102,17 +102,11 @@ export default function NovoServicoPage() {
   }, [creditoFromQuery]);
 
   useEffect(() => {
-    if (!taxaCreditoFromQuery) return;
-    const n = Number(taxaCreditoFromQuery.replace(",", "."));
-    if (!Number.isFinite(n) || n < 0) return;
-    setTaxaCreditoQuery(n);
-  }, [taxaCreditoFromQuery]);
-
-  useEffect(() => {
     if (!parcelasCreditoFromQuery) return;
     const n = Number(parcelasCreditoFromQuery);
     if (!Number.isFinite(n) || n < 1) return;
     setParcelasCreditoQuery(n);
+    setParcelas(normalizarParcelas(n));
   }, [parcelasCreditoFromQuery]);
 
   // O valor gravado no serviço é sempre o PIX do orçamento — é a base de
@@ -124,8 +118,6 @@ export default function NovoServicoPage() {
     setValorEstimado(
       valorPixQuery.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     );
-    setTaxaPercentualQuery(0);
-    setParcelasQuery(null);
   }, [valorPixQuery, valorEstimadoTocado]);
 
   useEffect(() => {
@@ -215,9 +207,8 @@ export default function NovoServicoPage() {
       valor_repasse: valorRepasseQuery,
       custo_fixo: custoFixoQuery,
       valor_garantia: valorGarantiaQuery,
-      taxa_percentual: taxaPercentualQuery,
       imposto_percentual: impostoPercentualQuery,
-      parcelas: parcelasQuery,
+      parcelas: formaPagamento === "CREDITO" ? parcelas : null,
       lucro_pretendido: lucroPretendidoQuery,
       forma_pagamento: formaPagamento || null,
       tecnico_id: tecnicoId || null,
@@ -578,6 +569,22 @@ export default function NovoServicoPage() {
             <option value="DEBITO">Débito</option>
           </select>
         </div>
+        {formaPagamento === "CREDITO" && (
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1">Parcelas no crédito</label>
+            <select
+              value={parcelas}
+              onChange={(e) => setParcelas(Number(e.target.value))}
+              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+            >
+              {Array.from({ length: MAX_PARCELAS }, (_, i) => i + 1).map((p) => (
+                <option key={p} value={p}>
+                  {p}x — taxa {pct(taxaCartaoPct("CREDITO", p))}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-theme-muted mb-1">Descrição</label>
           <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" rows={3} required />

@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { brl } from "@/lib/format";
+import { TAXAS, simples, type Faixa } from "@/lib/taxas";
 
 /**
  * Calculadora de precificação alternativa — modelo Simples Nacional Anexo III.
@@ -13,86 +14,7 @@ import { brl } from "@/lib/format";
  * regras, independentes da calculadora de orçamento rápido ao lado.
  */
 
-// Taxas REAIS da conta da SI, lidas na calculadora do app SumUp em 11/08/2026.
-// Visa/Mastercard, maquininha, recebimento D+1.
-//
-// Não use as tabelas do site da SumUp: elas não batem com esta conta. A
-// fonte de verdade é o app → Calculadora de taxas. Reconfira se o
-// faturamento mensal mudar de faixa.
-//
-// As demais entradas abaixo ("tabela do site") são só simulação por faixa
-// de faturamento, lidas em 11/08/2026. "Receba na hora" e "1 dia" são
-// idênticas nelas.
-const TAXAS = {
-  contaSI: {
-    rotulo: "Conta SI (taxas reais — app SumUp, 11/08/2026)",
-    pix: 0,
-    debito: null as number | null, // ainda não confirmado no app
-    credito: [0.049, 0.098, 0.111, 0.125, 0.138, 0.151, 0.164, 0.177, 0.19, 0.201],
-  },
-  ate20k: {
-    rotulo: "Até R$ 20 mil/mês (tabela do site)",
-    pix: 0,
-    debito: 0.0099 as number | null,
-    credito: [
-      0.0349, 0.0649, 0.0749, 0.0799, 0.0849, 0.0949, 0.0999, 0.1049, 0.1099,
-      0.1149, 0.1249, 0.1399,
-    ],
-  },
-  de20a50k: {
-    rotulo: "R$ 20 mil a R$ 50 mil/mês (tabela do site)",
-    pix: 0,
-    debito: 0.0099 as number | null,
-    credito: [
-      0.0329, 0.0449, 0.0499, 0.0549, 0.0599, 0.0659, 0.0749, 0.0849, 0.0899,
-      0.0879, 0.0949, 0.1049,
-    ],
-  },
-  acima50k: {
-    rotulo: "Acima de R$ 50 mil/mês (tabela do site)",
-    pix: 0,
-    debito: 0.0099 as number | null,
-    credito: [
-      0.0319, 0.0399, 0.0459, 0.0519, 0.0559, 0.0649, 0.0699, 0.0749, 0.0789,
-      0.0849, 0.0899, 0.0999,
-    ],
-  },
-} as const;
-
-type Faixa = keyof typeof TAXAS;
 type Forma = "pix" | "debito" | "credito";
-
-// Simples Nacional — Anexo III (serviço de reparação e manutenção).
-const ANEXO_III = [
-  { teto: 180000, nominal: 0.06, deducao: 0, iss: 0.335 },
-  { teto: 360000, nominal: 0.112, deducao: 9360, iss: 0.32 },
-  { teto: 720000, nominal: 0.135, deducao: 17640, iss: 0.325 },
-  { teto: 1800000, nominal: 0.16, deducao: 35640, iss: 0.325 },
-  { teto: 3600000, nominal: 0.21, deducao: 125640, iss: 0.335 },
-  { teto: 4800000, nominal: 0.33, deducao: 648000, iss: 0 },
-];
-
-/**
- * Carga tributária total e sua repartição.
- *
- * A SI recolhe em duas guias: o DAS sai sem ISS (retenção/substituição) e o
- * ISS vai à parte pela Nota Carioca. A soma continua sendo a alíquota cheia
- * do Anexo III — por isso o gross-up usa `total`, nunca só uma das partes.
- *
- * Conferido no PGDAS-D de 05/2026: DAS 3,99% + ISS 2,01% = 6,00%.
- */
-function simples(rbt12: number) {
-  const f =
-    !rbt12 || rbt12 <= 0
-      ? ANEXO_III[0]
-      : ANEXO_III.find((x) => rbt12 <= x.teto) || ANEXO_III[ANEXO_III.length - 1];
-
-  const total =
-    !rbt12 || rbt12 <= 0 ? f.nominal : (rbt12 * f.nominal - f.deducao) / rbt12;
-
-  const iss = total * f.iss;
-  return { total, das: total - iss, iss };
-}
 
 const pct = (v: number) => (v * 100).toFixed(2).replace(".", ",") + "%";
 
