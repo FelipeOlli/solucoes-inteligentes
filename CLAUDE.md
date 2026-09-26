@@ -79,8 +79,11 @@ Commits detalhados vão no git, não aqui.
 - Campos no model `Servico`: `valorRepasse Float?` (migration `20260522`), `valorMaterial Float?` (migration `20260524`), `custoFixo`, `valorGarantia`, `taxaPercentual`, `impostoPercentual`, `parcelas` (todos `Float?`/`Int?`, migration `20260814000000_add_snapshot_precificacao`)
 - Fórmula de lucro em `lib/lucro.ts` (`composicaoLucro`): `receita − receita×taxa% − receita×imposto% − repasse − material − custoFixo − garantia`
 - **Snapshot**: serviço criado a partir da calculadora de orçamento (`/dashboard/orcamento` → botão "Criar serviço com este orçamento") grava `taxaPercentual` (taxa real da forma/parcelas, tabela SumUp) e `impostoPercentual` (DAS+ISS, Simples Anexo III) no momento da criação — não recalcula depois, mesmo se a tabela de taxas mudar
-- **Fallback**: serviço criado à mão (sem snapshot) usa taxa fixa por forma de pagamento (`taxaPorPagamento`, ainda em `lib/lucro.ts`) e imposto = 0 — comportamento antigo preservado
-- `custoFixo` (deslocamento) e `valorGarantia` são editáveis no detalhe do serviço; `taxaPercentual`/`impostoPercentual`/`parcelas` só vêm do orçamento
+- **Taxas centralizadas** em `lib/taxas.ts` (tabela SumUp da conta SI + Simples Anexo III), usadas pela calculadora e pela API de serviços
+- **Taxa por parcelas**: `taxaPercentual` é sempre calculada no servidor por `taxaCartaoPct(forma, parcelas)` — no POST e no PATCH quando forma ou parcelas mudam (senão preserva o snapshot). Crédito 1–10x, débito 3,99% (conta SI ainda não confirmada), PIX/dinheiro/cheque 0
+- **Imposto**: POST sem `imposto_percentual` grava a alíquota efetiva atual (`impostoAtualPct` em `lib/rbt12.ts`, via RBT12)
+- **Fallback**: serviço antigo sem `taxaPercentual` usa taxa fixa por forma (`taxaPorPagamento` em `lib/lucro.ts`) e imposto = 0 — histórico anterior a 26/09/2026 não foi recalculado
+- `custoFixo`, `valorGarantia`, forma de pagamento e **parcelas no crédito** são editáveis no detalhe do serviço
 - API `app/api/financeiro/resumo/route.ts` — agrega 12 meses via `composicaoLucro`: receita, repasse, material, deslocamento, garantia, taxa cartão, imposto, lucro operacional + gasto contábil (DocumentoFiscal pago) → lucro líquido
 - Página `app/dashboard/financeiro/page.tsx` — KPIs (receita, lucro operacional, contabilidade, lucro líquido, concluídos, abertos), breakdown com 8 componentes, gráfico de barras, gráfico de linha, tabela 12 meses
 - Badges de status: CONCLUIDO=verde, CANCELADO=vermelho, demais=amarelo (dashboard + detalhe)
@@ -90,9 +93,9 @@ Commits detalhados vão no git, não aqui.
 - Tabela exibe PIX com prioridade; se não tiver, mostra banco/agência/conta
 
 ## Sessões recentes
-### 2026-06-02 — Stories: área de link de afiliado
-Estado atual: bloco "Achou na @solucoesinteligentes_si" movido para o fundo da arte (bottom: 45px); área invisível reservada acima (bottom: 130px, height: 96px) para sticker de link do Instagram (Mercado Livre afiliado) — sem borda, sem texto, área limpa | Arquivos: `app/dashboard/marketing/gerador-stories/page.tsx`, `gerador-stories.module.css`
 ### 2026-06-16 — Vídeos na seção de fotos do serviço
 Estado atual: seção "Fotos / imagens / vídeos" aceita mp4, mov, webm e outros formatos de vídeo; vídeos renderizam como `<video controls>` na galeria (imagens continuam como `<img>`); vídeos não caem na lista de "Anexar Documentos"; API de upload não foi alterada | Arquivo: `app/dashboard/servicos/[id]/page.tsx` (helper `isVideoFileName`, filtros nos handlers e no render)
 ### 2026-07-14 — Fix cheque no enum + data de conclusão no futuro
 Estado atual: `FormaPagamento` ganhou valor `CHEQUE` (schema + migration `20260714000000_add_cheque_forma_pagamento`) — commit anterior só adicionou na UI, faltava enum/migration; `localDateIso` agora usa hora atual em vez de meio-dia fixo, corrigindo bloqueio falso de "data_conclusao não pode ser no futuro" ao concluir serviço no mesmo dia antes do meio-dia | Arquivos: `prisma/schema.prisma`, `prisma/migrations/20260714000000_add_cheque_forma_pagamento/migration.sql`, `app/dashboard/servicos/[id]/page.tsx`
+### 2026-09-26 — Taxa do cartão variável por parcelas
+Estado atual: seletor "Parcelas no crédito" no detalhe e no novo serviço; taxa recalculada no servidor pela tabela real SumUp (`lib/taxas.ts`); imposto do Simples gravado na criação; migration `20260926000000_backfill_taxas_servicos_hoje` corrige taxa/imposto dos serviços de 26/09 (crédito sem parcelas vira 1x) | Arquivos: `lib/taxas.ts`, `lib/rbt12.ts`, `app/api/servicos/route.ts`, `app/api/servicos/[id]/route.ts`, `app/dashboard/servicos/[id]/page.tsx`, `app/dashboard/servicos/novo/page.tsx`
