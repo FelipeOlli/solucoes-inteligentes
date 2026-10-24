@@ -5,6 +5,8 @@ import {
   TipoObrigacaoContabil,
 } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
+import { encryptSegredo, isEncryptionConfigured, isSegredoCriptografado } from "../lib/cripto-segredo";
 
 const prisma = new PrismaClient();
 
@@ -45,11 +47,22 @@ async function main() {
   if (existing) {
     console.log("Usuário dono já existe:", email);
   } else {
-    const passwordHash = await bcrypt.hash("senha123", 10);
+    // Nunca usar senha fixa: vem de SEED_OWNER_PASSWORD ou é gerada aleatoriamente
+    // e exibida UMA única vez no log da primeira subida. Trocar no primeiro login.
+    const envPassword = process.env.SEED_OWNER_PASSWORD?.trim();
+    if (envPassword && envPassword.length < 12) {
+      throw new Error("SEED_OWNER_PASSWORD deve ter pelo menos 12 caracteres.");
+    }
+    const password = envPassword || randomBytes(18).toString("base64url");
+    const passwordHash = await bcrypt.hash(password, 10);
     await prisma.user.create({
       data: { email, passwordHash },
     });
-    console.log("Usuário dono criado:", email, "| senha: senha123");
+    if (envPassword) {
+      console.log("Usuário dono criado:", email, "| senha: definida em SEED_OWNER_PASSWORD");
+    } else {
+      console.log("Usuário dono criado:", email, "| senha temporária (exibida só agora, troque no primeiro login):", password);
+    }
   }
 
   for (const nome of CATEGORIAS_PADRAO) {
@@ -80,6 +93,10 @@ async function main() {
   }
   console.log("Obrigações contábeis iniciais verificadas/criadas.");
 
+  // Criptografa senhas de certificado (PFX) que ainda estejam em texto puro.
+  // Idempotente: valores já criptografados ("enc:v1:") são ignorados.
+  await criptografarSenhasLegadas();
+
   // EmpresaFiscal padrão
   const cnpjPadrao = "20.273.228/0001-62";
   const empresaExistente = await prisma.empresaFiscal.findUnique({ where: { cnpj: cnpjPadrao } });
@@ -96,6 +113,30 @@ async function main() {
   } else {
     console.log("EmpresaFiscal já existe.");
   }
+}
+
+async function criptografarSenhasLegadas() {
+  const docs = await prisma.documentoEmpresa.findMany({
+    where: { senha: { not: null } },
+    select: { id: true, senha: true },
+  });
+  const pendentes = docs.filter((d) => d.senha && !isSegredoCriptografado(d.senha));
+  if (pendentes.length === 0) return;
+
+  if (!isEncryptionConfigured()) {
+    console.warn(
+      `ATENÇÃO: ${pendentes.length} senha(s) de certificado em texto puro no banco. Defina ENCRYPTION_KEY no EasyPanel e reinicie para criptografar.`
+    );
+    return;
+  }
+
+  for (const doc of pendentes) {
+    await prisma.documentoEmpresa.update({
+      where: { id: doc.id },
+      data: { senha: encryptSegredo(doc.senha as string) },
+    });
+  }
+  console.log(`Senhas de certificado criptografadas: ${pendentes.length}.`);
 }
 
 main()

@@ -93,7 +93,7 @@ Se usar integração de agenda Google, veja também o checklist de ativação em
 ## 4. Primeiro acesso
 
 - **URL:** a que o EasyPanel exibir para o app (ou o domínio que você apontou).
-- **Minha área:** acesse `/login`. O **seed roda automaticamente** na subida do container (Dockerfile): se o banco estiver vazio, o usuário **dono@solucoesinteligentes.com** (senha: **senha123**) é criado; se já existir, nada muda. Assim o login funciona logo após o deploy e **também após reiniciar o servidor**. Se ainda falhar, veja `CHECKLIST-TOKEN-LOGIN.md` (variáveis, volume, redeploy).
+- **Minha área:** acesse `/login`. O **seed roda automaticamente** na subida do container (Dockerfile): se o banco estiver vazio, o usuário **dono@solucoesinteligentes.com** (senha de `SEED_OWNER_PASSWORD` ou senha temporária aleatória exibida uma vez no log — troque no primeiro login) é criado; se já existir, nada muda. Assim o login funciona logo após o deploy e **também após reiniciar o servidor**. Se ainda falhar, veja `CHECKLIST-TOKEN-LOGIN.md` (variáveis, volume, redeploy).
 
 ---
 

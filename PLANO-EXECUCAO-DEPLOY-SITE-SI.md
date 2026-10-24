@@ -97,7 +97,7 @@ Copiar o resultado e colar no valor de `JWT_SECRET`.
 ### 3.3 Rodar o seed (primeiro usuário e categorias)
 
 O seed cria:
-- Usuário dono: `dono@solucoesinteligentes.com` / `senha123`
+- Usuário dono: `dono@solucoesinteligentes.com` / senha de `SEED_OWNER_PASSWORD` ou temporária do log
 - Categorias de serviço padrão.
 
 **Opção A – Comando único no primeiro deploy (recomendado)**  
@@ -127,7 +127,7 @@ Se você tiver acesso ao volume do servidor (SSH + caminho do volume), pode roda
 ### 3.4 Testar acesso
 
 - [ ] Abrir a URL do site no navegador.
-- [ ] Acessar `/login` e entrar com `dono@solucoesinteligentes.com` / `senha123`.
+- [ ] Acessar `/login` e entrar com `dono@solucoesinteligentes.com` e a senha do seed.
 - [ ] Conferir dashboard, clientes, novo serviço e link para cliente.
 
 ---
@@ -161,7 +161,7 @@ O volume em `/app/data` é mantido entre deploys; o banco e os dados não são a
 | `DATABASE_URL` | `file:/app/data/si.db` |
 | `JWT_SECRET` | Gerar com `openssl rand -base64 32` |
 | `NEXT_PUBLIC_APP_URL` | URL pública do site |
-| Primeiro usuário | Rodar seed (comando único ou Shell); login: `dono@solucoesinteligentes.com` / `senha123` |
+| Primeiro usuário | Rodar seed (comando único ou Shell); login: `dono@solucoesinteligentes.com` / senha do seed |
 | Atualizar site | Push na branch → Redeploy no EasyPanel |
 
 ---

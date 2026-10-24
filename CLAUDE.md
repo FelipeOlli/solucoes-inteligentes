@@ -69,6 +69,7 @@ DATABASE_URL
 JWT_SECRET
 NEXT_PUBLIC_APP_URL
 ANTHROPIC_API_KEY
+ENCRYPTION_KEY (criptografa a senha do PFX; nunca trocar depois de definida)
 
 ## Regra de sessão
 Ao encerrar, adicione 1 linha em "Sessões recentes" abaixo.
@@ -93,9 +94,9 @@ Commits detalhados vão no git, não aqui.
 - Tabela exibe PIX com prioridade; se não tiver, mostra banco/agência/conta
 
 ## Sessões recentes
-### 2026-06-16 — Vídeos na seção de fotos do serviço
-Estado atual: seção "Fotos / imagens / vídeos" aceita mp4, mov, webm e outros formatos de vídeo; vídeos renderizam como `<video controls>` na galeria (imagens continuam como `<img>`); vídeos não caem na lista de "Anexar Documentos"; API de upload não foi alterada | Arquivo: `app/dashboard/servicos/[id]/page.tsx` (helper `isVideoFileName`, filtros nos handlers e no render)
 ### 2026-07-14 — Fix cheque no enum + data de conclusão no futuro
 Estado atual: `FormaPagamento` ganhou valor `CHEQUE` (schema + migration `20260714000000_add_cheque_forma_pagamento`) — commit anterior só adicionou na UI, faltava enum/migration; `localDateIso` agora usa hora atual em vez de meio-dia fixo, corrigindo bloqueio falso de "data_conclusao não pode ser no futuro" ao concluir serviço no mesmo dia antes do meio-dia | Arquivos: `prisma/schema.prisma`, `prisma/migrations/20260714000000_add_cheque_forma_pagamento/migration.sql`, `app/dashboard/servicos/[id]/page.tsx`
 ### 2026-09-26 — Taxa do cartão variável por parcelas
 Estado atual: seletor "Parcelas no crédito" no detalhe e no novo serviço; taxa recalculada no servidor pela tabela real SumUp (`lib/taxas.ts`); imposto do Simples gravado na criação; migration `20260926000000_backfill_taxas_servicos_hoje` corrige taxa/imposto dos serviços de 26/09 (crédito sem parcelas vira 1x) | Arquivos: `lib/taxas.ts`, `lib/rbt12.ts`, `app/api/servicos/route.ts`, `app/api/servicos/[id]/route.ts`, `app/dashboard/servicos/[id]/page.tsx`, `app/dashboard/servicos/novo/page.tsx`
+### 2026-10-24 — Correções de segurança (credenciais)
+Estado atual: seed sem senha fixa (`SEED_OWNER_PASSWORD` ou temporária aleatória no log); `JWT_SECRET` fora da imagem Docker, lido sob demanda e valores públicos/padrão recusados em produção; senha do PFX criptografada (AES-256-GCM, `ENCRYPTION_KEY`) e legado criptografado pelo seed | Arquivos: `prisma/seed.ts`, `lib/auth.ts`, `lib/cripto-segredo.ts`, `Dockerfile`, `app/api/empresas-fiscais/[id]/documentos/route.ts`, `SEGURANCA.md`

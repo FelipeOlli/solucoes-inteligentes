@@ -72,7 +72,7 @@ Na primeira vez (ou após criar o Postgres), suba na ordem:
 
 - URL: `https://sitecnologia.tec.br/login`
 - E-mail: **dono@solucoesinteligentes.com**
-- Senha: **senha123**
+- Senha: a de `SEED_OWNER_PASSWORD` ou a temporária exibida no log do seed
 
 O seed roda automaticamente na subida do backend e cria o usuário dono se ainda não existir.
 
@@ -92,7 +92,7 @@ Confira na ordem:
    ```
    Deve aparecer "Usuário dono criado" ou "Usuário dono já existe". Depois tente o login de novo.
 
-3. **Senha correta** – O seed cria o usuário com senha **senha123** (tudo minúsculo, sem espaço).
+3. **Senha correta** – O seed cria o usuário com a senha de `SEED_OWNER_PASSWORD` ou com uma senha temporária aleatória exibida uma única vez no log.
 
 4. **Limpar token antigo** – No navegador: F12 → Application → Local Storage → apague a chave **si_token** (ou use aba anônima) e recarregue a página de login.
 
