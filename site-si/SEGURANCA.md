@@ -6,9 +6,19 @@ Checklist e boas práticas de segurança do projeto.
 
 ## 1. JWT e autenticação
 
-- **JWT_SECRET:** Obrigatório em produção. Deve ter **pelo menos 32 caracteres** e ser aleatório. Se estiver ausente ou for o valor padrão, o app **não inicia** em produção (ver `lib/auth.ts`).
-- **Geração:** `openssl rand -base64 32` ou similar. Nunca commitar o valor no repositório.
+- **JWT_SECRET:** Obrigatório em produção, definido **somente** no Environment do EasyPanel (o Dockerfile não embute nenhum valor na imagem). Deve ter **pelo menos 32 caracteres** e ser aleatório. Se estiver ausente, curto ou for um valor padrão/público conhecido, as rotas autenticadas **falham** em produção (ver `lib/auth.ts`).
+- **Geração:** `openssl rand -base64 48` ou similar. Nunca commitar o valor no repositório.
+- **Trocar o JWT_SECRET** invalida todas as sessões (dono e técnicos fazem login de novo). Links de acompanhamento dos clientes continuam válidos (usam token próprio no banco).
 - **Token do dono:** expira em 7 dias; **token do cliente** (link de acompanhamento): 90 dias. Ajuste em `lib/auth.ts` se precisar.
+
+- **Usuário dono inicial:** o seed não usa senha fixa. Usa `SEED_OWNER_PASSWORD` (se definida) ou gera uma senha temporária aleatória exibida uma única vez no log da primeira subida. Troque no primeiro login.
+
+### Criptografia de segredos no banco
+
+- **ENCRYPTION_KEY:** obrigatória para salvar senha de certificado digital (PFX). Mínimo 32 caracteres, gerar com `openssl rand -base64 48`, definir no Environment do EasyPanel.
+- A senha do PFX é gravada em `DocumentoEmpresa.senha` com AES-256-GCM (`lib/cripto-segredo.ts`, prefixo `enc:v1:`). Só o dono recebe o valor aberto via API.
+- Senhas antigas em texto puro são criptografadas automaticamente pelo seed na subida do container, quando a chave existir.
+- **Não troque a ENCRYPTION_KEY** depois de definida: as senhas já salvas deixariam de abrir. Guarde a chave num cofre de senhas.
 
 ---
 

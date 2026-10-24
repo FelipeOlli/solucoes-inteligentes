@@ -50,7 +50,7 @@ NEXT_PUBLIC_APP_URL=https://sitecnologia.tec.br
 - Abra DevTools (F12) → **Application** → **Local Storage** → remova a chave `si_token` se existir.
 - Ou use uma **aba anônima**.
 - Recarregue a página (Ctrl+Shift+R).
-- Login: **dono@solucoesinteligentes.com** / **senha123**.
+- Login: **dono@solucoesinteligentes.com** / senha de `SEED_OWNER_PASSWORD` ou a temporária exibida no log do seed.
 
 ---
 

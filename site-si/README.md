@@ -25,13 +25,13 @@ Site unificado: **visão dono** (gestão de serviços) + **visão cliente** (aco
 npm install --legacy-peer-deps
 cp .env.example .env   # se ainda não tiver .env
 npx prisma db push     # cria o banco SQLite
-npx tsx prisma/seed.ts # cria usuário dono (dono@solucoesinteligentes.com / senha123)
+npx tsx prisma/seed.ts # cria usuário dono (senha de SEED_OWNER_PASSWORD ou temporária exibida no log)
 npm run dev
 ```
 
 Abre em [http://localhost:3000](http://localhost:3000).
 
-**Login (dono):** e-mail `dono@solucoesinteligentes.com`, senha `senha123`.
+**Login (dono):** e-mail `dono@solucoesinteligentes.com`, senha definida em `SEED_OWNER_PASSWORD` ou a senha temporária exibida no log do seed.
 
 ## Assets (favicon e logo)
 

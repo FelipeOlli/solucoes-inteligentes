@@ -5,6 +5,7 @@ import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { badRequest, forbidden, jsonResponse, notFound, unauthorized } from "@/lib/api-response";
 import { saveDocumentoEmpresa } from "@/lib/storage-fiscal";
 import { CategoriaDocumentoEmpresa } from "@prisma/client";
+import { decryptSegredo, encryptSegredo } from "@/lib/cripto-segredo";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -26,7 +27,18 @@ export async function GET(_req: NextRequest, { params }: Params) {
     orderBy: { createdAt: "desc" },
   });
 
-  return jsonResponse(docs);
+  // Senha do PFX fica criptografada no banco; só o dono recebe o valor aberto.
+  const docsComSenha = docs.map((doc) => {
+    if (!doc.senha) return doc;
+    try {
+      return { ...doc, senha: decryptSegredo(doc.senha) };
+    } catch (e) {
+      console.error("Falha ao descriptografar senha do documento", doc.id, e);
+      return { ...doc, senha: null };
+    }
+  });
+
+  return jsonResponse(docsComSenha);
 }
 
 export async function POST(request: NextRequest, { params }: Params) {
@@ -55,6 +67,17 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
   if (!EXTS_VALIDAS.includes(ext)) return badRequest("Tipo de arquivo não permitido.");
+
+  // Criptografa antes de gravar; sem ENCRYPTION_KEY recusa em vez de salvar em texto puro.
+  let senhaCriptografada: string | null = null;
+  if (senha) {
+    try {
+      senhaCriptografada = encryptSegredo(senha);
+    } catch (e) {
+      console.error(e);
+      return badRequest("Não foi possível proteger a senha do certificado: ENCRYPTION_KEY não configurada no servidor.");
+    }
+  }
 
   const uuid = nanoid();
   const { url, tamanhoBytes } = await saveDocumentoEmpresa(id, uuid, file, ext);
@@ -89,10 +112,10 @@ export async function POST(request: NextRequest, { params }: Params) {
       nomeArquivo: file.name,
       tamanhoBytes,
       dataValidade: dataValidade ?? undefined,
-      senha: senha ?? undefined,
+      senha: senhaCriptografada ?? undefined,
       obrigacaoContabilId,
     },
   });
 
-  return jsonResponse({ ...doc, lembreteAgendado: !!obrigacaoContabilId }, 201);
+  return jsonResponse({ ...doc, senha, lembreteAgendado: !!obrigacaoContabilId }, 201);
 }

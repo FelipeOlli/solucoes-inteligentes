@@ -3,16 +3,39 @@ import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
 
 const DEFAULT_SECRET = "default-secret-change-in-production-min-32-chars";
+/** Valor usado só durante o `next build` no Dockerfile; nunca é aceito em runtime. */
+export const BUILD_ONLY_SECRET = "build-only-secret-never-used-at-runtime-0000";
+/** Valores que já estiveram públicos no repositório — rejeitados em produção. */
+const SECRETS_CONHECIDOS = new Set([
+  DEFAULT_SECRET,
+  BUILD_ONLY_SECRET,
+  "build-secret-at-least-32-characters-long-123456",
+  "your-secret-at-least-32-chars-long",
+]);
 
+let cachedSecret: Uint8Array | null = null;
+
+/**
+ * Lido sob demanda (não no import do módulo), para o `next build` não precisar
+ * do segredo real. Em produção, falha se o segredo estiver ausente, curto ou
+ * for um valor conhecido/público.
+ */
 function getSecret(): Uint8Array {
+  if (cachedSecret) return cachedSecret;
   const raw = process.env.JWT_SECRET || DEFAULT_SECRET;
-  if (process.env.NODE_ENV === "production" && (raw === DEFAULT_SECRET || raw.length < 32)) {
-    throw new Error("JWT_SECRET deve ser definido e ter pelo menos 32 caracteres em produção. Veja SEGURANCA.md.");
+  const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+  if (
+    process.env.NODE_ENV === "production" &&
+    !isBuildPhase &&
+    (SECRETS_CONHECIDOS.has(raw) || raw.length < 32)
+  ) {
+    throw new Error(
+      "JWT_SECRET deve ser definido no ambiente, ter pelo menos 32 caracteres e não pode ser um valor padrão/público. Veja SEGURANCA.md."
+    );
   }
-  return new TextEncoder().encode(raw);
+  cachedSecret = new TextEncoder().encode(raw);
+  return cachedSecret;
 }
-
-const SECRET = getSecret();
 
 export type PayloadDono = { role: "dono"; userId: string };
 export type PayloadCliente = { role: "cliente"; id_cliente: string };
@@ -24,7 +47,7 @@ export async function createTokenDono(userId: string): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("7d")
     .setIssuedAt()
-    .sign(SECRET);
+    .sign(getSecret());
 }
 
 export async function createTokenCliente(id_cliente: string): Promise<string> {
@@ -32,7 +55,7 @@ export async function createTokenCliente(id_cliente: string): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("90d")
     .setIssuedAt()
-    .sign(SECRET);
+    .sign(getSecret());
 }
 
 export async function createTokenTecnico(userId: string, tecnicoId: string): Promise<string> {
@@ -40,12 +63,12 @@ export async function createTokenTecnico(userId: string, tecnicoId: string): Pro
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("30d")
     .setIssuedAt()
-    .sign(SECRET);
+    .sign(getSecret());
 }
 
 export async function verifyToken(token: string): Promise<Payload | null> {
   try {
-    const { payload } = await jwtVerify(token, SECRET);
+    const { payload } = await jwtVerify(token, getSecret());
     return payload as unknown as Payload;
   } catch {
     return null;

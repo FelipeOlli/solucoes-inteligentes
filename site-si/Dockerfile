@@ -6,8 +6,9 @@ FROM node:20
 WORKDIR /app
 ARG CACHEBUST=2
 
-ARG JWT_SECRET=build-secret-at-least-32-characters-long-123456
-ENV JWT_SECRET=$JWT_SECRET
+# JWT_SECRET NÃO fica na imagem: o valor real vem só do Environment do EasyPanel
+# em runtime. O build usa um valor descartável apenas no comando de build
+# (lib/auth.ts recusa esse valor em produção).
 
 COPY package.json package-lock.json* ./
 RUN npm install --legacy-peer-deps
@@ -19,7 +20,7 @@ RUN test -f public/favicon.svg && test -f public/logo/logo-simbolo-branco.svg ||
 # Build (DATABASE_URL só para generate; em produção vem do Environment do EasyPanel)
 ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
 RUN npx prisma generate
-RUN npm run build
+RUN JWT_SECRET=build-only-secret-never-used-at-runtime-0000 npm run build
 
 EXPOSE 3000
 ENV PORT=3000

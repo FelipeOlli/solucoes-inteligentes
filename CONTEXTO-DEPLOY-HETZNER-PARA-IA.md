@@ -84,7 +84,7 @@ Porta do container: **3000**. Domínio próprio é opcional (configurar no EasyP
     - `npx prisma db push --accept-data-loss`
     - `npx tsx prisma/seed.ts`
   - e reiniciar o app.
-- O seed cria: usuário `dono@solucoesinteligentes.com` / senha `senha123` e categorias padrão. **Trocar a senha no primeiro login.**
+- O seed cria: usuário `dono@solucoesinteligentes.com` (senha de `SEED_OWNER_PASSWORD` ou senha temporária aleatória exibida uma vez no log) e categorias padrão. **Trocar a senha no primeiro login.**
 - Testar: abrir a URL do site, acessar `/login`, conferir dashboard, clientes e novo serviço.
 
 ### Fase 4 – Atualizações
@@ -105,7 +105,7 @@ Porta do container: **3000**. Domínio próprio é opcional (configurar no EasyP
 | `DATABASE_URL` | `file:/app/data/si.db` |
 | `JWT_SECRET` | `openssl rand -base64 32` |
 | `NEXT_PUBLIC_APP_URL` | URL pública do site |
-| Primeiro usuário (seed) | `dono@solucoesinteligentes.com` / `senha123` (trocar depois) |
+| Primeiro usuário (seed) | `dono@solucoesinteligentes.com` / senha de `SEED_OWNER_PASSWORD` ou temporária do log (trocar depois) |
 | Atualizar site | Push na branch → Redeploy no EasyPanel |
 
 ---
