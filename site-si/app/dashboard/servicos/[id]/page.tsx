@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { api, withBasePath } from "@/lib/api";
 import { STATUS_LIST, STATUS_LABEL, getStatusBadgeClass } from "@/lib/status";
 import { composicaoLucro } from "@/lib/lucro";
+import { MAX_PARCELAS, taxaCartaoPct } from "@/lib/taxas";
 import { brl, pct } from "@/lib/format";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ function formatCampoHist(campo: string, anterior: string | null, novo: string | 
     valor: "Valor estimado",
     categoria: "Categoria",
     formaPagamento: "Forma de pagamento",
+    parcelas: "Parcelas no crédito",
     tecnico: "Técnico responsável",
     convidado: "Convidado",
     cliente: "Cliente",
@@ -63,6 +65,10 @@ function formatCampoHist(campo: string, anterior: string | null, novo: string | 
     if (!anterior) return `${l} definida: ${fmt(novo)}`;
     if (!novo) return `${l} removida`;
     return `${l}: ${fmt(anterior)} → ${fmt(novo)}`;
+  }
+  if (campo === "parcelas") {
+    const fmtP = (v: string | null) => (v ? `${v}x` : "—");
+    return `${l}: ${fmtP(anterior)} → ${fmtP(novo)}`;
   }
   if (campo === "convidado") {
     if (!anterior) return `Convidado adicionado: ${novo}`;
@@ -124,6 +130,7 @@ type PatchBody = {
   valor_garantia?: number | null;
   categoria_id?: string | null;
   forma_pagamento?: string | null;
+  parcelas?: number | null;
   tecnico_id?: string | null;
   cliente_id?: string;
   convidado_email?: string | null;
@@ -159,6 +166,7 @@ export default function ServicoDetailPage() {
   const [editValor, setEditValor] = useState("");
   const [editCategoriaId, setEditCategoriaId] = useState("");
   const [editFormaPagamento, setEditFormaPagamento] = useState("");
+  const [editParcelas, setEditParcelas] = useState(1);
   const [editTecnicoId, setEditTecnicoId] = useState("");
   const [editValorRepasse, setEditValorRepasse] = useState("");
   const [editValorMaterial, setEditValorMaterial] = useState("");
@@ -214,12 +222,13 @@ export default function ServicoDetailPage() {
     setEditValorGarantia(servico.valorGarantia != null ? String(servico.valorGarantia) : "");
     setEditCategoriaId(servico.categoria?.id ?? "");
     setEditFormaPagamento(servico.formaPagamento ?? "");
+    setEditParcelas(servico.parcelas ?? 1);
     setEditTecnicoId(servico.tecnico?.id ?? "");
     setNovoStatus(servico.statusAtual);
     setEditDataConclusao(servico.dataConclusao ? new Date(servico.dataConclusao).toISOString().slice(0, 10) : "");
     setClienteQuery(servico.cliente.nome);
     setClienteSelecionado(null);
-  }, [servico?.id, servico?.dataAgendamento, servico?.valorEstimado, servico?.categoria?.id, servico?.statusAtual, servico?.formaPagamento, servico?.dataConclusao]);
+  }, [servico?.id, servico?.dataAgendamento, servico?.valorEstimado, servico?.categoria?.id, servico?.statusAtual, servico?.formaPagamento, servico?.parcelas, servico?.dataConclusao]);
 
   useEffect(() => {
     api<Categoria[]>("/categorias").then(({ data }) => data && setCategorias(data));
@@ -270,6 +279,7 @@ export default function ServicoDetailPage() {
       valor_garantia: editValorGarantia.trim() ? Number(editValorGarantia.trim().replace(",", ".")) || null : null,
       categoria_id: editCategoriaId || null,
       forma_pagamento: editFormaPagamento || null,
+      parcelas: editFormaPagamento === "CREDITO" ? editParcelas : null,
       tecnico_id: editTecnicoId || null,
     };
     if (clienteSelecionado && clienteSelecionado.id !== servico?.cliente?.id) {
@@ -818,7 +828,7 @@ export default function ServicoDetailPage() {
                 <span className="text-orange-400">− Garantia <strong>{fmt(c.garantia)}</strong></span>
               )}
               {c.taxa > 0 && (
-                <span className="text-yellow-500">− Taxa ({pct(c.taxaPct)}) <strong>{fmt(c.taxa)}</strong></span>
+                <span className="text-yellow-500">− Taxa{servico.formaPagamento === "CREDITO" && servico.parcelas ? ` crédito ${servico.parcelas}x` : ""} ({pct(c.taxaPct)}) <strong>{fmt(c.taxa)}</strong></span>
               )}
               {c.imposto > 0 && (
                 <span className="text-yellow-500">− Imposto ({pct(c.impostoPct)}) <strong>{fmt(c.imposto)}</strong></span>
@@ -975,6 +985,22 @@ export default function ServicoDetailPage() {
                 <option value="DEBITO">Débito</option>
               </Select>
             </div>
+            {editFormaPagamento === "CREDITO" && (
+              <div className="space-y-2 mb-3">
+                <label className="block text-sm font-medium text-theme-muted">Parcelas no crédito</label>
+                <select
+                  value={editParcelas}
+                  onChange={(e) => setEditParcelas(Number(e.target.value))}
+                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                >
+                  {Array.from({ length: MAX_PARCELAS }, (_, i) => i + 1).map((p) => (
+                    <option key={p} value={p}>
+                      {p}x — taxa {pct(taxaCartaoPct("CREDITO", p))}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="space-y-2 mb-3">
               <label className="block text-sm font-medium text-ink-muted">Técnico responsável</label>
               <Select

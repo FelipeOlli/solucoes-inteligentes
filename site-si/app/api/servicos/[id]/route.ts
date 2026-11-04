@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthFromRequest, isDono } from "@/lib/auth";
 import { jsonResponse, unauthorized, forbidden, notFound, badRequest } from "@/lib/api-response";
 import { enqueueServicoSync, processAgendaSyncQueue } from "@/lib/agenda-sync";
+import { normalizarParcelas, taxaCartaoPct } from "@/lib/taxas";
 
 async function getServicoId(idOrCodigo: string): Promise<string | null> {
   const byId = await prisma.servico.findUnique({ where: { id: idOrCodigo }, select: { id: true } });
@@ -97,6 +98,7 @@ export async function PATCH(
       valorEstimado: true,
       categoriaId: true,
       formaPagamento: true,
+      parcelas: true,
       tecnicoId: true,
       clienteId: true,
       convidadoEmail: true,
@@ -126,6 +128,19 @@ export async function PATCH(
   if (body.forma_pagamento !== undefined || body.formaPagamento !== undefined) {
     const fp = String(body.forma_pagamento ?? body.formaPagamento ?? "").trim().toUpperCase();
     data.formaPagamento = fp || null;
+  }
+  // Taxa da maquininha acompanha forma + parcelas: recalcula (tabela real
+  // SumUp) só quando uma delas muda, preservando o snapshot do orçamento.
+  if (data.formaPagamento !== undefined || body.parcelas !== undefined) {
+    const forma = (data.formaPagamento !== undefined ? data.formaPagamento : before.formaPagamento) as string | null;
+    const parcelas =
+      forma === "CREDITO"
+        ? normalizarParcelas(body.parcelas !== undefined ? body.parcelas : before.parcelas)
+        : null;
+    if (forma !== before.formaPagamento || parcelas !== before.parcelas) {
+      data.parcelas = parcelas;
+      data.taxaPercentual = forma ? taxaCartaoPct(forma, parcelas) : null;
+    }
   }
   if (body.tecnico_id !== undefined) data.tecnicoId = body.tecnico_id ? String(body.tecnico_id).trim() : null;
   if (body.imagens !== undefined) {
@@ -224,6 +239,13 @@ export async function PATCH(
     const ant = (before.formaPagamento as string | null) ?? null;
     const nov = (servico.formaPagamento as string | null) ?? null;
     if (ant !== nov) historicoEntries.push({ campo: "formaPagamento", valorAnterior: ant, valorNovo: nov });
+  }
+  if (data.parcelas !== undefined && (before.parcelas ?? null) !== (servico.parcelas ?? null)) {
+    historicoEntries.push({
+      campo: "parcelas",
+      valorAnterior: before.parcelas != null ? String(before.parcelas) : null,
+      valorNovo: servico.parcelas != null ? String(servico.parcelas) : null,
+    });
   }
   if (body.tecnico_id !== undefined && (before.tecnicoId ?? null) !== (servico.tecnicoId ?? null)) {
     historicoEntries.push({ campo: "tecnico", valorAnterior: before.tecnico?.nome ?? null, valorNovo: servico.tecnico?.nome ?? null });
