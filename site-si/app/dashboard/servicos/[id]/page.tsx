@@ -6,6 +6,12 @@ import { api, withBasePath } from "@/lib/api";
 import { STATUS_LIST, STATUS_LABEL, getStatusBadgeClass } from "@/lib/status";
 import { composicaoLucro } from "@/lib/lucro";
 import { brl, pct } from "@/lib/format";
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { PageHeader } from "@/components/ui/page-header";
+import { Textarea } from "@/components/ui/textarea";
 
 const FORMA_PAGAMENTO_LABEL: Record<string, string> = {
   DINHEIRO: "Dinheiro",
@@ -495,8 +501,8 @@ export default function ServicoDetailPage() {
     await uploadFiles(files);
   }
 
-  if (loading) return <p className="text-body">Carregando…</p>;
-  if (!servico) return <p className="text-body">Serviço não encontrado.</p>;
+  if (loading) return <p className="w-full px-3 py-2 border rounded-control bg-surface border-line text-ink text-sm">Carregando…</p>;
+  if (!servico) return <p className="w-full px-3 py-2 border rounded-control bg-surface border-line text-ink text-sm">Serviço não encontrado.</p>;
 
   const descricaoLinha =
     servico.descricao.trim() !== ""
@@ -521,179 +527,181 @@ export default function ServicoDetailPage() {
   const tecnicosComEmail = tecnicos.filter((t) => t.email);
 
   return (
-    <div className="text-theme">
+    <div className="text-ink">
       {/* Modal de exclusão */}
       {showModalExcluir && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-theme-card rounded-lg border border-theme p-6 w-full max-w-sm shadow-xl">
-            <h2 className="font-heading font-bold text-theme-primary text-lg mb-2">Excluir serviço</h2>
-            <p className="text-sm text-theme-muted mb-5">
-              Esta ação é irreversível. O serviço <span className="font-medium text-theme">{servico.codigo}</span> e todos os seus dados serão excluídos permanentemente.
-            </p>
-            <div className="flex gap-2 justify-end">
-              <button
+        <Modal
+          open={showModalExcluir}
+          onClose={() => setShowModalExcluir(false)}
+          title="Excluir serviço"
+          description={
+            <>
+              Esta ação é irreversível. O serviço{" "}
+              <span className="font-medium text-ink">{servico.codigo}</span> e todos os seus
+              dados serão excluídos permanentemente.
+            </>
+          }
+          className="max-w-sm"
+          footer={
+            <>
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setShowModalExcluir(false)}
                 disabled={deleting}
-                className="px-4 py-2 border border-theme rounded-lg text-sm text-theme-muted hover:opacity-80 disabled:opacity-50"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="destructive"
                 onClick={handleExcluir}
                 disabled={deleting}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm disabled:opacity-50"
               >
                 {deleting ? "Excluindo…" : "Excluir permanentemente"}
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </>
+          }
+        >
+          <span />
+        </Modal>
       )}
 
       {/* Modal de data de conclusão/cancelamento */}
       {showModalConclusao && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-theme-card rounded-lg border border-theme p-6 w-full max-w-sm shadow-xl">
-            <h2 className="font-heading font-bold text-theme-primary text-lg mb-2">
-              {novoStatus === "CONCLUIDO" ? "Data de conclusão" : "Data de cancelamento"}
-            </h2>
-            <p className="text-sm text-theme-muted mb-4">
-              Qual foi a data real em que o serviço foi {novoStatus === "CONCLUIDO" ? "concluído" : "cancelado"}?
-            </p>
-            <input
-              type="date"
-              value={dataConclusaoInput}
-              onChange={(e) => setDataConclusaoInput(e.target.value)}
-              max={new Date().toISOString().slice(0, 10)}
-              className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme mb-4"
-              autoFocus
-            />
-            <div className="flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={() => setShowModalConclusao(false)}
-                className="px-4 py-2 border border-theme rounded-lg text-sm text-theme-muted hover:opacity-80"
-              >
+        <Modal
+          open={showModalConclusao}
+          onClose={() => setShowModalConclusao(false)}
+          title={novoStatus === "CONCLUIDO" ? "Data de conclusão" : "Data de cancelamento"}
+          description={`Qual foi a data real em que o serviço foi ${novoStatus === "CONCLUIDO" ? "concluído" : "cancelado"}?`}
+          className="max-w-sm"
+          footer={
+            <>
+              <Button type="button" variant="outline" onClick={() => setShowModalConclusao(false)}>
                 Voltar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmarConclusao}
-                disabled={!dataConclusaoInput}
-                className="px-4 py-2 bg-primary text-white rounded-lg text-sm disabled:opacity-50"
-              >
+              </Button>
+              <Button type="button" onClick={handleConfirmarConclusao} disabled={!dataConclusaoInput}>
                 Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </>
+          }
+        >
+          <Input
+            type="date"
+            value={dataConclusaoInput}
+            onChange={(e) => setDataConclusaoInput(e.target.value)}
+            max={new Date().toISOString().slice(0, 10)}
+            autoFocus
+          />
+        </Modal>
       )}
 
       {/* Modal de convidado */}
       {showModalConvidado && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-theme-card rounded-lg border border-theme p-6 w-full max-w-md shadow-xl">
-            <h2 className="font-heading font-bold text-theme-primary text-lg mb-1">Convidado para o agendamento</h2>
-            <p className="text-sm text-theme-muted mb-4">Haverá algum convidado neste agendamento? O convidado receberá um convite pelo Google Calendar.</p>
-
-            <div className="space-y-3 mb-5">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="convidado" value="sem" checked={convidadoTipo === "sem"} onChange={() => setConvidadoTipo("sem")} />
-                <span className="text-sm">Sem convidado</span>
-              </label>
-
-              {tecnicosComEmail.length > 0 && (
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input type="radio" name="convidado" value="tecnico" checked={convidadoTipo === "tecnico"} onChange={() => setConvidadoTipo("tecnico")} className="mt-1" />
-                  <div className="flex-1">
-                    <span className="text-sm">Técnico cadastrado</span>
-                    {convidadoTipo === "tecnico" && (
-                      <select
-                        value={convidadoTecnicoEmail}
-                        onChange={(e) => setConvidadoTecnicoEmail(e.target.value)}
-                        className="mt-2 w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm"
-                        autoFocus
-                      >
-                        <option value="">Selecionar técnico…</option>
-                        {tecnicosComEmail.map((t) => (
-                          <option key={t.id} value={t.email!}>{t.nome} ({t.email})</option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-                </label>
-              )}
-
-              <label className="flex items-start gap-2 cursor-pointer">
-                <input type="radio" name="convidado" value="outro" checked={convidadoTipo === "outro"} onChange={() => setConvidadoTipo("outro")} className="mt-1" />
-                <div className="flex-1">
-                  <span className="text-sm">Outro email</span>
-                  {convidadoTipo === "outro" && (
-                    <input
-                      type="email"
-                      value={convidadoOutroEmail}
-                      onChange={(e) => setConvidadoOutroEmail(e.target.value)}
-                      placeholder="email@exemplo.com"
-                      className="mt-2 w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm"
-                      autoFocus
-                    />
-                  )}
-                </div>
-              </label>
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              <button
+        <Modal
+          open={showModalConvidado}
+          onClose={() => { setShowModalConvidado(false); setPendingBody(null); }}
+          title="Convidado para o agendamento"
+          description="Haverá algum convidado neste agendamento? O convidado receberá um convite pelo Google Calendar."
+          className="max-w-md"
+          footer={
+            <>
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => { setShowModalConvidado(false); setPendingBody(null); }}
-                className="px-4 py-2 border border-theme rounded-lg text-sm text-theme-muted hover:opacity-80"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={handleConfirmarConvidado}
                 disabled={savingEdit || (convidadoTipo === "tecnico" && !convidadoTecnicoEmail) || (convidadoTipo === "outro" && !convidadoOutroEmail.trim())}
-                className="px-4 py-2 bg-primary text-white rounded-lg text-sm disabled:opacity-50"
               >
                 {savingEdit ? "Salvando…" : "Confirmar e salvar"}
-              </button>
-            </div>
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-3">
+            <label className="flex cursor-pointer items-center gap-2">
+              <Input type="radio" name="convidado" value="sem" checked={convidadoTipo === "sem"} onChange={() => setConvidadoTipo("sem")} />
+              <span className="text-sm">Sem convidado</span>
+            </label>
+
+            {tecnicosComEmail.length > 0 && (
+              <label className="flex cursor-pointer items-start gap-2">
+                <Input type="radio" name="convidado" value="tecnico" checked={convidadoTipo === "tecnico"} onChange={() => setConvidadoTipo("tecnico")} className="mt-1" />
+                <div className="flex-1">
+                  <span className="text-sm">Técnico cadastrado</span>
+                  {convidadoTipo === "tecnico" && (
+                    <Select
+                      value={convidadoTecnicoEmail}
+                      onChange={(e) => setConvidadoTecnicoEmail(e.target.value)}
+                      className="mt-2 text-sm"
+                      autoFocus
+                    >
+                      <option value="">Selecionar técnico…</option>
+                      {tecnicosComEmail.map((t) => (
+                        <option key={t.id} value={t.email!}>{t.nome} ({t.email})</option>
+                      ))}
+                    </Select>
+                  )}
+                </div>
+              </label>
+            )}
+
+            <label className="flex cursor-pointer items-start gap-2">
+              <Input type="radio" name="convidado" value="outro" checked={convidadoTipo === "outro"} onChange={() => setConvidadoTipo("outro")} className="mt-1" />
+              <div className="flex-1">
+                <span className="text-sm">Outro email</span>
+                {convidadoTipo === "outro" && (
+                  <Input
+                    type="email"
+                    value={convidadoOutroEmail}
+                    onChange={(e) => setConvidadoOutroEmail(e.target.value)}
+                    placeholder="email@exemplo.com"
+                    className="mt-2 text-sm"
+                    autoFocus
+                  />
+                )}
+              </div>
+            </label>
           </div>
-        </div>
+        </Modal>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
-        <div className="min-w-0">
-          <h1 className="font-heading text-2xl font-bold text-theme-primary">{servico.codigo}</h1>
-          <p className="text-body text-gray-600 break-words">
-            {servico.cliente.nome} – {servico.categoria?.nome ?? servico.tipoServico ?? "—"}
-          </p>
-          {servico.dataAgendamento && (
-            <p className="text-sm text-white mt-1">Agendado: {new Date(servico.dataAgendamento).toLocaleString("pt-BR")}</p>
-          )}
-          {servico.valorEstimado != null && (
-            <p className="text-sm font-medium mt-1">Valor cobrado: {brl(servico.valorEstimado)}</p>
-          )}
-        </div>
-        <div className="flex items-start gap-2 self-start">
-          <span className={`px-3 py-1 rounded ${getStatusBadgeClass(servico.statusAtual)}`}>
-            {STATUS_LABEL[servico.statusAtual]}
-          </span>
-          <button
-            type="button"
-            onClick={() => setShowModalExcluir(true)}
-            className="px-3 py-1 rounded border border-red-300 text-red-600 text-sm hover:bg-red-50 transition"
-          >
-            Excluir
-          </button>
-        </div>
+      <PageHeader
+        title={servico.codigo}
+        description={`${servico.cliente.nome} – ${servico.categoria?.nome ?? servico.tipoServico ?? "—"}`}
+        actions={
+          <>
+            <span className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusBadgeClass(servico.statusAtual)}`}>
+              {STATUS_LABEL[servico.statusAtual] || servico.statusAtual}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowModalExcluir(true)}
+              className="text-red-600 hover:bg-red-600/10 hover:text-red-600"
+            >
+              Excluir
+            </Button>
+          </>
+        }
+      />
+
+      <div className="mb-6">
+        {servico.dataAgendamento && (
+          <p className="text-sm text-ink-muted">Agendado: {new Date(servico.dataAgendamento).toLocaleString("pt-BR")}</p>
+        )}
+        {servico.valorEstimado != null && (
+          <p className="text-sm font-medium">Valor cobrado: {brl(servico.valorEstimado)}</p>
+        )}
       </div>
 
       {servico.dataReagendamentoProposta && (
-        <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 mb-6 text-pink-900">
+        <div className="banner-alert rounded-card border p-4 mb-6">
           <h2 className="font-heading font-semibold text-sm mb-1">Pedido de reagendamento do técnico</h2>
           <p className="text-sm mb-1">
             Nova data proposta: <strong>{new Date(servico.dataReagendamentoProposta).toLocaleString("pt-BR")}</strong>
@@ -704,7 +712,7 @@ export default function ServicoDetailPage() {
               type="button"
               disabled={reagendamentoPendente}
               onClick={handleRecusarReagendamento}
-              className="px-3 py-1.5 rounded-lg border border-pink-300 text-pink-900 text-sm disabled:opacity-50"
+              className="rounded-control border border-current px-3 py-1.5 text-sm disabled:opacity-50"
             >
               Recusar
             </button>
@@ -712,7 +720,7 @@ export default function ServicoDetailPage() {
               type="button"
               disabled={reagendamentoPendente}
               onClick={handleAprovarReagendamento}
-              className="px-3 py-1.5 rounded-lg bg-pink-600 text-white text-sm disabled:opacity-50"
+              className="rounded-control bg-pink-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
             >
               {reagendamentoPendente ? "Enviando…" : "Aprovar novo agendamento"}
             </button>
@@ -725,7 +733,7 @@ export default function ServicoDetailPage() {
           !!servico.tecnico && !servico.tecnico.ehProprio && (servico.valorRepasse ?? 0) > 0;
         const comentarioTecnico = servico.notas[servico.notas.length - 1]?.conteudo;
         return (
-          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6 text-purple-900">
+          <div className="banner-info rounded-card border p-4 mb-6">
             <h2 className="font-heading font-semibold text-sm mb-1">Técnico concluiu o atendimento</h2>
             {comentarioTecnico && <p className="text-sm mb-3">Comentário: {comentarioTecnico}</p>}
 
@@ -742,11 +750,11 @@ export default function ServicoDetailPage() {
                     {servico.comprovanteRepasseNomeArquivo ?? "Ver comprovante enviado"}
                   </a>
                 ) : (
-                  <p className="text-sm text-purple-700">Nenhum comprovante enviado ainda.</p>
+                  <p className="text-sm opacity-80">Nenhum comprovante enviado ainda.</p>
                 )}
                 <label className="inline-block mt-2 text-sm underline cursor-pointer">
                   {uploadingComprovante ? "Enviando…" : servico.comprovanteRepasseUrl ? "Trocar arquivo" : "Anexar comprovante"}
-                  <input
+                  <Input
                     type="file"
                     accept=".pdf,image/*"
                     className="hidden"
@@ -766,7 +774,7 @@ export default function ServicoDetailPage() {
                 type="button"
                 disabled={reabrindoAtendimento}
                 onClick={handleReabrirAtendimento}
-                className="px-3 py-1.5 rounded-lg border border-purple-300 text-purple-900 text-sm disabled:opacity-50"
+                className="rounded-control border border-current px-3 py-1.5 text-sm disabled:opacity-50"
               >
                 {reabrindoAtendimento ? "Enviando…" : "Reabrir atendimento"}
               </button>
@@ -774,7 +782,7 @@ export default function ServicoDetailPage() {
                 type="button"
                 disabled={precisaComprovante && !servico.comprovanteRepasseUrl}
                 onClick={handleAbrirConfirmarConclusao}
-                className="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-sm disabled:opacity-50"
+                className="rounded-control bg-purple-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
               >
                 Confirmar conclusão
               </button>
@@ -789,8 +797,8 @@ export default function ServicoDetailPage() {
         if (!c) return null;
         const fmt = brl;
         return (
-          <div className="bg-theme-card border border-theme rounded-xl p-4 mb-6">
-            <h2 className="font-heading font-semibold text-theme-primary text-sm mb-3">Composição do lucro</h2>
+          <div className="bg-surface border border-line rounded-card p-4 mb-6">
+            <h2 className="font-heading font-semibold text-brand text-sm mb-3">Composição do lucro</h2>
             <div className="flex flex-wrap gap-4 text-sm items-center">
               <span>Receita <strong>{fmt(c.receita)}</strong></span>
               {c.repasse > 0 && (
@@ -815,11 +823,11 @@ export default function ServicoDetailPage() {
               {c.imposto > 0 && (
                 <span className="text-yellow-500">− Imposto ({pct(c.impostoPct)}) <strong>{fmt(c.imposto)}</strong></span>
               )}
-              <span className={`font-bold text-base border-l border-theme pl-4 ${c.lucro >= 0 ? "text-green-400" : "text-red-400"}`}>
-                = Lucro {fmt(c.lucro)} <span className="font-normal text-xs text-theme-muted">({(c.margem * 100).toFixed(1).replace(".", ",")}%)</span>
+              <span className={`font-bold text-base border-l border-line pl-4 ${c.lucro >= 0 ? "text-green-400" : "text-red-400"}`}>
+                = Lucro {fmt(c.lucro)} <span className="font-normal text-xs text-ink-muted">({(c.margem * 100).toFixed(1).replace(".", ",")}%)</span>
               </span>
               {servico.lucroPretendido != null && (
-                <span className="text-xs text-theme-muted border-l border-theme pl-4">
+                <span className="text-xs text-ink-muted border-l border-line pl-4">
                   Lucro pretendido no orçamento: <strong>{fmt(servico.lucroPretendido)}</strong>
                 </span>
               )}
@@ -829,14 +837,14 @@ export default function ServicoDetailPage() {
       })()}
 
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="bg-theme-card p-4 rounded-lg border border-theme text-theme">
-          <h2 className="font-heading font-bold text-theme-primary mb-2">Linha do tempo</h2>
+        <div className="bg-surface p-4 rounded-card border border-line text-ink">
+          <h2 className="font-heading font-bold text-brand mb-2">Linha do tempo</h2>
           <ul className="space-y-3">
             {timeline.map((item) => (
-              <li key={item.id} className="text-sm border-l-2 border-primary pl-3">
+              <li key={item.id} className="text-sm border-l-2 border-brand pl-3">
                 {item.type === "status" ? (
                   <>
-                    <span className="text-theme-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
+                    <span className="text-ink-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
                     <p>
                       {(item as { statusAnterior: string | null }).statusAnterior
                         ? `Status: ${STATUS_LABEL[(item as { statusAnterior: string }).statusAnterior]} → ${STATUS_LABEL[(item as { statusNovo: string }).statusNovo]}`
@@ -845,13 +853,13 @@ export default function ServicoDetailPage() {
                   </>
                 ) : item.type === "descricao" ? (
                   <>
-                    <span className="text-theme-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
-                    <p className="text-xs font-medium text-theme-muted mb-1">Descrição do serviço</p>
+                    <span className="text-ink-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
+                    <p className="text-xs font-medium text-ink-muted mb-1">Descrição do serviço</p>
                     <p className="whitespace-pre-wrap break-words">{(item as { conteudo: string }).conteudo}</p>
                   </>
                 ) : item.type === "campo" ? (
                   <>
-                    <span className="text-theme-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
+                    <span className="text-ink-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
                     <p>{formatCampoHist(
                       (item as CampoHistItem).campo,
                       (item as CampoHistItem).valorAnterior,
@@ -860,7 +868,7 @@ export default function ServicoDetailPage() {
                   </>
                 ) : (
                   <>
-                    <span className="text-theme-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
+                    <span className="text-ink-muted">{new Date(item.createdAt).toLocaleString("pt-BR")}</span>
                     <p className="whitespace-pre-wrap break-words">{(item as { conteudo: string }).conteudo}</p>
                     {(item as { visivelCliente: boolean }).visivelCliente && (
                       <span className="text-xs text-secondary">(visível ao cliente)</span>
@@ -873,19 +881,19 @@ export default function ServicoDetailPage() {
         </div>
 
         <div className="space-y-4">
-          <form onSubmit={handleStatus} className="bg-theme-card p-4 rounded-lg border border-theme">
-            <h2 className="font-heading font-bold text-theme-primary mb-2">Alterar status</h2>
+          <form onSubmit={handleStatus} className="bg-surface p-4 rounded-card border border-line">
+            <h2 className="font-heading font-bold text-brand mb-2">Alterar status</h2>
             <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
-              <select value={novoStatus} onChange={(e) => setNovoStatus(e.target.value)} className="px-4 py-2 border rounded-lg flex-1 min-w-[140px] bg-theme-card border-theme text-theme">
+              <Select value={novoStatus} onChange={(e) => setNovoStatus(e.target.value)} >
                 <option value="">Novo status...</option>
                 {STATUS_LIST.map((s) => (
                   <option key={s} value={s}>{STATUS_LABEL[s]}</option>
                 ))}
-              </select>
+              </Select>
               <button
                 type="submit"
                 disabled={!novoStatus || novoStatus === servico.statusAtual}
-                className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto"
+                className="px-4 py-2 bg-brand text-brand-fg rounded-control disabled:opacity-50 w-full sm:w-auto"
               >
                 Atualizar
               </button>
@@ -893,71 +901,71 @@ export default function ServicoDetailPage() {
             {statusError && <p className="text-red-600 text-sm mt-2">{statusError}</p>}
           </form>
 
-          <form onSubmit={handleSalvarDados} className="bg-theme-card p-4 rounded-lg border border-theme">
-            <h2 className="font-heading font-bold text-theme-primary mb-2">Dados do serviço</h2>
+          <form onSubmit={handleSalvarDados} className="bg-surface p-4 rounded-card border border-line">
+            <h2 className="font-heading font-bold text-brand mb-2">Dados do serviço</h2>
             <div className="space-y-2 mb-3">
-              <label className="block text-sm font-medium text-theme-muted">Data de agendamento</label>
-              <input type="datetime-local" value={editDataAgendamento} onChange={(e) => setEditDataAgendamento(e.target.value)} className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" />
+              <label className="block text-sm font-medium text-ink-muted">Data de agendamento</label>
+              <Input type="datetime-local" value={editDataAgendamento} onChange={(e) => setEditDataAgendamento(e.target.value)}  />
             </div>
             <div className="space-y-2 mb-3">
-              <label className="block text-sm font-medium text-theme-muted">Valor cobrado (R$)</label>
-              <input type="text" value={editValor} onChange={(e) => setEditValor(e.target.value)} placeholder="0,00" className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme" />
+              <label className="block text-sm font-medium text-ink-muted">Valor cobrado (R$)</label>
+              <Input type="text" value={editValor} onChange={(e) => setEditValor(e.target.value)} placeholder="0,00"  />
             </div>
             <div className="space-y-2 mb-3">
-              <label className="block text-sm font-medium text-theme-muted">Repasse ao técnico (R$)</label>
-              <input
+              <label className="block text-sm font-medium text-ink-muted">Repasse ao técnico (R$)</label>
+              <Input
                 type="text"
                 value={editValorRepasse}
                 onChange={(e) => setEditValorRepasse(e.target.value)}
                 placeholder="0,00 (deixe vazio se executou você mesmo)"
-                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                
               />
             </div>
             <div className="space-y-2 mb-3">
-              <label className="block text-sm font-medium text-theme-muted">Material gasto (R$)</label>
-              <input
+              <label className="block text-sm font-medium text-ink-muted">Material gasto (R$)</label>
+              <Input
                 type="text"
                 value={editValorMaterial}
                 onChange={(e) => setEditValorMaterial(e.target.value)}
                 placeholder="0,00 (peças, insumos, etc.)"
-                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                
               />
             </div>
             <div className="space-y-2 mb-3">
-              <label className="block text-sm font-medium text-theme-muted">Deslocamento (R$)</label>
-              <input
+              <label className="block text-sm font-medium text-ink-muted">Deslocamento (R$)</label>
+              <Input
                 type="text"
                 value={editCustoFixo}
                 onChange={(e) => setEditCustoFixo(e.target.value)}
                 placeholder="0,00"
-                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                
               />
             </div>
             <div className="space-y-2 mb-3">
-              <label className="block text-sm font-medium text-theme-muted">Provisão de garantia (R$)</label>
-              <input
+              <label className="block text-sm font-medium text-ink-muted">Provisão de garantia (R$)</label>
+              <Input
                 type="text"
                 value={editValorGarantia}
                 onChange={(e) => setEditValorGarantia(e.target.value)}
                 placeholder="0,00"
-                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                
               />
             </div>
             <div className="space-y-2 mb-3">
-              <label className="block text-sm font-medium text-theme-muted">Categoria</label>
-              <select value={editCategoriaId} onChange={(e) => setEditCategoriaId(e.target.value)} className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme">
+              <label className="block text-sm font-medium text-ink-muted">Categoria</label>
+              <Select value={editCategoriaId} onChange={(e) => setEditCategoriaId(e.target.value)} >
                 <option value="">—</option>
                 {categorias.map((c) => (
                   <option key={c.id} value={c.id}>{c.nome}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="space-y-2 mb-3">
-              <label className="block text-sm font-medium text-theme-muted">Forma de pagamento</label>
-              <select
+              <label className="block text-sm font-medium text-ink-muted">Forma de pagamento</label>
+              <Select
                 value={editFormaPagamento}
                 onChange={(e) => setEditFormaPagamento(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                
               >
                 <option value="">—</option>
                 <option value="DINHEIRO">Dinheiro</option>
@@ -965,39 +973,39 @@ export default function ServicoDetailPage() {
                 <option value="CHEQUE">Cheque</option>
                 <option value="CREDITO">Crédito</option>
                 <option value="DEBITO">Débito</option>
-              </select>
+              </Select>
             </div>
             <div className="space-y-2 mb-3">
-              <label className="block text-sm font-medium text-theme-muted">Técnico responsável</label>
-              <select
+              <label className="block text-sm font-medium text-ink-muted">Técnico responsável</label>
+              <Select
                 value={editTecnicoId}
                 onChange={(e) => setEditTecnicoId(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                
               >
                 <option value="">— Sem técnico —</option>
                 {tecnicos.map((t) => (
                   <option key={t.id} value={t.id}>{t.nome}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             {(servico.statusAtual === "CONCLUIDO" || servico.statusAtual === "CANCELADO") && (
               <div className="space-y-2 mb-3">
-                <label className="block text-sm font-medium text-theme-muted">
+                <label className="block text-sm font-medium text-ink-muted">
                   Data de {servico.statusAtual === "CONCLUIDO" ? "conclusão" : "cancelamento"}
                 </label>
-                <input
+                <Input
                   type="date"
                   value={editDataConclusao}
                   onChange={(e) => setEditDataConclusao(e.target.value)}
                   max={new Date().toISOString().slice(0, 10)}
-                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                  
                 />
               </div>
             )}
             <div ref={clienteDropdownRef} className="space-y-2 mb-3 relative">
-              <label className="block text-sm font-medium text-theme-muted">Cliente</label>
+              <label className="block text-sm font-medium text-ink-muted">Cliente</label>
               <div className="flex gap-2">
-                <input
+                <Input
                   type="text"
                   value={clienteQuery}
                   onChange={(e) => {
@@ -1009,20 +1017,20 @@ export default function ServicoDetailPage() {
                     buscarClientes(clienteQuery);
                   }}
                   placeholder="Buscar cliente..."
-                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
+                  
                 />
                 {clienteSelecionado && (
                   <button
                     type="button"
                     onClick={() => { setClienteSelecionado(null); setClienteQuery(servico.cliente.nome); }}
-                    className="px-3 py-2 rounded-lg border border-theme text-theme-muted hover:text-theme text-sm"
+                    className="px-3 py-2 rounded-control border border-line text-ink-muted hover:text-ink text-sm"
                   >
                     ✕
                   </button>
                 )}
               </div>
               {showClienteDropdown && clienteResultados.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-theme-card border border-theme rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-surface border border-line rounded-control shadow-lg max-h-48 overflow-y-auto">
                   {clienteResultados.map((c) => (
                     <button
                       key={c.id}
@@ -1033,10 +1041,10 @@ export default function ServicoDetailPage() {
                         setShowClienteDropdown(false);
                         setClienteResultados([]);
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-theme-hover text-sm"
+                      className="w-full text-left px-4 py-2 hover:bg-surface-hover text-sm"
                     >
-                      <span className="font-medium text-theme">{c.nome}</span>
-                      <span className="text-theme-muted ml-2">{c.telefone}</span>
+                      <span className="font-medium text-ink">{c.nome}</span>
+                      <span className="text-ink-muted ml-2">{c.telefone}</span>
                     </button>
                   ))}
                 </div>
@@ -1046,30 +1054,30 @@ export default function ServicoDetailPage() {
               )}
             </div>
 
-            <button type="submit" disabled={savingEdit} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">Salvar</button>
+            <button type="submit" disabled={savingEdit} className="px-4 py-2 bg-brand text-brand-fg rounded-control disabled:opacity-50 w-full sm:w-auto">Salvar</button>
           </form>
 
-          <form onSubmit={handleNota} className="bg-theme-card p-4 rounded-lg border border-theme">
-            <h2 className="font-heading font-bold text-theme-primary mb-2">Nova nota</h2>
-            <textarea value={notaConteudo} onChange={(e) => setNotaConteudo(e.target.value)} className="w-full px-4 py-2 border rounded-lg mb-2 bg-theme-card border-theme text-theme" rows={2} placeholder="Observação..." />
+          <form onSubmit={handleNota} className="bg-surface p-4 rounded-card border border-line">
+            <h2 className="font-heading font-bold text-brand mb-2">Nova nota</h2>
+            <Textarea value={notaConteudo} onChange={(e) => setNotaConteudo(e.target.value)}  rows={2} placeholder="Observação..." />
             <label className="flex items-center gap-2 mb-2">
-              <input type="checkbox" checked={notaVisivel} onChange={(e) => setNotaVisivel(e.target.checked)} />
+              <Input type="checkbox" checked={notaVisivel} onChange={(e) => setNotaVisivel(e.target.checked)} />
               Visível ao cliente
             </label>
-            <button type="submit" disabled={!notaConteudo.trim()} className="px-4 py-2 bg-secondary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">Adicionar nota</button>
+            <button type="submit" disabled={!notaConteudo.trim()} className="px-4 py-2 bg-secondary text-white rounded-control disabled:opacity-50 w-full sm:w-auto">Adicionar nota</button>
           </form>
 
-          <div className="bg-theme-card p-4 rounded-lg border border-theme">
-            <h2 className="font-heading font-bold text-theme-primary mb-2">Link para o cliente</h2>
-            <button type="button" onClick={handleLinkCliente} className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 w-full sm:w-auto">
+          <div className="bg-surface p-4 rounded-card border border-line">
+            <h2 className="font-heading font-bold text-brand mb-2">Link para o cliente</h2>
+            <button type="button" onClick={handleLinkCliente} className="px-4 py-2 bg-brand text-brand-fg rounded-control hover:opacity-90 w-full sm:w-auto">
               Gerar e copiar link
             </button>
-            {linkUrl && <p className="mt-2 text-sm text-theme-muted">Copiado!</p>}
+            {linkUrl && <p className="mt-2 text-sm text-ink-muted">Copiado!</p>}
           </div>
 
           {servico.comprovantesMaterial != null && servico.comprovantesMaterial.length > 0 && (
-            <div className="bg-theme-card p-4 rounded-lg border border-theme">
-              <h2 className="font-heading font-bold text-theme-primary mb-2">Comprovantes de material (enviados pelo técnico)</h2>
+            <div className="bg-surface p-4 rounded-card border border-line">
+              <h2 className="font-heading font-bold text-brand mb-2">Comprovantes de material (enviados pelo técnico)</h2>
               <ul className="space-y-1">
                 {servico.comprovantesMaterial.map((url) => (
                   <li key={url}>
@@ -1077,7 +1085,7 @@ export default function ServicoDetailPage() {
                       href={withBasePath(url)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-theme-primary underline"
+                      className="text-sm text-brand underline"
                     >
                       {url.split("/").pop()}
                     </a>
@@ -1087,8 +1095,8 @@ export default function ServicoDetailPage() {
             </div>
           )}
 
-          <div className="bg-theme-card p-4 rounded-lg border border-theme">
-            <h2 className="font-heading font-bold text-theme-primary mb-2">Fotos / imagens / vídeos</h2>
+          <div className="bg-surface p-4 rounded-card border border-line">
+            <h2 className="font-heading font-bold text-brand mb-2">Fotos / imagens / vídeos</h2>
             {mediaUrls.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
                 {mediaUrls.map((url) => {
@@ -1096,10 +1104,10 @@ export default function ServicoDetailPage() {
                   return (
                     <div key={url} className="relative group shrink-0">
                       {isVideoFileName(url) ? (
-                        <video src={href} controls className="w-20 h-20 object-cover rounded border border-theme" />
+                        <video src={href} controls className="w-20 h-20 object-cover rounded border border-line" />
                       ) : (
                         <a href={href} target="_blank" rel="noopener noreferrer" className="block">
-                          <img src={href} alt="" className="w-20 h-20 object-cover rounded border border-theme" />
+                          <img src={href} alt="" className="w-20 h-20 object-cover rounded border border-line" />
                         </a>
                       )}
                       <button
@@ -1124,26 +1132,26 @@ export default function ServicoDetailPage() {
               }}
               onDragLeave={() => setDraggingFotos(false)}
               onDrop={handleDropFotos}
-              className={`rounded-lg border border-dashed p-3 transition ${draggingFotos ? "border-primary bg-primary/10" : "border-theme"}`}
+              className={`rounded-lg border border-dashed p-3 transition ${draggingFotos ? "border-brand bg-brand/10" : "border-line"}`}
             >
               <label className="block">
                 <span className="sr-only">Anexar foto</span>
-                <input
+                <Input
                   type="file"
                   accept="image/*,video/*"
                   multiple
                   disabled={uploadingImg}
                   onChange={handleUploadFotosInput}
-                  className="w-full text-sm text-theme-muted file:mr-3 file:rounded-md file:border-0 file:px-4 file:py-2 file:bg-primary file:text-white file:font-medium hover:file:opacity-90"
+                  className="w-full text-sm text-ink-muted file:mr-3 file:rounded-md file:border-0 file:px-4 file:py-2 file:bg-brand file:text-white file:font-medium hover:file:opacity-90"
                 />
               </label>
-              <p className="text-xs text-theme-muted mt-2">Arraste e solte imagens ou vídeos aqui ou clique em Escolher arquivos.</p>
+              <p className="text-xs text-ink-muted mt-2">Arraste e solte imagens ou vídeos aqui ou clique em Escolher arquivos.</p>
             </div>
-            {uploadingImg && <p className="text-sm text-theme-muted mt-1">Enviando…</p>}
+            {uploadingImg && <p className="text-sm text-ink-muted mt-1">Enviando…</p>}
           </div>
 
-          <div className="bg-theme-card p-4 rounded-lg border border-theme">
-            <h2 className="font-heading font-bold text-theme-primary mb-2">Anexar Documentos</h2>
+          <div className="bg-surface p-4 rounded-card border border-line">
+            <h2 className="font-heading font-bold text-brand mb-2">Anexar Documentos</h2>
             {anexoUrls.length > 0 && (
               <ul className="mb-3 space-y-1 text-sm">
                 {anexoUrls.map((url) => {
@@ -1178,22 +1186,22 @@ export default function ServicoDetailPage() {
               }}
               onDragLeave={() => setDraggingOrcamento(false)}
               onDrop={handleDropOrcamento}
-              className={`rounded-lg border border-dashed p-3 transition ${draggingOrcamento ? "border-primary bg-primary/10" : "border-theme"}`}
+              className={`rounded-lg border border-dashed p-3 transition ${draggingOrcamento ? "border-brand bg-brand/10" : "border-line"}`}
             >
               <label className="block">
                 <span className="sr-only">Anexar Documentos</span>
-                <input
+                <Input
                   type="file"
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,image/*"
                   multiple
                   disabled={uploadingImg}
                   onChange={handleUploadOrcamentoInput}
-                  className="w-full text-sm text-theme-muted file:mr-3 file:rounded-md file:border-0 file:px-4 file:py-2 file:bg-primary file:text-white file:font-medium hover:file:opacity-90"
+                  className="w-full text-sm text-ink-muted file:mr-3 file:rounded-md file:border-0 file:px-4 file:py-2 file:bg-brand file:text-white file:font-medium hover:file:opacity-90"
                 />
               </label>
-              <p className="text-xs text-theme-muted mt-2">Arraste e solte arquivos aqui ou clique em Escolher arquivos.</p>
+              <p className="text-xs text-ink-muted mt-2">Arraste e solte arquivos aqui ou clique em Escolher arquivos.</p>
             </div>
-            {uploadingImg && <p className="text-sm text-theme-muted mt-1">Enviando…</p>}
+            {uploadingImg && <p className="text-sm text-ink-muted mt-1">Enviando…</p>}
           </div>
         </div>
       </div>

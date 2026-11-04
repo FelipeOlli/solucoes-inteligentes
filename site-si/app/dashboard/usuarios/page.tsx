@@ -3,6 +3,20 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Usuario = {
   id: string;
@@ -128,132 +142,113 @@ export default function UsuariosPage() {
   }
 
   return (
-    <div className="text-theme">
-      <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-6">Usuários</h1>
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
-        <input
+    <div>
+      <PageHeader
+        title="Usuários"
+        description="Contas com acesso ao painel administrativo."
+        actions={
+          <Button type="button" onClick={openCreateModal} className="w-full sm:w-auto">
+            Novo usuário
+          </Button>
+        }
+      />
+
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+        <Input
           type="search"
           placeholder="Buscar por e-mail..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="px-4 py-2 border rounded-lg font-body w-full sm:flex-1 sm:max-w-md bg-theme-card border-theme text-theme"
+          className="w-full sm:max-w-md"
         />
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:opacity-90 w-full sm:w-auto"
-        >
-          Novo usuário
-        </button>
       </div>
-      {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
       {loading ? (
-        <p className="text-body text-theme-muted">Carregando…</p>
+        <p className="text-sm text-ink-muted">Carregando…</p>
       ) : usuarios.length === 0 ? (
-        <p className="text-body text-theme-muted">Nenhum usuário encontrado.</p>
+        <p className="text-sm text-ink-muted">Nenhum usuário encontrado.</p>
       ) : (
-        <div className="bg-theme-card border border-theme rounded-lg overflow-hidden overflow-x-auto">
-          <table className="w-full font-body text-sm text-theme">
-            <thead className="border-b border-theme" style={{ backgroundColor: "var(--color-navbar)" }}>
-              <tr>
-                <th className="text-left p-3 font-heading text-theme-primary">E-mail</th>
-                <th className="text-left p-3 font-heading text-theme-primary">Criado em</th>
-                <th className="text-left p-3 font-heading text-theme-primary">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
+          <Table>
+            <TableHeader className="bg-surface-subtle">
+              <TableRow className="hover:bg-surface-subtle">
+                <TableHead>E-mail</TableHead>
+                <TableHead>Criado em</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {usuarios.map((u) => (
-                <tr key={u.id} className="border-t border-theme">
-                  <td className="p-3">{u.email}</td>
-                  <td className="p-3">
+                <TableRow key={u.id}>
+                  <TableCell className="font-medium">{u.email}</TableCell>
+                  <TableCell className="text-ink-muted">
                     {u.createdAt ? new Date(u.createdAt).toLocaleString("pt-BR") : "—"}
-                  </td>
-                  <td className="p-3">
+                  </TableCell>
+                  <TableCell>
                     {u.email === OWNER_EMAIL ? (
-                      <span className="text-xs px-2 py-1 rounded bg-theme-card border border-theme text-theme-muted">
-                        Protegido
-                      </span>
+                      <Badge variant="outline">Protegido</Badge>
                     ) : (
                       <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(u)}
-                          className="text-sm text-theme-primary underline"
-                        >
+                        <Button type="button" variant="outline" size="sm" onClick={() => openEditModal(u)}>
                           Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(u)}
-                          className="text-sm text-red-600 underline"
-                        >
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => handleDelete(u)} className="text-red-600 hover:bg-red-600/10 hover:text-red-600">
                           Excluir
-                        </button>
+                        </Button>
                       </div>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 
-      {modal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-10 p-4">
-          <div className="bg-theme-card border border-theme rounded-lg max-w-md w-full p-5 sm:p-6 text-theme">
-            <h2 className="font-heading text-xl font-bold text-theme-primary mb-4">
-              {editId ? "Editar usuário" : "Novo usuário"}
-            </h2>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">E-mail</label>
-                <input
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">
-                  {editId ? "Nova senha (opcional)" : "Senha"}
-                </label>
-                <input
-                  type="password"
-                  required={!editId}
-                  value={form.password}
-                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">Confirmar senha</label>
-                <input
-                  type="password"
-                  required={!editId || form.password.length > 0}
-                  value={form.confirm}
-                  onChange={(e) => setForm((f) => ({ ...f, confirm: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                />
-              </div>
-              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
-                <button type="button" onClick={closeModal} className="px-4 py-2 border border-theme rounded-lg text-theme">
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50"
-                >
-                  {saving ? "Salvando…" : editId ? "Atualizar" : "Salvar"}
-                </button>
-              </div>
-            </form>
+      <Modal
+        open={modal}
+        onClose={closeModal}
+        title={editId ? "Editar usuário" : "Novo usuário"}
+        className="max-w-md"
+      >
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div>
+            <Label className="mb-1">E-mail</Label>
+            <Input
+              type="email"
+              required
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            />
           </div>
-        </div>
-      )}
+          <div>
+            <Label className="mb-1">{editId ? "Nova senha (opcional)" : "Senha"}</Label>
+            <Input
+              type="password"
+              required={!editId}
+              value={form.password}
+              onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label className="mb-1">Confirmar senha</Label>
+            <Input
+              type="password"
+              required={!editId || form.password.length > 0}
+              value={form.confirm}
+              onChange={(e) => setForm((f) => ({ ...f, confirm: e.target.value }))}
+            />
+          </div>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" onClick={closeModal}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? "Salvando…" : editId ? "Atualizar" : "Salvar"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

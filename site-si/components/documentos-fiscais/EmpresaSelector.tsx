@@ -1,5 +1,7 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
+
 type Empresa = { id: string; cnpj: string; razaoSocial: string };
 
 type Props = {
@@ -12,10 +14,9 @@ export function EmpresaSelector({ empresas, empresaId, onChange }: Props) {
   if (empresas.length === 0) return null;
 
   return (
-    <select
+    <Select
       value={empresaId ?? ""}
       onChange={(e) => onChange(e.target.value || null)}
-      className="px-3 py-2 rounded border border-theme bg-theme-card text-sm focus:outline-none"
     >
       <option value="">Todas as empresas</option>
       {empresas.map((e) => (
@@ -23,6 +24,6 @@ export function EmpresaSelector({ empresas, empresaId, onChange }: Props) {
           {e.cnpj} — {e.razaoSocial}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }

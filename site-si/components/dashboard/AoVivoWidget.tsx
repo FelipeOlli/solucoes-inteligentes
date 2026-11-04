@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type AoVivo = {
   emAndamento: {
@@ -42,24 +44,25 @@ export default function AoVivoWidget() {
   if (!dados || (dados.emAndamento.length === 0 && dados.aguardandoCheckin.length === 0)) return null;
 
   return (
-    <div className="bg-theme-card p-4 rounded-lg border border-theme mb-6">
-      <h2 className="font-heading font-bold text-theme-primary mb-3 flex items-center gap-2">
+    <Card className="mb-6 p-5">
+      <h2 className="mb-4 flex items-center gap-2 font-heading text-lg font-semibold text-ink">
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
         </span>
         Ao vivo
       </h2>
 
       {dados.emAndamento.length > 0 && (
-        <div className="space-y-2 mb-3">
+        <div className="mb-3 space-y-2">
           {dados.emAndamento.map((v) => (
             <Link
               key={v.id}
               href={`/dashboard/servicos/${v.servico.id}`}
-              className="block text-sm px-3 py-2 rounded-lg bg-blue-50 text-blue-900 hover:opacity-90"
+              className="block rounded-control bg-surface-hover px-3 py-2.5 text-sm text-ink transition-colors hover:bg-brand/10"
             >
-              <span className="font-medium">{v.tecnico.nome}</span> em atendimento — {v.servico.codigo} desde {formatHora(v.inicioEm)}
+              <span className="font-medium">{v.tecnico.nome}</span> em atendimento —{" "}
+              {v.servico.codigo} desde {formatHora(v.inicioEm)}
             </Link>
           ))}
         </div>
@@ -71,7 +74,9 @@ export default function AoVivoWidget() {
             <Link
               key={s.id}
               href={`/dashboard/servicos/${s.id}`}
-              className="block text-sm px-3 py-2 rounded-lg bg-yellow-50 text-yellow-900 hover:opacity-90"
+              className={cn(
+                "block rounded-control bg-warn-bg px-3 py-2.5 text-sm text-warn transition-colors hover:bg-warn-bg/70"
+              )}
             >
               {s.tecnico?.nome ?? "Sem técnico"} ainda não chegou — {s.codigo}
               {s.dataAgendamento && ` (agendado ${formatHora(s.dataAgendamento)})`}
@@ -79,6 +84,6 @@ export default function AoVivoWidget() {
           ))}
         </div>
       )}
-    </div>
+    </Card>
   );
 }

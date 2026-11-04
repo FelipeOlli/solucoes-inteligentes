@@ -32,22 +32,26 @@ export const STATUS_LABEL: Record<string, string> = {
   CANCELADO: "Cancelado",
 };
 
-/** Classe Tailwind (fundo + texto) de cada status — uma cor por status, não mais um bucket "tudo amarelo". */
+/**
+ * Classe de badge por status — as cores vêm das CSS vars `--status-*`,
+ * definidas por tema em `app/globals.css` (default / dark / brand-blue).
+ * Assim o badge fica legível nos três temas.
+ */
 export const STATUS_COLOR: Record<string, string> = {
-  ABERTO: "bg-gray-100 text-gray-800",
-  AGENDADO: "bg-indigo-100 text-indigo-800",
-  EM_ANDAMENTO: "bg-blue-100 text-blue-800",
-  AGUARDANDO_PECA: "bg-orange-100 text-orange-800",
-  AGUARDANDO_CLIENTE: "bg-amber-100 text-amber-800",
-  AGUARDANDO_PAGAMENTO: "bg-yellow-100 text-yellow-800",
-  AGUARDANDO_CONFIRMACAO: "bg-purple-100 text-purple-800",
-  AGUARDANDO_REAGENDAMENTO: "bg-pink-100 text-pink-800",
-  CONCLUIDO: "bg-green-100 text-green-800",
-  CANCELADO: "bg-red-100 text-red-800",
+  ABERTO: "status-aberto",
+  AGENDADO: "status-agendado",
+  EM_ANDAMENTO: "status-andamento",
+  AGUARDANDO_PECA: "status-peca",
+  AGUARDANDO_CLIENTE: "status-cliente",
+  AGUARDANDO_PAGAMENTO: "status-pagamento",
+  AGUARDANDO_CONFIRMACAO: "status-confirmacao",
+  AGUARDANDO_REAGENDAMENTO: "status-reagendamento",
+  CONCLUIDO: "status-concluido",
+  CANCELADO: "status-cancelado",
 };
 
 export function getStatusBadgeClass(status: string): string {
-  return STATUS_COLOR[status] ?? "bg-gray-100 text-gray-800";
+  return STATUS_COLOR[status] ?? "status-aberto";
 }
 
 // Legado: categorias agora vêm do banco (CategoriaServico)

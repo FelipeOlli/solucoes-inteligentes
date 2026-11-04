@@ -2,6 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Categoria = { id: string; nome: string };
 
@@ -89,7 +101,7 @@ export default function CategoriasPage() {
     }
   }
 
-  if (loading) return <p className="text-body">Carregando…</p>;
+  if (loading) return <p className="">Carregando…</p>;
 
   const categoriasFiltradas = categorias.filter((c) =>
     c.nome.toLowerCase().includes(busca.toLowerCase())
@@ -97,61 +109,66 @@ export default function CategoriasPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-4">Categorias de serviço</h1>
+      <PageHeader
+        title="Categorias de serviço"
+        description="Tipos de serviço disponíveis para classificar os atendimentos."
+      />
 
-      <form onSubmit={handleCriar} className="bg-theme-card p-4 rounded-lg border border-theme mb-6 max-w-md">
-        <h2 className="font-heading font-bold text-theme-primary mb-2">Nova categoria</h2>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            type="text"
-            value={novoNome}
-            onChange={(e) => setNovoNome(e.target.value)}
-            placeholder="Nome da categoria"
-            className="flex-1 px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-          />
-          <button type="submit" disabled={!novoNome.trim()} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 w-full sm:w-auto">
-            Adicionar
-          </button>
-        </div>
-      </form>
+      <Card className="mb-6 max-w-md">
+        <CardHeader>
+          <CardTitle>Nova categoria</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleCriar} className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              type="text"
+              value={novoNome}
+              onChange={(e) => setNovoNome(e.target.value)}
+              placeholder="Nome da categoria"
+            />
+            <Button type="submit" disabled={!novoNome.trim()} className="w-full sm:w-auto">
+              Adicionar
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-      {loadError && <p className="text-red-600 mb-4">{loadError} <button type="button" onClick={() => { setLoading(true); load(); }} className="underline ml-1">Recarregar</button></p>}
+      {loadError && <p className="mb-4 text-red-600">{loadError} <button type="button" onClick={() => { setLoading(true); load(); }} className="ml-1 underline">Recarregar</button></p>}
 
       <div className="mb-4 max-w-md">
-        <input
+        <Input
           type="text"
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Buscar categoria…"
-          className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
         />
       </div>
 
-      <div className="bg-theme-card rounded-lg border border-theme overflow-hidden overflow-x-auto">
-        <table className="w-full text-left text-theme">
-          <thead className="border-b border-theme" style={{ backgroundColor: "var(--color-navbar)" }}>
-            <tr>
-              <th className="px-4 py-3 font-heading font-bold text-theme-primary">Nome</th>
-              <th className="px-4 py-3 font-heading font-bold text-theme-primary w-32">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
+        <Table>
+          <TableHeader className="bg-surface-subtle">
+            <TableRow className="hover:bg-surface-subtle">
+              <TableHead>Nome</TableHead>
+              <TableHead className="w-32">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {categoriasFiltradas.length === 0 ? (
-              <tr>
-                <td colSpan={2} className="px-4 py-6 text-theme-muted text-center">
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={2} className="py-6 text-center text-ink-muted">
                   {busca ? "Nenhuma categoria encontrada." : "Nenhuma categoria cadastrada."}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               categoriasFiltradas.map((c) => (
-                <tr key={c.id} className="border-b border-theme last:border-b-0">
-                  <td className="px-4 py-3">
+                <TableRow key={c.id}>
+                  <TableCell>
                     {editId === c.id ? (
-                      <input
+                      <Input
                         type="text"
                         value={editNome}
                         onChange={(e) => setEditNome(e.target.value)}
-                        className="w-full max-w-xs px-3 py-1 border rounded bg-theme-card border-theme text-theme"
+                        className="max-w-xs"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleSalvarEdicao(c.id);
@@ -159,30 +176,38 @@ export default function CategoriasPage() {
                         }}
                       />
                     ) : (
-                      <span className="text-body">{c.nome}</span>
+                      <span>{c.nome}</span>
                     )}
-                  </td>
-                  <td className="px-4 py-3 flex gap-2">
+                  </TableCell>
+                  <TableCell>
                     {editId === c.id ? (
-                      <>
-                        <button type="button" onClick={() => handleSalvarEdicao(c.id)} className="text-sm text-theme-primary underline">Salvar</button>
-                        <button type="button" onClick={() => setEditId(null)} className="text-sm text-theme-muted underline">Cancelar</button>
-                      </>
+                      <div className="flex gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => handleSalvarEdicao(c.id)}>
+                          Salvar
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setEditId(null)}>
+                          Cancelar
+                        </Button>
+                      </div>
                     ) : (
-                      <>
-                        <button type="button" onClick={() => { setEditId(c.id); setEditNome(c.nome); }} className="text-sm text-theme-primary underline">Editar</button>
-                        <button type="button" onClick={() => handleExcluir(c.id, c.nome)} className="text-sm text-red-600 underline">Excluir</button>
-                      </>
+                      <div className="flex gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => { setEditId(c.id); setEditNome(c.nome); }}>
+                          Editar
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => handleExcluir(c.id, c.nome)} className="text-red-600 hover:bg-red-600/10 hover:text-red-600">
+                          Excluir
+                        </Button>
+                      </div>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      {error && <p className="text-red-600 mt-4">{error}</p>}
+      {error && <p className="mt-4 text-red-600">{error}</p>}
     </div>
   );
 }

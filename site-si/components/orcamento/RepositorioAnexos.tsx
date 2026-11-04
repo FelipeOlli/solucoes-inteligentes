@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 
 interface Anexo {
   id: string;
@@ -148,39 +150,46 @@ export default function RepositorioAnexos() {
   return (
     <div className="mt-8 space-y-6">
       {/* ── Modelos de orçamento ── */}
-      <div className="bg-theme-card p-6 rounded-lg border border-theme">
-        <h2 className="font-heading text-base font-semibold text-theme-primary mb-4">
+      <div className="bg-surface p-6 rounded-card border border-line">
+        <h2 className="font-heading text-base font-semibold text-brand mb-4">
           Modelos de orçamento
         </h2>
-        <p className="text-xs text-theme-muted mb-4">
+        <p className="text-xs text-ink-muted mb-4">
           Armazene modelos prontos (o seu e os das coberturas) para consultar e baixar quando precisar.
         </p>
 
         {/* Upload de modelo */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3 mb-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-theme-muted mb-1">Nome do modelo</label>
-            <input
+            <label className="block text-sm font-medium text-ink-muted mb-1">Nome do modelo</label>
+            <Input
               type="text"
               value={modeloRotulo}
               onChange={(e) => setModeloRotulo(e.target.value)}
               placeholder="Ex: Soluções Inteligentes, Cobertura Empresa X"
-              className="w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm"
+              
             />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-theme-muted mb-1">Arquivo</label>
+            <label className="block text-sm font-medium text-ink-muted mb-1">Arquivo</label>
+            <label
+              htmlFor="modelo-file"
+              className="inline-flex w-full cursor-pointer items-center gap-2 rounded-control border border-line bg-surface px-3 py-2 text-sm text-ink transition-colors hover:border-brand"
+            >
+              <span className="truncate">{modeloFile ? modeloFile.name : "Escolher arquivo…"}</span>
+            </label>
             <input
+              id="modelo-file"
               ref={modeloInputRef}
               type="file"
               onChange={(e) => setModeloFile(e.target.files?.[0] ?? null)}
-              className="w-full text-sm text-theme-muted file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:opacity-90 cursor-pointer"
+              className="sr-only"
             />
           </div>
           <button
             onClick={enviarModelo}
             disabled={enviandoModelo || !modeloFile || !modeloRotulo.trim()}
-            className="px-4 py-2 rounded-lg bg-theme-cta font-medium text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+            className="px-4 py-2 rounded-control bg-brand font-medium text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
             {enviandoModelo ? "Enviando..." : "Anexar"}
           </button>
@@ -188,28 +197,28 @@ export default function RepositorioAnexos() {
 
         {/* Lista de modelos */}
         {carregando ? (
-          <p className="text-sm text-theme-muted">Carregando...</p>
+          <p className="text-sm text-ink-muted">Carregando...</p>
         ) : modelos.length === 0 ? (
-          <p className="text-sm text-theme-muted">Nenhum modelo anexado ainda.</p>
+          <p className="text-sm text-ink-muted">Nenhum modelo anexado ainda.</p>
         ) : (
           <ul className="divide-y divide-theme">
             {modelos.map((m) => (
               <li key={m.id} className="flex items-center justify-between py-3 gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-theme truncate">{m.rotulo}</p>
-                  <p className="text-xs text-theme-muted truncate">{m.nomeArquivo} · {formatBytes(m.tamanhoBytes)}</p>
+                  <p className="text-sm font-medium text-ink truncate">{m.rotulo}</p>
+                  <p className="text-xs text-ink-muted truncate">{m.nomeArquivo} · {formatBytes(m.tamanhoBytes)}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <a
                     href={m.url}
                     download={m.nomeArquivo}
-                    className="px-3 py-1 text-xs rounded-lg border border-theme text-theme hover:opacity-80"
+                    className="px-3 py-1 text-xs rounded-control border border-line text-ink hover:opacity-80"
                   >
                     Baixar
                   </a>
                   <button
                     onClick={() => remover(m.id)}
-                    className="px-3 py-1 text-xs rounded-lg border border-red-300 text-red-500 hover:opacity-80"
+                    className="px-3 py-1 text-xs rounded-control border border-red-300 text-red-500 hover:opacity-80"
                   >
                     Remover
                   </button>
@@ -221,41 +230,48 @@ export default function RepositorioAnexos() {
       </div>
 
       {/* ── Carimbos ── */}
-      <div className="bg-theme-card p-6 rounded-lg border border-theme">
-        <h2 className="font-heading text-base font-semibold text-theme-primary mb-4">
+      <div className="bg-surface p-6 rounded-card border border-line">
+        <h2 className="font-heading text-base font-semibold text-brand mb-4">
           Carimbos de pagamento
         </h2>
-        <p className="text-xs text-theme-muted mb-4">
+        <p className="text-xs text-ink-muted mb-4">
           Armazene imagens de carimbo por tipo de pagamento (PIX, Cartão de crédito, Cheque).
         </p>
 
         {/* Upload de carimbo */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3 mb-4">
           <div>
-            <label className="block text-sm font-medium text-theme-muted mb-1">Tipo</label>
-            <select
+            <label className="block text-sm font-medium text-ink-muted mb-1">Tipo</label>
+            <Select
               value={carimboTipo}
               onChange={(e) => setCarimboTipo(e.target.value as typeof carimboTipo)}
-              className="px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm"
+              
             >
               <option value="PIX">PIX</option>
               <option value="CARTAO_CREDITO">Cartão de crédito</option>
               <option value="CHEQUE">Cheque</option>
-            </select>
+            </Select>
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-theme-muted mb-1">Arquivo</label>
+            <label className="block text-sm font-medium text-ink-muted mb-1">Arquivo</label>
+            <label
+              htmlFor="carimbo-file"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-control border border-line bg-surface px-3 py-2 text-sm text-ink transition-colors hover:border-brand"
+            >
+              <span className="truncate">{carimboFile ? carimboFile.name : "Escolher arquivo…"}</span>
+            </label>
             <input
+              id="carimbo-file"
               ref={carimboInputRef}
               type="file"
               onChange={(e) => setCarimboFile(e.target.files?.[0] ?? null)}
-              className="w-full text-sm text-theme-muted file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:opacity-90 cursor-pointer"
+              className="sr-only"
             />
           </div>
           <button
             onClick={enviarCarimbo}
             disabled={enviandoCarimbo || !carimboFile}
-            className="px-4 py-2 rounded-lg bg-theme-cta font-medium text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+            className="px-4 py-2 rounded-control bg-brand font-medium text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
             {enviandoCarimbo ? "Enviando..." : "Anexar"}
           </button>
@@ -263,30 +279,30 @@ export default function RepositorioAnexos() {
 
         {/* Lista de carimbos */}
         {carregando ? (
-          <p className="text-sm text-theme-muted">Carregando...</p>
+          <p className="text-sm text-ink-muted">Carregando...</p>
         ) : carimbos.length === 0 ? (
-          <p className="text-sm text-theme-muted">Nenhum carimbo anexado ainda.</p>
+          <p className="text-sm text-ink-muted">Nenhum carimbo anexado ainda.</p>
         ) : (
           <ul className="divide-y divide-theme">
             {carimbos.map((c) => (
               <li key={c.id} className="flex items-center justify-between py-3 gap-3">
                 <div className="min-w-0">
-                  <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary mb-1">
+                  <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded bg-brand/10 text-brand mb-1">
                     {c.tipoCarimbo ? TIPO_CARIMBO_LABELS[c.tipoCarimbo] : c.rotulo}
                   </span>
-                  <p className="text-xs text-theme-muted truncate">{c.nomeArquivo} · {formatBytes(c.tamanhoBytes)}</p>
+                  <p className="text-xs text-ink-muted truncate">{c.nomeArquivo} · {formatBytes(c.tamanhoBytes)}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <a
                     href={c.url}
                     download={c.nomeArquivo}
-                    className="px-3 py-1 text-xs rounded-lg border border-theme text-theme hover:opacity-80"
+                    className="px-3 py-1 text-xs rounded-control border border-line text-ink hover:opacity-80"
                   >
                     Baixar
                   </a>
                   <button
                     onClick={() => remover(c.id)}
-                    className="px-3 py-1 text-xs rounded-lg border border-red-300 text-red-500 hover:opacity-80"
+                    className="px-3 py-1 text-xs rounded-control border border-red-300 text-red-500 hover:opacity-80"
                   >
                     Remover
                   </button>

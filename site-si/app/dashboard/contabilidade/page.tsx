@@ -9,6 +9,13 @@ import {
   TipoObrigacaoContabil,
 } from "@prisma/client";
 import { api, withBasePath } from "@/lib/api";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { StatCard } from "@/components/ui/stat-card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type Comentario = {
   id: string;
@@ -257,267 +264,270 @@ export default function ContabilidadePage() {
   }
 
   return (
-    <div className="space-y-4 text-theme">
-      <div>
-        <h1 className="font-heading text-2xl font-bold text-theme-primary">Contabilidade</h1>
-        <p className="text-sm text-theme-muted">
-          Controle impostos, tarifas, certificados, boletos, comprovantes e vencimentos em um só lugar.
-        </p>
-      </div>
+    <div className="text-ink space-y-4">
+      <PageHeader
+        title="Contabilidade"
+        description="Controle impostos, tarifas, certificados, boletos, comprovantes e vencimentos em um só lugar."
+      />
 
       <div className="grid gap-3 md:grid-cols-3">
-        <div className="bg-theme-card border border-theme rounded-lg p-4">
-          <p className="text-sm text-theme-muted">Vencendo</p>
-          <p className="text-2xl font-semibold text-amber-600">{cards.vencendo}</p>
-        </div>
-        <div className="bg-theme-card border border-theme rounded-lg p-4">
-          <p className="text-sm text-theme-muted">Vencido</p>
-          <p className="text-2xl font-semibold text-red-600">{cards.vencido}</p>
-        </div>
-        <div className="bg-theme-card border border-theme rounded-lg p-4">
-          <p className="text-sm text-theme-muted">Concluídas</p>
-          <p className="text-2xl font-semibold text-green-600">{cards.concluidas}</p>
-        </div>
+        <StatCard title="Vencendo" value={cards.vencendo} delay={0} />
+        <StatCard title="Vencido" value={cards.vencido} delay={80} />
+        <StatCard title="Concluídas" value={cards.concluidas} delay={160} />
       </div>
 
-      <form onSubmit={onCreate} className="bg-theme-card border border-theme rounded-lg p-4 grid md:grid-cols-5 gap-2">
-        <input
-          className="md:col-span-2 px-3 py-2 rounded border border-theme bg-transparent"
-          placeholder="Nome da obrigação"
-          value={form.nome}
-          onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
-          required
-        />
-        <select
-          className="px-3 py-2 rounded border border-theme bg-transparent"
-          value={form.tipo}
-          onChange={(e) => setForm((prev) => ({ ...prev, tipo: e.target.value as TipoObrigacaoContabil }))}
-        >
-          {Object.values(TipoObrigacaoContabil).map((tipo) => (
-            <option key={tipo} value={tipo}>{tipo}</option>
-          ))}
-        </select>
-        <select
-          className="px-3 py-2 rounded border border-theme bg-transparent"
-          value={form.periodicidade}
-          onChange={(e) => setForm((prev) => ({ ...prev, periodicidade: e.target.value as PeriodicidadeObrigacao }))}
-        >
-          {Object.values(PeriodicidadeObrigacao).map((p) => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
-        <input
-          type="date"
-          className="px-3 py-2 rounded border border-theme bg-transparent"
-          value={form.proximoVencimento}
-          onChange={(e) => setForm((prev) => ({ ...prev, proximoVencimento: e.target.value }))}
-          required
-        />
-        <input
-          className="md:col-span-4 px-3 py-2 rounded border border-theme bg-transparent"
-          placeholder="Observação (opcional)"
-          value={form.observacao}
-          onChange={(e) => setForm((prev) => ({ ...prev, observacao: e.target.value }))}
-        />
-        <button
-          type="submit"
-          className="px-3 py-2 rounded bg-primary text-white disabled:opacity-60"
-          disabled={saving}
-        >
-          {saving ? "Salvando..." : "Adicionar obrigação"}
-        </button>
-      </form>
+      <Card>
+        <CardHeader>
+          <CardTitle>Nova obrigação</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={onCreate} className="grid gap-2 md:grid-cols-5">
+            <Input
+              className="md:col-span-2"
+              placeholder="Nome da obrigação"
+              value={form.nome}
+              onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
+              required
+            />
+            <Select
+              value={form.tipo}
+              onChange={(e) => setForm((prev) => ({ ...prev, tipo: e.target.value as TipoObrigacaoContabil }))}
+            >
+              {Object.values(TipoObrigacaoContabil).map((tipo) => (
+                <option key={tipo} value={tipo}>{tipo}</option>
+              ))}
+            </Select>
+            <Select
+              value={form.periodicidade}
+              onChange={(e) => setForm((prev) => ({ ...prev, periodicidade: e.target.value as PeriodicidadeObrigacao }))}
+            >
+              {Object.values(PeriodicidadeObrigacao).map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </Select>
+            <Input
+              type="date"
+              value={form.proximoVencimento}
+              onChange={(e) => setForm((prev) => ({ ...prev, proximoVencimento: e.target.value }))}
+              required
+            />
+            <Input
+              className="md:col-span-4"
+              placeholder="Observação (opcional)"
+              value={form.observacao}
+              onChange={(e) => setForm((prev) => ({ ...prev, observacao: e.target.value }))}
+            />
+            <Button type="submit" disabled={saving}>
+              {saving ? "Salvando..." : "Adicionar obrigação"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-3 space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              className="px-2 py-2 rounded border border-theme bg-transparent text-sm"
-              value={filtroStatus}
-              onChange={(e) => setFiltroStatus(e.target.value as StatusObrigacaoContabil | "TODOS")}
-            >
-              <option value="TODOS">Todos status</option>
-              {Object.values(StatusObrigacaoContabil).map((st) => (
-                <option key={st} value={st}>{st}</option>
-              ))}
-            </select>
-            <select
-              className="px-2 py-2 rounded border border-theme bg-transparent text-sm"
-              value={filtroTipo}
-              onChange={(e) => setFiltroTipo(e.target.value as TipoObrigacaoContabil | "TODOS")}
-            >
-              <option value="TODOS">Todos tipos</option>
-              {Object.values(TipoObrigacaoContabil).map((tp) => (
-                <option key={tp} value={tp}>{tp}</option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-            {loading && <p className="text-sm text-theme-muted">Carregando...</p>}
-            {!loading && filtered.length === 0 && <p className="text-sm text-theme-muted">Sem obrigações para os filtros.</p>}
-            {filtered.map((item) => (
-              <button
-                type="button"
-                key={item.id}
-                onClick={() => setSelectedId(item.id)}
-                className={`w-full text-left rounded-lg border px-3 py-2 ${selectedId === item.id ? "border-primary" : "border-theme"}`}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="h-fit">
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Select
+                
+                value={filtroStatus}
+                onChange={(e) => setFiltroStatus(e.target.value as StatusObrigacaoContabil | "TODOS")}
               >
-                <p className="font-medium">{item.nome}</p>
-                <p className="text-xs text-theme-muted">{item.tipo} • {(item.statusCalculado || item.status)}</p>
-                <p className="text-xs">Vence em {new Date(item.proximoVencimento).toLocaleDateString("pt-BR")}</p>
-              </button>
-            ))}
-          </div>
-        </div>
+                <option value="TODOS">Todos status</option>
+                {Object.values(StatusObrigacaoContabil).map((st) => (
+                  <option key={st} value={st}>{st}</option>
+                ))}
+              </Select>
+              <Select
+                
+                value={filtroTipo}
+                onChange={(e) => setFiltroTipo(e.target.value as TipoObrigacaoContabil | "TODOS")}
+              >
+                <option value="TODOS">Todos tipos</option>
+                {Object.values(TipoObrigacaoContabil).map((tp) => (
+                  <option key={tp} value={tp}>{tp}</option>
+                ))}
+              </Select>
+            </div>
+            <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
+              {loading && <p className="text-sm text-ink-muted">Carregando...</p>}
+              {!loading && filtered.length === 0 && <p className="text-sm text-ink-muted">Sem obrigações para os filtros.</p>}
+              {filtered.map((item) => (
+                <button
+                  type="button"
+                  key={item.id}
+                  onClick={() => setSelectedId(item.id)}
+                  className={cn(
+                    "w-full rounded-control border px-3 py-2 text-left transition-colors",
+                    selectedId === item.id
+                      ? "border-brand bg-brand/10"
+                      : "border-line hover:bg-surface-hover"
+                  )}
+                >
+                  <p className="font-medium">{item.nome}</p>
+                  <p className="text-xs text-ink-muted">{item.tipo} • {(item.statusCalculado || item.status)}</p>
+                  <p className="text-xs">Vence em {new Date(item.proximoVencimento).toLocaleDateString("pt-BR")}</p>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="md:col-span-2 bg-theme-card border border-theme rounded-lg p-4 space-y-4">
-          {!selected && <p className="text-sm text-theme-muted">Selecione uma obrigação.</p>}
-          {selected && (
-            <>
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <h2 className="font-heading text-lg font-semibold text-theme-primary">{selected.nome}</h2>
-                  <p className="text-sm text-theme-muted">
-                    {selected.tipo} • {selected.periodicidade} • {(selected.statusCalculado || selected.status)}
-                  </p>
-                  <p className="text-sm">Próximo vencimento: {new Date(selected.proximoVencimento).toLocaleDateString("pt-BR")}</p>
+        <Card className="md:col-span-2">
+          <CardContent className="space-y-4">
+            {!selected && <p className="text-sm text-ink-muted">Selecione uma obrigação.</p>}
+            {selected && (
+              <>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <h2 className="font-heading text-lg font-semibold">{selected.nome}</h2>
+                    <p className="text-sm text-ink-muted">
+                      {selected.tipo} • {selected.periodicidade} • {(selected.statusCalculado || selected.status)}
+                    </p>
+                    <p >Próximo vencimento: {new Date(selected.proximoVencimento).toLocaleDateString("pt-BR")}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => patchObrigacao(selected.id, { marcarConcluida: true })}
+                    >
+                      Marcar concluída
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => patchObrigacao(selected.id, { avancarCiclo: true })}
+                    >
+                      Avançar ciclo
+                    </Button>
+                    <Button type="button" onClick={syncCalendario}>
+                      Vincular ao calendário
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleExcluir}
+                      className="text-red-600 hover:bg-red-600/10 hover:text-red-600"
+                    >
+                      Excluir
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="px-3 py-2 rounded border border-theme"
-                    onClick={() => patchObrigacao(selected.id, { marcarConcluida: true })}
-                  >
-                    Marcar concluída
-                  </button>
-                  <button
-                    type="button"
-                    className="px-3 py-2 rounded border border-theme"
-                    onClick={() => patchObrigacao(selected.id, { avancarCiclo: true })}
-                  >
-                    Avançar ciclo
-                  </button>
-                  <button
-                    type="button"
-                    className="px-3 py-2 rounded bg-primary text-white"
-                    onClick={syncCalendario}
-                  >
-                    Vincular ao calendário
-                  </button>
-                  <button
-                    type="button"
-                    className="px-3 py-2 rounded border border-red-500 text-red-600"
-                    onClick={handleExcluir}
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </div>
 
-              {selected.tipo === TipoObrigacaoContabil.CERTIFICADO_DIGITAL && (
-                <div className="rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
-                  Atenção ao certificado digital: mantenha os arquivos e a data de vencimento atualizados para evitar indisponibilidade.
-                </div>
-              )}
+                {selected.tipo === TipoObrigacaoContabil.CERTIFICADO_DIGITAL && (
+                  <div className="border-amber-500/40 bg-amber-500/10">
+                    Atenção ao certificado digital: mantenha os arquivos e a data de vencimento atualizados para evitar indisponibilidade.
+                  </div>
+                )}
 
-              <div className="grid md:grid-cols-2 gap-3">
-                <label className="text-sm space-y-1">
-                  <span className="text-theme-muted">Atualizar vencimento</span>
-                  <input
-                    type="date"
-                    defaultValue={new Date(selected.proximoVencimento).toISOString().slice(0, 10)}
-                    className="w-full px-3 py-2 rounded border border-theme bg-transparent"
-                    onBlur={(e) => {
-                      if (!e.target.value) return;
-                      patchObrigacao(selected.id, { proximoVencimento: e.target.value });
-                    }}
-                  />
-                </label>
-                <label className="text-sm space-y-1">
-                  <span className="text-theme-muted">Observação</span>
-                  <input
-                    defaultValue={selected.observacao || ""}
-                    className="w-full px-3 py-2 rounded border border-theme bg-transparent"
-                    onBlur={(e) => patchObrigacao(selected.id, { observacao: e.target.value })}
-                  />
-                </label>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-semibold">Documentos</h3>
-                <div className="flex flex-wrap gap-2 items-center">
-                  <select id="categoria-doc" className="px-2 py-2 rounded border border-theme bg-transparent text-sm">
-                    {Object.values(CategoriaDocumentoContabil).map((categoria) => (
-                      <option key={categoria} value={categoria}>{categoria}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="file"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const categoriaSelect = document.getElementById("categoria-doc") as HTMLSelectElement | null;
-                      const categoria = (categoriaSelect?.value || CategoriaDocumentoContabil.OUTRO) as CategoriaDocumentoContabil;
-                      uploadDocumento(file, categoria);
-                      e.currentTarget.value = "";
-                    }}
-                  />
-                  {uploading && <span className="text-sm text-theme-muted">Enviando...</span>}
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="text-sm space-y-1">
+                    <span className="text-ink-muted">Atualizar vencimento</span>
+                    <Input
+                      type="date"
+                      defaultValue={new Date(selected.proximoVencimento).toISOString().slice(0, 10)}
+                      onBlur={(e) => {
+                        if (!e.target.value) return;
+                        patchObrigacao(selected.id, { proximoVencimento: e.target.value });
+                      }}
+                    />
+                  </label>
+                  <label className="space-y-1 text-sm">
+                    <span className="text-ink-muted">Observação</span>
+                    <Input
+                      defaultValue={selected.observacao || ""}
+                      onBlur={(e) => patchObrigacao(selected.id, { observacao: e.target.value })}
+                    />
+                  </label>
                 </div>
+
                 <div className="space-y-2">
-                  {(selected.documentos || []).map((doc) => (
-                    <div key={doc.id} className="rounded border border-theme px-3 py-2 flex items-center justify-between gap-2">
-                      <div>
-                        <a href={withBasePath(doc.arquivoUrl)} target="_blank" rel="noreferrer" className="underline">
-                          {doc.nomeOriginal}
-                        </a>
-                        <p className="text-xs text-theme-muted">
-                          {doc.categoria} • {new Date(doc.createdAt).toLocaleString("pt-BR")}
+                  <h3 className="font-semibold">Documentos</h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Select id="categoria-doc" >
+                      {Object.values(CategoriaDocumentoContabil).map((categoria) => (
+                        <option key={categoria} value={categoria}>{categoria}</option>
+                      ))}
+                    </Select>
+                    <label
+                      htmlFor="doc-file"
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-control border border-line bg-brand px-3 py-2 font-medium text-brand-fg text-sm transition-colors hover:bg-brand-hover"
+                    >
+                      Escolher arquivo
+                    </label>
+                    <input
+                      id="doc-file"
+                      type="file"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const categoriaSelect = document.getElementById("categoria-doc") as HTMLSelectElement | null;
+                        const categoria = (categoriaSelect?.value || CategoriaDocumentoContabil.OUTRO) as CategoriaDocumentoContabil;
+                        uploadDocumento(file, categoria);
+                        e.currentTarget.value = "";
+                      }}
+                    />
+                    {uploading && <span className="text-sm text-ink-muted">Enviando...</span>}
+                  </div>
+                  <div className="space-y-2">
+                    {(selected.documentos || []).map((doc) => (
+                      <div key={doc.id} className="flex items-center justify-between gap-2 rounded-control border border-line px-3 py-2">
+                        <div>
+                          <a href={withBasePath(doc.arquivoUrl)} target="_blank" rel="noreferrer" className="underline">
+                            {doc.nomeOriginal}
+                          </a>
+                          <p className="text-xs text-ink-muted">
+                            {doc.categoria} • {new Date(doc.createdAt).toLocaleString("pt-BR")}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeDocumento(doc.id)}
+                          className="text-red-600 hover:bg-red-600/10 hover:text-red-600"
+                        >
+                          Remover
+                        </Button>
+                      </div>
+                    ))}
+                    {(selected.documentos || []).length === 0 && (
+                      <p className="text-sm text-ink-muted">Nenhum boleto/comprovante/certificado anexado.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Comentários</h3>
+                  <div className="flex gap-2">
+                    <Input
+                      className="min-w-0 flex-1"
+                      value={comentario}
+                      onChange={(e) => setComentario(e.target.value)}
+                      placeholder="Explique a situação deste imposto/tarifa..."
+                    />
+                    <Button type="button" onClick={addComentario}>
+                      Salvar
+                    </Button>
+                  </div>
+                  <div className="max-h-52 space-y-2 overflow-y-auto pr-1">
+                    {(selected.comentarios || []).map((c) => (
+                      <div key={c.id} className="rounded-control border border-line px-3 py-2">
+                        <p className="text-sm">{c.conteudo}</p>
+                        <p className="text-xs text-ink-muted">
+                          {c.autor.email} • {new Date(c.createdAt).toLocaleString("pt-BR")}
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        className="text-red-600 text-sm"
-                        onClick={() => removeDocumento(doc.id)}
-                      >
-                        Remover
-                      </button>
-                    </div>
-                  ))}
-                  {(selected.documentos || []).length === 0 && (
-                    <p className="text-sm text-theme-muted">Nenhum boleto/comprovante/certificado anexado.</p>
-                  )}
+                    ))}
+                    {(selected.comentarios || []).length === 0 && <p className="text-sm text-ink-muted">Sem comentários.</p>}
+                  </div>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-semibold">Comentários</h3>
-                <div className="flex gap-2">
-                  <input
-                    className="flex-1 px-3 py-2 rounded border border-theme bg-transparent"
-                    value={comentario}
-                    onChange={(e) => setComentario(e.target.value)}
-                    placeholder="Explique a situação deste imposto/tarifa..."
-                  />
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white" onClick={addComentario}>
-                    Salvar
-                  </button>
-                </div>
-                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                  {(selected.comentarios || []).map((c) => (
-                    <div key={c.id} className="rounded border border-theme px-3 py-2">
-                      <p className="text-sm">{c.conteudo}</p>
-                      <p className="text-xs text-theme-muted">
-                        {c.autor.email} • {new Date(c.createdAt).toLocaleString("pt-BR")}
-                      </p>
-                    </div>
-                  ))}
-                  {(selected.comentarios || []).length === 0 && <p className="text-sm text-theme-muted">Sem comentários.</p>}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

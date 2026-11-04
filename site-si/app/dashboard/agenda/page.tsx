@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { AnimatePresence, motion } from "framer-motion";
 import { RefreshCw, RotateCcw, Power } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Tabs } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type AgendaEvent = {
   id: string;
@@ -234,114 +238,106 @@ export default function AgendaPage() {
   const periodKey = `${viewMode}-${bounds.start.toISOString()}`;
 
   return (
-    <div className="text-theme space-y-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary">Agenda</h1>
-          <p className="text-sm text-theme-muted">Visualize por dia, semana ou mês e reagende serviços com facilidade.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 justify-end">
-          <div className="inline-flex rounded-lg border border-theme overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setViewMode("day")}
-              className={`px-3 py-2 text-sm ${viewMode === "day" ? "bg-primary text-white" : "bg-theme-card"}`}
-            >
-              Dia
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("week")}
-              className={`px-3 py-2 text-sm border-x border-theme ${viewMode === "week" ? "bg-primary text-white" : "bg-theme-card"}`}
-            >
-              Semana
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("month")}
-              className={`px-3 py-2 text-sm ${viewMode === "month" ? "bg-primary text-white" : "bg-theme-card"}`}
-            >
-              Mês
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Agenda"
+        description="Visualize por dia, semana ou mês e reagende serviços com facilidade."
+        actions={
+          <Tabs
+            variant="segmented"
+            value={viewMode}
+            onChange={(v) => setViewMode(v as ViewMode)}
+            items={[
+              { value: "day", label: "Dia" },
+              { value: "week", label: "Semana" },
+              { value: "month", label: "Mês" },
+            ]}
+          />
+        }
+      />
 
-      <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <h2 className="font-heading font-bold text-theme-primary">Google Agenda</h2>
-            <p className="text-sm text-theme-muted">
-              {google.connected
-                ? `Conectado (${google.integration?.accountEmail || "conta da empresa"})`
-                : "Não conectado"}
-            </p>
-            {google.integration?.lastSyncedAt && (
-              <p className="text-xs text-theme-muted">
-                Última sincronização: {new Date(google.integration.lastSyncedAt).toLocaleString("pt-BR")}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle>Google Agenda</CardTitle>
+              <p className="mt-1 text-sm text-ink-muted">
+                {google.connected
+                  ? `Conectado (${google.integration?.accountEmail || "conta da empresa"})`
+                  : "Não conectado"}
               </p>
-            )}
+              {google.integration?.lastSyncedAt && (
+                <p className="mt-0.5 text-xs text-ink-muted">
+                  Última sincronização: {new Date(google.integration.lastSyncedAt).toLocaleString("pt-BR")}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {!google.connected ? (
+                <Button type="button" onClick={connectGoogle}>
+                  Conectar Google
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => resyncGoogle("resync")}
+                    title="Sincronizar agora"
+                    aria-label="Sincronizar agora"
+                    className="h-10 w-10"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => resyncGoogle("restart_watch")}
+                    title="Reiniciar webhook"
+                    aria-label="Reiniciar webhook"
+                    className="h-10 w-10"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={disconnectGoogle}
+                    title="Desconectar Google"
+                    aria-label="Desconectar Google"
+                    className="h-10 w-10"
+                  >
+                    <Power className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {!google.connected ? (
-              <button
-                type="button"
-                onClick={connectGoogle}
-                className="px-3 py-2 bg-primary text-white rounded-lg"
-              >
-                Conectar Google
-              </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => resyncGoogle("resync")}
-                  title="Sincronizar agora"
-                  aria-label="Sincronizar agora"
-                  className="h-10 w-10 inline-flex items-center justify-center rounded-lg border border-theme bg-theme-card hover:opacity-90"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => resyncGoogle("restart_watch")}
-                  title="Reiniciar webhook"
-                  aria-label="Reiniciar webhook"
-                  className="h-10 w-10 inline-flex items-center justify-center rounded-lg border border-theme bg-theme-card hover:opacity-90"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={disconnectGoogle}
-                  title="Desconectar Google"
-                  aria-label="Desconectar Google"
-                  className="h-10 w-10 inline-flex items-center justify-center rounded-lg bg-red-600 text-white hover:opacity-90"
-                >
-                  <Power className="h-4 w-4" />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+        </CardHeader>
+      </Card>
 
-      <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-heading font-bold text-theme-primary capitalize">{periodLabel}</h3>
-          {loading && <span className="text-sm text-theme-muted">Carregando…</span>}
-        </div>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={periodKey}
-            initial={{ opacity: 0, x: 0 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 0 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="space-y-2"
-          >
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="first-letter:uppercase">{periodLabel}</CardTitle>
+            {loading && <span className="text-sm text-ink-muted">Carregando…</span>}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={periodKey}
+              initial={{ opacity: 0, x: 0 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="space-y-2"
+            >
             {viewMode !== "day" && (
-              <div className="grid grid-cols-7 gap-2 text-xs uppercase text-theme-muted mb-2">
+              <div className="mb-2 grid grid-cols-7 gap-2 text-xs uppercase text-ink-muted">
                 {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((w) => (
                   <div key={w} className="px-2">{w}</div>
                 ))}
@@ -350,24 +346,23 @@ export default function AgendaPage() {
 
             {viewMode === "day" && (
               <div
-                className={`rounded-lg border border-theme p-3 min-h-[240px] ${isToday(cursor) ? "ring-2 ring-amber-500 ring-inset" : ""}`}
+                className={`min-h-[240px] rounded-control border border-line p-3 ${isToday(cursor) ? "ring-2 ring-inset ring-amber-500" : ""}`}
               >
-                <div className="text-xs mb-3 font-medium text-theme-muted">
+                <div className="mb-3 text-xs font-medium text-ink-muted">
                   {cursor.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" })}
                 </div>
                 <div className="space-y-2">
                   {dayEvents.length === 0 ? (
-                    <p className="text-sm text-theme-muted">Nenhum serviço agendado para este dia.</p>
+                    <p className="text-sm text-ink-muted">Nenhum serviço agendado para este dia.</p>
                   ) : (
                     dayEvents.map((ev) => (
                       <div
                         key={ev.id}
-                        className="rounded px-3 py-2 text-sm"
-                        style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-cta-text)" }}
+                        className="rounded-control bg-accent px-3 py-2 text-sm text-accent-fg"
                         title={`${ev.title} (${new Date(ev.start).toLocaleString("pt-BR")})`}
                       >
                         <Link href={ev.href} className="block">
-                          <div className="font-medium truncate">{ev.title}</div>
+                          <div className="truncate font-medium">{ev.title}</div>
                           <div className="opacity-90">
                             {new Date(ev.start).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                           </div>
@@ -395,9 +390,9 @@ export default function AgendaPage() {
                         await moveEvent(eventId, day);
                         setDraggingEventId(null);
                       }}
-                      className={`min-h-[220px] rounded-lg border border-theme p-2 ${isToday(day) ? "ring-2 ring-amber-500 ring-inset" : ""}`}
+                      className={`min-h-[220px] rounded-control border border-line p-2 ${isToday(day) ? "ring-2 ring-inset ring-amber-500" : ""}`}
                     >
-                      <div className="text-xs mb-2 font-medium">
+                      <div className="mb-2 text-xs font-medium">
                         {day.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
                       </div>
                       <div className="space-y-1">
@@ -410,12 +405,11 @@ export default function AgendaPage() {
                               setDraggingEventId(ev.id);
                             }}
                             onDragEnd={() => setDraggingEventId(null)}
-                            className={`rounded px-2 py-1 text-xs cursor-move transition-opacity duration-150 ${draggingEventId === ev.id ? "opacity-50" : ""}`}
-                            style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-cta-text)" }}
+                            className={`cursor-move rounded-control bg-accent px-2 py-1 text-xs text-accent-fg transition-opacity duration-150 ${draggingEventId === ev.id ? "opacity-50" : ""}`}
                             title={`${ev.title} (${new Date(ev.start).toLocaleString("pt-BR")})`}
                           >
                         <Link href={ev.href} className="block">
-                              <div className="font-medium truncate">{ev.title}</div>
+                              <div className="truncate font-medium">{ev.title}</div>
                               <div className="opacity-90">
                                 {new Date(ev.start).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                               </div>
@@ -446,9 +440,9 @@ export default function AgendaPage() {
                         await moveEvent(eventId, day);
                         setDraggingEventId(null);
                       }}
-                      className={`min-h-[120px] rounded-lg border p-2 ${isCurrentMonth ? "border-theme" : "border-theme opacity-50"} ${isToday(day) ? "ring-2 ring-amber-500 ring-inset" : ""}`}
+                      className={`min-h-[120px] rounded-control border p-2 ${isCurrentMonth ? "border-line" : "border-line opacity-50"} ${isToday(day) ? "ring-2 ring-inset ring-amber-500" : ""}`}
                     >
-                      <div className="text-xs mb-2 font-medium">{day.getDate()}</div>
+                      <div className="mb-2 text-xs font-medium">{day.getDate()}</div>
                       <div className="space-y-1">
                         {monthEvents.map((ev) => (
                           <div
@@ -459,12 +453,11 @@ export default function AgendaPage() {
                               setDraggingEventId(ev.id);
                             }}
                             onDragEnd={() => setDraggingEventId(null)}
-                            className={`rounded px-2 py-1 text-xs cursor-move transition-opacity duration-150 ${draggingEventId === ev.id ? "opacity-50" : ""}`}
-                            style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-cta-text)" }}
+                            className={`cursor-move rounded-control bg-accent px-2 py-1 text-xs text-accent-fg transition-opacity duration-150 ${draggingEventId === ev.id ? "opacity-50" : ""}`}
                             title={`${ev.title} (${new Date(ev.start).toLocaleString("pt-BR")})`}
                           >
                             <Link href={ev.href} className="block">
-                              <div className="font-medium truncate">{ev.title}</div>
+                              <div className="truncate font-medium">{ev.title}</div>
                               <div className="opacity-90">
                                 {new Date(ev.start).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                               </div>
@@ -479,8 +472,9 @@ export default function AgendaPage() {
             )}
           </motion.div>
         </AnimatePresence>
-      </div>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+        </CardContent>
+      </Card>
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 }

@@ -2,6 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Tecnico = {
   id: string;
@@ -109,258 +122,266 @@ export default function TecnicosPage() {
         </span>
       );
     }
-    return <span className="text-theme-muted">—</span>;
+    return <span className="text-ink-muted">—</span>;
   }
 
-  if (loading) return <p className="text-body">Carregando…</p>;
+  if (loading) return <p className="text-sm text-ink-muted">Carregando…</p>;
 
   return (
     <div>
-      <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-4">Técnicos</h1>
+      <PageHeader
+        title="Técnicos"
+        description="Cadastro da equipe, dados bancários e acessos ao portal do técnico."
+      />
 
-      <form onSubmit={handleCriar} className="bg-theme-card p-4 rounded-lg border border-theme mb-6 max-w-xl">
-        <h2 className="font-heading font-bold text-theme-primary mb-3">Novo técnico</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input
-            placeholder="Nome *"
-            required
-            value={form.nome}
-            onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-            className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
-          />
-          <input
-            placeholder="Telefone"
-            value={form.telefone}
-            onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
-            className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-          />
-          <input
-            placeholder="E-mail"
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-            className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-          />
-          <input
-            placeholder="Endereço"
-            value={form.endereco}
-            onChange={(e) => setForm((f) => ({ ...f, endereco: e.target.value }))}
-            className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
-          />
-        </div>
+      <Card className="mb-6 max-w-xl">
+        <CardHeader>
+          <CardTitle>Novo técnico</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleCriar}>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Input
+                placeholder="Nome *"
+                required
+                value={form.nome}
+                onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+                className="sm:col-span-2"
+              />
+              <Input
+                placeholder="Telefone"
+                value={form.telefone}
+                onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
+              />
+              <Input
+                placeholder="E-mail"
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              />
+              <Input
+                placeholder="Endereço"
+                value={form.endereco}
+                onChange={(e) => setForm((f) => ({ ...f, endereco: e.target.value }))}
+                className="sm:col-span-2"
+              />
+            </div>
 
-        <p className="text-xs text-theme-muted mt-4 mb-2 font-medium uppercase tracking-wide">Dados bancários (opcional)</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input
-            placeholder="Chave PIX"
-            value={form.chavePix}
-            onChange={(e) => setForm((f) => ({ ...f, chavePix: e.target.value }))}
-            className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
-          />
-          <input
-            placeholder="Banco"
-            value={form.banco}
-            onChange={(e) => setForm((f) => ({ ...f, banco: e.target.value }))}
-            className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme sm:col-span-2"
-          />
-          <input
-            placeholder="Agência"
-            value={form.agencia}
-            onChange={(e) => setForm((f) => ({ ...f, agencia: e.target.value }))}
-            className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-          />
-          <input
-            placeholder="Conta"
-            value={form.conta}
-            onChange={(e) => setForm((f) => ({ ...f, conta: e.target.value }))}
-            className="px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-          />
-        </div>
+            <p className="mb-2 mt-4 text-xs font-medium uppercase tracking-wide text-ink-muted">
+              Dados bancários (opcional)
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Input
+                placeholder="Chave PIX"
+                value={form.chavePix}
+                onChange={(e) => setForm((f) => ({ ...f, chavePix: e.target.value }))}
+                className="sm:col-span-2"
+              />
+              <Input
+                placeholder="Banco"
+                value={form.banco}
+                onChange={(e) => setForm((f) => ({ ...f, banco: e.target.value }))}
+                className="sm:col-span-2"
+              />
+              <Input
+                placeholder="Agência"
+                value={form.agencia}
+                onChange={(e) => setForm((f) => ({ ...f, agencia: e.target.value }))}
+              />
+              <Input
+                placeholder="Conta"
+                value={form.conta}
+                onChange={(e) => setForm((f) => ({ ...f, conta: e.target.value }))}
+              />
+            </div>
 
-        <button
-          type="submit"
-          disabled={!form.nome.trim()}
-          className="mt-3 px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50"
-        >
-          Adicionar
-        </button>
-      </form>
+            <Button type="submit" disabled={!form.nome.trim()} className="mt-4">
+              Adicionar
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-      <div className="bg-theme-card rounded-lg border border-theme overflow-hidden overflow-x-auto">
-        <table className="w-full text-left text-theme min-w-[820px]">
-          <thead className="border-b border-theme" style={{ backgroundColor: "var(--color-navbar)" }}>
-            <tr>
-              <th className="px-4 py-3 font-heading font-bold text-theme-primary">Nome</th>
-              <th className="px-4 py-3 font-heading font-bold text-theme-primary">Telefone</th>
-              <th className="px-4 py-3 font-heading font-bold text-theme-primary">E-mail</th>
-              <th className="px-4 py-3 font-heading font-bold text-theme-primary">Dados bancários</th>
-              <th className="px-4 py-3 font-heading font-bold text-theme-primary">Acesso ao app</th>
-              <th className="px-4 py-3 font-heading font-bold text-theme-primary w-32">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
+        <Table className="min-w-[820px]">
+          <TableHeader className="bg-surface-subtle">
+            <TableRow className="hover:bg-surface-subtle">
+              <TableHead>Nome</TableHead>
+              <TableHead>Telefone</TableHead>
+              <TableHead>E-mail</TableHead>
+              <TableHead>Dados bancários</TableHead>
+              <TableHead>Acesso ao app</TableHead>
+              <TableHead className="w-32">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {tecnicos.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-theme-muted text-center">Nenhum técnico cadastrado.</td>
-              </tr>
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={6} className="py-6 text-center text-ink-muted">
+                  Nenhum técnico cadastrado.
+                </TableCell>
+              </TableRow>
             ) : (
               tecnicos.map((t) => (
-                <tr key={t.id} className="border-b border-theme last:border-b-0">
+                <TableRow key={t.id}>
                   {editId === t.id ? (
                     <>
-                      <td className="px-4 py-3">
-                        <input
+                      <TableCell>
+                        <Input
                           value={editForm.nome}
                           onChange={(e) => setEditForm((f) => ({ ...f, nome: e.target.value }))}
-                          className="w-full px-3 py-1 border rounded bg-theme-card border-theme text-theme"
                           autoFocus
                         />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input
+                      </TableCell>
+                      <TableCell>
+                        <Input
                           value={editForm.telefone}
                           onChange={(e) => setEditForm((f) => ({ ...f, telefone: e.target.value }))}
-                          className="w-full px-3 py-1 border rounded bg-theme-card border-theme text-theme"
                         />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input
+                      </TableCell>
+                      <TableCell>
+                        <Input
                           type="email"
                           value={editForm.email}
                           onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
-                          className="w-full px-3 py-1 border rounded bg-theme-card border-theme text-theme"
                         />
-                      </td>
-                      <td className="px-4 py-3 space-y-1">
-                        <input
-                          placeholder="Chave PIX"
-                          value={editForm.chavePix}
-                          onChange={(e) => setEditForm((f) => ({ ...f, chavePix: e.target.value }))}
-                          className="w-full px-3 py-1 border rounded bg-theme-card border-theme text-theme"
-                        />
-                        <input
-                          placeholder="Banco"
-                          value={editForm.banco}
-                          onChange={(e) => setEditForm((f) => ({ ...f, banco: e.target.value }))}
-                          className="w-full px-3 py-1 border rounded bg-theme-card border-theme text-theme"
-                        />
-                        <div className="flex gap-1">
-                          <input
-                            placeholder="Agência"
-                            value={editForm.agencia}
-                            onChange={(e) => setEditForm((f) => ({ ...f, agencia: e.target.value }))}
-                            className="w-1/2 px-3 py-1 border rounded bg-theme-card border-theme text-theme"
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Input
+                            placeholder="Chave PIX"
+                            value={editForm.chavePix}
+                            onChange={(e) => setEditForm((f) => ({ ...f, chavePix: e.target.value }))}
                           />
-                          <input
-                            placeholder="Conta"
-                            value={editForm.conta}
-                            onChange={(e) => setEditForm((f) => ({ ...f, conta: e.target.value }))}
-                            className="w-1/2 px-3 py-1 border rounded bg-theme-card border-theme text-theme"
+                          <Input
+                            placeholder="Banco"
+                            value={editForm.banco}
+                            onChange={(e) => setEditForm((f) => ({ ...f, banco: e.target.value }))}
                           />
+                          <div className="flex gap-1">
+                            <Input
+                              placeholder="Agência"
+                              value={editForm.agencia}
+                              onChange={(e) => setEditForm((f) => ({ ...f, agencia: e.target.value }))}
+                            />
+                            <Input
+                              placeholder="Conta"
+                              value={editForm.conta}
+                              onChange={(e) => setEditForm((f) => ({ ...f, conta: e.target.value }))}
+                            />
+                          </div>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-theme-muted text-sm">—</td>
-                      <td className="px-4 py-3 flex gap-2">
-                        <button type="button" onClick={() => handleSalvar(t.id)} className="text-sm text-theme-primary underline">Salvar</button>
-                        <button type="button" onClick={() => setEditId(null)} className="text-sm text-theme-muted underline">Cancelar</button>
-                      </td>
+                      </TableCell>
+                      <TableCell className="text-sm text-ink-muted">—</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button type="button" variant="outline" size="sm" onClick={() => handleSalvar(t.id)}>
+                            Salvar
+                          </Button>
+                          <Button type="button" variant="ghost" size="sm" onClick={() => setEditId(null)}>
+                            Cancelar
+                          </Button>
+                        </div>
+                      </TableCell>
                     </>
                   ) : (
                     <>
-                      <td className="px-4 py-3">{t.nome}</td>
-                      <td className="px-4 py-3 text-theme-muted">{t.telefone ?? "—"}</td>
-                      <td className="px-4 py-3 text-theme-muted">{t.email ?? "—"}</td>
-                      <td className="px-4 py-3 text-sm text-theme-muted">{dadosBancariosLabel(t)}</td>
-                      <td className="px-4 py-3 text-sm">
+                      <TableCell className="font-medium">{t.nome}</TableCell>
+                      <TableCell className="text-ink-muted">{t.telefone ?? "—"}</TableCell>
+                      <TableCell className="text-ink-muted">{t.email ?? "—"}</TableCell>
+                      <TableCell className="text-sm text-ink-muted">{dadosBancariosLabel(t)}</TableCell>
+                      <TableCell className="text-sm">
                         {t.userId ? (
                           <div className="flex items-center gap-2">
-                            <span className="text-green-700">Login ativo</span>
-                            <button
+                            <Badge variant="accent">Login ativo</Badge>
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleRemoverCredencial(t.id, t.nome)}
-                              className="text-red-600 underline"
+                              className="text-red-600 hover:bg-red-600/10 hover:text-red-600"
                             >
                               Remover
-                            </button>
+                            </Button>
                           </div>
                         ) : credencialId === t.id ? (
-                          <div className="space-y-1 min-w-[220px]">
-                            <input
+                          <div className="min-w-[220px] space-y-1">
+                            <Input
                               type="email"
                               placeholder="E-mail de login"
                               value={credencialForm.email}
                               onChange={(e) => setCredencialForm((f) => ({ ...f, email: e.target.value }))}
-                              className="w-full px-2 py-1 border rounded bg-theme-card border-theme text-theme text-sm"
                               autoFocus
                             />
-                            <input
+                            <Input
                               type="password"
                               placeholder="Senha (mín. 8 caracteres)"
                               value={credencialForm.password}
                               onChange={(e) => setCredencialForm((f) => ({ ...f, password: e.target.value }))}
-                              className="w-full px-2 py-1 border rounded bg-theme-card border-theme text-theme text-sm"
                             />
                             <div className="flex gap-2">
-                              <button type="button" onClick={() => handleCriarCredencial(t.id)} className="text-theme-primary underline">
+                              <Button type="button" variant="outline" size="sm" onClick={() => handleCriarCredencial(t.id)}>
                                 Criar
-                              </button>
-                              <button
+                              </Button>
+                              <Button
                                 type="button"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => { setCredencialId(null); setCredencialForm({ email: "", password: "" }); }}
-                                className="text-theme-muted underline"
                               >
                                 Cancelar
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => setCredencialId(t.id)}
-                            className="text-theme-primary underline"
-                          >
+                          <Button type="button" variant="outline" size="sm" onClick={() => setCredencialId(t.id)}>
                             Criar login
-                          </button>
+                          </Button>
                         )}
-                      </td>
-                      <td className="px-4 py-3 flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditId(t.id);
-                            setEditForm({
-                              nome: t.nome,
-                              telefone: t.telefone ?? "",
-                              email: t.email ?? "",
-                              endereco: t.endereco ?? "",
-                              chavePix: t.chavePix ?? "",
-                              banco: t.banco ?? "",
-                              agencia: t.agencia ?? "",
-                              conta: t.conta ?? "",
-                            });
-                          }}
-                          className="text-sm text-theme-primary underline"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleExcluir(t.id, t.nome)}
-                          className="text-sm text-red-600 underline"
-                        >
-                          Remover
-                        </button>
-                      </td>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditId(t.id);
+                              setEditForm({
+                                nome: t.nome,
+                                telefone: t.telefone ?? "",
+                                email: t.email ?? "",
+                                endereco: t.endereco ?? "",
+                                chavePix: t.chavePix ?? "",
+                                banco: t.banco ?? "",
+                                agencia: t.agencia ?? "",
+                                conta: t.conta ?? "",
+                              });
+                            }}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleExcluir(t.id, t.nome)}
+                            className="text-red-600 hover:bg-red-600/10 hover:text-red-600"
+                          >
+                            Remover
+                          </Button>
+                        </div>
+                      </TableCell>
                     </>
                   )}
-                </tr>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      {error && <p className="text-red-600 mt-4">{error}</p>}
+      {error && <p className="mt-4 text-red-600">{error}</p>}
     </div>
   );
 }

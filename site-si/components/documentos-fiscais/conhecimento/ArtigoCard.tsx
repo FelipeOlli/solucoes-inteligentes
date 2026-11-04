@@ -33,22 +33,22 @@ export function ArtigoCard({ artigo, onClick }: Props) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-left bg-theme-card border border-theme rounded-lg p-4 hover:border-primary transition-colors"
+      className="w-full text-left bg-surface border border-line rounded-card p-4 hover:border-brand transition-colors"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-medium text-theme-primary truncate">{artigo.titulo}</p>
+          <p className="font-medium text-brand truncate">{artigo.titulo}</p>
           {artigo.descricao && (
-            <p className="text-sm text-theme-muted mt-0.5 line-clamp-2">{artigo.descricao}</p>
+            <p className="text-sm text-ink-muted mt-0.5 line-clamp-2">{artigo.descricao}</p>
           )}
         </div>
         {artigo.categoria && (
-          <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+          <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-brand/10 text-brand font-medium">
             {artigo.categoria}
           </span>
         )}
       </div>
-      <div className="flex items-center gap-3 mt-2 text-xs text-theme-muted">
+      <div className="flex items-center gap-3 mt-2 text-xs text-ink-muted">
         {artigo.anexos.length > 0 && (
           <span>📎 {artigo.anexos.length} anexo{artigo.anexos.length > 1 ? "s" : ""}</span>
         )}

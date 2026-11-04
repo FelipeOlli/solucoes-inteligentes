@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { ArtigoCard, type Artigo } from "./ArtigoCard";
 import { ArtigoDrawer } from "./ArtigoDrawer";
+import { Select } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 const CATEGORIAS = ["DAS", "PGDAS-D", "DARF", "IRPF", "Certificado Digital", "Contrato", "Geral", "Outro"];
 
@@ -71,25 +73,25 @@ export function BaseConhecimento() {
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex flex-wrap gap-3 items-center">
-        <input
+        <Input
           type="search"
           placeholder="Buscar artigos..."
           value={busca}
           onChange={(e) => handleBusca(e.target.value)}
-          className="flex-1 min-w-[180px] rounded border border-theme bg-theme-card px-3 py-2 text-sm text-theme focus:outline-none focus:border-primary"
+          className="min-w-[180px] flex-1"
         />
-        <select
+        <Select
           value={filtroCategoria}
           onChange={(e) => handleCategoria(e.target.value)}
-          className="px-3 py-2 rounded border border-theme bg-theme-card text-sm text-theme shrink-0"
+          className="shrink-0"
         >
           <option value="">Todas as categorias</option>
           {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
+        </Select>
         <button
           type="button"
           onClick={abrirNovo}
-          className="px-4 py-2 rounded bg-primary text-white text-sm shrink-0"
+          className="px-4 rounded bg-brand text-brand-fg shrink-0"
         >
           + Novo artigo
         </button>
@@ -98,16 +100,16 @@ export function BaseConhecimento() {
       {erro && <p className="text-sm text-red-600">{erro}</p>}
 
       {loading ? (
-        <div className="bg-theme-card border border-theme rounded-lg p-8 text-center text-sm text-theme-muted">
+        <div className="bg-surface border border-line rounded-card p-8 text-center text-sm text-ink-muted">
           Carregando...
         </div>
       ) : artigos.length === 0 ? (
-        <div className="bg-theme-card border border-theme rounded-lg p-12 text-center space-y-2">
-          <p className="text-theme-muted text-sm">Nenhum artigo encontrado.</p>
+        <div className="p-12 text-center space-y-2">
+          <p className="text-ink-muted text-sm">Nenhum artigo encontrado.</p>
           <button
             type="button"
             onClick={abrirNovo}
-            className="text-sm text-primary hover:underline"
+            className="text-sm text-brand hover:underline"
           >
             Criar o primeiro artigo
           </button>

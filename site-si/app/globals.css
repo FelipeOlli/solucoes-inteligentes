@@ -22,6 +22,33 @@
   --color-card-border: #e5e7eb;
   --font-heading: 'Titillium Web', sans-serif;
   --font-body: 'Poppins', sans-serif;
+
+  /* Tokens do design system (admin) — em RGB para suportar opacidade no Tailwind */
+  --si-surface: 255 255 255;
+  --si-surface-subtle: 248 250 252;
+  --si-surface-hover: 241 245 249;
+  --si-line: 226 232 240;
+  --si-ink: 5 0 6;
+  --si-ink-muted: 100 116 139;
+  --si-brand: 18 41 105;
+  --si-brand-hover: 13 31 77;
+  --si-brand-fg: 255 255 255;
+  --si-accent: 25 203 150;
+  --si-accent-hover: 18 166 122;
+  --si-accent-fg: 4 21 14;
+  --shadow-brand: 0 10px 20px -8px rgb(18 41 105 / 0.28);
+  --si-warn: 154 52 18;
+  --si-warn-bg: 255 237 213;
+  --si-success: 4 120 87;
+  --si-success-bg: 209 250 229;
+  --si-danger: 185 28 28;
+  --si-danger-bg: 254 226 226;
+  --si-info: 126 34 206;
+  --si-info-bg: 250 232 255;
+  --si-info-line: 232 214 250;
+  --si-alert: 190 24 93;
+  --si-alert-bg: 252 231 243;
+  --si-alert-line: 249 205 226;
 }
 
 [data-theme="dark"] {
@@ -38,6 +65,32 @@
   --color-cta-text: #1a1a1a;
   --color-card: #1a1a1a;
   --color-card-border: #333333;
+
+  --si-surface: 26 26 26;
+  --si-surface-subtle: 20 20 20;
+  --si-surface-hover: 34 34 34;
+  --si-line: 58 58 58;
+  --si-ink: 243 244 246;
+  --si-ink-muted: 156 163 175;
+  --si-brand: 37 99 235;
+  --si-brand-hover: 29 78 216;
+  --si-brand-fg: 255 255 255;
+  --si-accent: 25 203 150;
+  --si-accent-hover: 46 229 173;
+  --si-accent-fg: 4 21 14;
+  --shadow-brand: 0 10px 20px -8px rgb(37 99 235 / 0.4);
+  --si-warn: 253 186 116;
+  --si-warn-bg: 67 20 7;
+  --si-success: 110 231 183;
+  --si-success-bg: 2 44 34;
+  --si-danger: 252 165 165;
+  --si-danger-bg: 69 10 10;
+  --si-info: 196 181 253;
+  --si-info-bg: 46 16 101;
+  --si-info-line: 76 29 149;
+  --si-alert: 249 168 212;
+  --si-alert-bg: 80 7 36;
+  --si-alert-line: 131 24 67;
 }
 
 /* Azul da marca - manual Soluções Inteligentes */
@@ -55,6 +108,81 @@
   --color-cta-text: #122969;
   --color-card: #122969;
   --color-card-border: #1a3a7a;
+
+  --si-surface: 18 41 105;
+  --si-surface-subtle: 15 35 82;
+  --si-surface-hover: 26 58 122;
+  --si-line: 43 76 140;
+  --si-ink: 224 231 255;
+  --si-ink-muted: 147 163 201;
+  --si-brand: 25 203 150;
+  --si-brand-hover: 46 229 173;
+  --si-brand-fg: 4 21 14;
+  --si-accent: 25 203 150;
+  --si-accent-hover: 46 229 173;
+  --si-accent-fg: 4 21 14;
+  --shadow-brand: 0 10px 20px -8px rgb(25 203 150 / 0.35);
+  --si-warn: 253 186 116;
+  --si-warn-bg: 59 36 16;
+  --si-success: 110 231 183;
+  --si-success-bg: 10 51 39;
+  --si-danger: 253 164 175;
+  --si-danger-bg: 63 22 32;
+  --si-info: 196 181 253;
+  --si-info-bg: 42 20 98;
+  --si-info-line: 71 33 142;
+  --si-alert: 249 168 212;
+  --si-alert-bg: 75 12 33;
+  --si-alert-line: 122 22 62;
+}
+
+/* Raio e elevation do design system */
+:root {
+  --radius-control: 0.625rem;
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px 0 rgb(5 0 6 / 0.04), 0 1px 3px 0 rgb(5 0 6 / 0.06);
+  --shadow-card-hover: 0 10px 24px -6px rgb(5 0 6 / 0.12);
+}
+
+/* Badges de status — um par fundo/texto por status, por tema */
+:root,
+[data-theme="default"] {
+  --status-aberto-bg: #f1f5f9;         --status-aberto-fg: #334155;
+  --status-agendado-bg: #e0e7ff;      --status-agendado-fg: #3730a3;
+  --status-andamento-bg: #dbeafe;     --status-andamento-fg: #1e40af;
+  --status-peca-bg: #ffedd5;          --status-peca-fg: #9a3412;
+  --status-cliente-bg: #fef3c7;        --status-cliente-fg: #92400e;
+  --status-pagamento-bg: #fef9c3;      --status-pagamento-fg: #854d0e;
+  --status-confirmacao-bg: #ede9fe;   --status-confirmacao-fg: #5b21b6;
+  --status-reagendamento-bg: #fce7f3; --status-reagendamento-fg: #9d174d;
+  --status-concluido-bg: #d1fae5;      --status-concluido-fg: #065f46;
+  --status-cancelado-bg: #fee2e2;     --status-cancelado-fg: #991b1b;
+}
+
+[data-theme="dark"] {
+  --status-aberto-bg: #262626;         --status-aberto-fg: #d4d4d8;
+  --status-agendado-bg: #312e81;       --status-agendado-fg: #c7d2fe;
+  --status-andamento-bg: #1e3a8a;      --status-andamento-fg: #bfdbfe;
+  --status-peca-bg: #431407;           --status-peca-fg: #fdba74;
+  --status-cliente-bg: #422006;        --status-cliente-fg: #fde047;
+  --status-pagamento-bg: #422006;      --status-pagamento-fg: #fef08a;
+  --status-confirmacao-bg: #3b0764;    --status-confirmacao-fg: #ddd6fe;
+  --status-reagendamento-bg: #500724;  --status-reagendamento-fg: #fbcfe8;
+  --status-concluido-bg: #022c22;      --status-concluido-fg: #6ee7b7;
+  --status-cancelado-bg: #450a0a;      --status-cancelado-fg: #fca5a5;
+}
+
+[data-theme="brand-blue"] {
+  --status-aberto-bg: #0f2352;         --status-aberto-fg: #c7d2fe;
+  --status-agendado-bg: #1e2f7a;       --status-agendado-fg: #a5b4fc;
+  --status-andamento-bg: #0b3a52;      --status-andamento-fg: #7dd3fc;
+  --status-peca-bg: #3b2410;           --status-peca-fg: #fdba74;
+  --status-cliente-bg: #3b2f08;         --status-cliente-fg: #fde047;
+  --status-pagamento-bg: #1a2f52;      --status-pagamento-fg: #93c5fd;
+  --status-confirmacao-bg: #2a1a4d;    --status-confirmacao-fg: #c4b5fd;
+  --status-reagendamento-bg: #40142e;  --status-reagendamento-fg: #f9a8d4;
+  --status-concluido-bg: #0a3327;      --status-concluido-fg: #6ee7b7;
+  --status-cancelado-bg: #3f1620;      --status-cancelado-fg: #fda4af;
 }
 
 body {
@@ -168,3 +296,43 @@ body { overflow-x: hidden; }
 .text-theme-muted { color: var(--color-navbar-text-muted); }
 .text-theme-primary { color: var(--color-primary); }
 .bg-theme-cta { background-color: var(--color-cta-bg); color: var(--color-cta-text); }
+
+/* Badges de status */
+.status-aberto { background-color: var(--status-aberto-bg); color: var(--status-aberto-fg); }
+.status-agendado { background-color: var(--status-agendado-bg); color: var(--status-agendado-fg); }
+.status-andamento { background-color: var(--status-andamento-bg); color: var(--status-andamento-fg); }
+.status-peca { background-color: var(--status-peca-bg); color: var(--status-peca-fg); }
+.status-cliente { background-color: var(--status-cliente-bg); color: var(--status-cliente-fg); }
+.status-pagamento { background-color: var(--status-pagamento-bg); color: var(--status-pagamento-fg); }
+.status-confirmacao { background-color: var(--status-confirmacao-bg); color: var(--status-confirmacao-fg); }
+.status-reagendamento { background-color: var(--status-reagendamento-bg); color: var(--status-reagendamento-fg); }
+.status-concluido { background-color: var(--status-concluido-bg); color: var(--status-concluido-fg); }
+.status-cancelado { background-color: var(--status-cancelado-bg); color: var(--status-cancelado-fg); }
+
+/* Badges de status de pagamento (documentos fiscais) */
+.pgto-pendente { background-color: rgb(var(--si-warn-bg)); color: rgb(var(--si-warn)); }
+.pgto-pago { background-color: rgb(var(--si-success-bg)); color: rgb(var(--si-success)); }
+.pgto-atrasado { background-color: rgb(var(--si-danger-bg)); color: rgb(var(--si-danger)); }
+.pgto-isento { background-color: rgb(var(--si-brand) / 0.15); color: rgb(var(--si-brand)); }
+.pgto-nao-aplicavel { background-color: rgb(var(--si-ink-muted) / 0.15); color: rgb(var(--si-ink-muted)); }
+
+/* Banners de aviso (tematizados) */
+.banner-info { background-color: rgb(var(--si-info-bg)); border-color: rgb(var(--si-info-line)); color: rgb(var(--si-info)); }
+.banner-alert { background-color: rgb(var(--si-alert-bg)); border-color: rgb(var(--si-alert-line)); color: rgb(var(--si-alert)); }
+.banner-warn { background-color: rgb(var(--si-warn-bg)); border-color: rgb(var(--si-warn) / 0.4); color: rgb(var(--si-warn)); }
+
+/* Animações do design system */
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+.animate-slide-in-up { animation: slide-in-up 0.45s ease-out both; }
+.animate-fade-in { animation: fade-in 0.2s ease-out both; }

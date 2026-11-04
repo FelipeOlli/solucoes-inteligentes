@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 type Modo = "MANUAL" | "SEMI_AUTO" | "IA";
 
@@ -107,15 +108,15 @@ export function UploadDialog({ empresaFiscalId, onClose, onUploadConcluido }: Pr
     <>
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-theme-card border border-theme rounded-lg w-full max-w-lg space-y-4 p-6">
+        <div className="bg-surface border border-line rounded-card w-full max-w-lg space-y-4 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-heading font-semibold text-theme-primary">Upload de documentos fiscais</h2>
-            <button type="button" onClick={onClose} className="text-theme-muted">✕</button>
+            <h2 className="font-heading font-semibold text-brand">Upload de documentos fiscais</h2>
+            <button type="button" onClick={onClose} className="text-ink-muted">✕</button>
           </div>
 
           {/* Seletor de modo */}
           <div>
-            <p className="text-xs text-theme-muted mb-2">Modo de extração</p>
+            <p className="text-xs text-ink-muted mb-2">Modo de extração</p>
             <div className="grid grid-cols-3 gap-2">
               {MODOS.map((m) => (
                 <button
@@ -124,15 +125,15 @@ export function UploadDialog({ empresaFiscalId, onClose, onUploadConcluido }: Pr
                   onClick={() => setModo(m.value)}
                   className={`rounded border p-2 text-left transition-colors ${
                     modo === m.value
-                      ? "border-primary bg-primary/10 text-theme-primary"
-                      : "border-theme text-theme-muted hover:border-primary/50"
+                      ? "border-brand bg-brand/10 text-brand"
+                      : "border-line text-ink-muted hover:border-brand/50"
                   }`}
                 >
                   <p className="text-sm font-medium">{m.label}</p>
                 </button>
               ))}
             </div>
-            <p className="text-xs text-theme-muted mt-2">
+            <p className="text-xs text-ink-muted mt-2">
               {MODOS.find((m) => m.value === modo)?.descricao}
             </p>
           </div>
@@ -140,17 +141,17 @@ export function UploadDialog({ empresaFiscalId, onClose, onUploadConcluido }: Pr
           {/* Dropzone */}
           <div
             className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              dragging ? "border-primary bg-primary/5" : "border-theme hover:border-primary/50"
+              dragging ? "border-brand bg-brand/5" : "border-line hover:border-brand/50"
             }`}
             onClick={() => inputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
             onDrop={(e) => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer.files); }}
           >
-            <p className="text-theme-muted text-sm">
-              Arraste PDFs aqui ou <span className="text-primary underline">clique para selecionar</span>
+            <p className="text-sm text-ink-muted">
+              Arraste PDFs aqui ou <span className="text-brand underline">clique para selecionar</span>
             </p>
-            <p className="text-xs text-theme-muted mt-1">Máx. 20MB por arquivo • Somente PDF</p>
+            <p className="text-xs text-ink-muted mt-1">Máx. 20MB por arquivo • Somente PDF</p>
             <input
               ref={inputRef}
               type="file"
@@ -169,7 +170,7 @@ export function UploadDialog({ empresaFiscalId, onClose, onUploadConcluido }: Pr
                 const res = resultados[file.name];
                 const erro = erros[file.name];
                 return (
-                  <div key={file.name} className="rounded border border-theme p-3 space-y-1">
+                  <div key={file.name} className="rounded border border-line p-3 space-y-1">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm truncate">{file.name}</span>
                       <span className="text-xs shrink-0">
@@ -188,7 +189,7 @@ export function UploadDialog({ empresaFiscalId, onClose, onUploadConcluido }: Pr
                       </p>
                     )}
                     {status === "ok" && modo === "MANUAL" && (
-                      <p className="text-xs text-theme-muted">Salvo — preencha os dados pelo botão Editar.</p>
+                      <p className="text-xs text-ink-muted">Salvo — preencha os dados pelo botão Editar.</p>
                     )}
                   </div>
                 );
@@ -197,20 +198,15 @@ export function UploadDialog({ empresaFiscalId, onClose, onUploadConcluido }: Pr
           )}
 
           <div className="flex gap-2 justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded border border-theme text-sm">
+            <Button type="button" variant="outline" onClick={onClose}>
               Fechar
-            </button>
+            </Button>
             {!todosFeitos && files.length > 0 && (
-              <button
-                type="button"
-                onClick={enviar}
-                disabled={uploading}
-                className="px-4 py-2 rounded bg-primary text-white text-sm disabled:opacity-60"
-              >
+              <Button type="button" onClick={enviar} disabled={uploading}>
                 {uploading
                   ? modo === "IA" ? "Analisando com IA..." : "Enviando..."
                   : `Enviar ${files.length} arquivo(s)`}
-              </button>
+              </Button>
             )}
           </div>
         </div>

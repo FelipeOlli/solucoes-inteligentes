@@ -1,6 +1,8 @@
 "use client";
 
 import { TipoDocumentoFiscal } from "@prisma/client";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const LABELS: Record<TipoDocumentoFiscal | "TODOS", string> = {
   TODOS: "Todos",
@@ -49,31 +51,34 @@ export function SidebarTipos({ contadores, tipoAtivo, onChange }: Props) {
   ];
 
   return (
-    <aside className="bg-theme-card border border-theme rounded-lg p-3 space-y-1">
-      {tipos.map((tipo) => {
-        const count = tipo === "TODOS" ? totalGeral : getCount(tipo as TipoDocumentoFiscal);
-        const ativo = tipoAtivo === tipo;
-        return (
-          <button
-            key={tipo}
-            type="button"
-            onClick={() => onChange(tipo)}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm transition-colors ${
-              ativo
-                ? "bg-primary text-white"
-                : "hover:bg-theme-card text-theme"
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <span>{ICONS[tipo]}</span>
-              <span>{LABELS[tipo]}</span>
-            </span>
-            <span className={`font-mono text-xs ${ativo ? "text-white/80" : "text-theme-muted"}`}>
-              {count}
-            </span>
-          </button>
-        );
-      })}
-    </aside>
+    <Card className="p-3">
+      <CardContent className="space-y-1 p-0">
+        {tipos.map((tipo) => {
+          const count = tipo === "TODOS" ? totalGeral : getCount(tipo as TipoDocumentoFiscal);
+          const ativo = tipoAtivo === tipo;
+          return (
+            <button
+              key={tipo}
+              type="button"
+              onClick={() => onChange(tipo)}
+              className={cn(
+                "flex w-full items-center justify-between gap-2 rounded-control px-3 py-2 text-sm transition-all duration-300",
+                ativo
+                  ? "bg-brand text-brand-fg shadow-brand"
+                  : "text-ink-muted hover:bg-surface-hover hover:text-ink"
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="shrink-0">{ICONS[tipo]}</span>
+                <span className="truncate">{LABELS[tipo]}</span>
+              </span>
+              <span className={cn("shrink-0 font-mono text-xs", ativo ? "text-brand-fg/80" : "text-ink-muted")}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </CardContent>
+    </Card>
   );
 }

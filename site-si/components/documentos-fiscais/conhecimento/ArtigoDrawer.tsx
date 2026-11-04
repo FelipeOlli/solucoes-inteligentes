@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { api, withBasePath } from "@/lib/api";
 import type { Artigo, Anexo } from "./ArtigoCard";
+import { Select } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 type Mode = "view" | "edit" | "new";
 
@@ -151,8 +155,8 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
       <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 pointer-events-none">
       <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl flex flex-col max-h-[85vh] pointer-events-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-theme shrink-0">
-          <h2 className="font-heading font-bold text-lg text-theme-primary truncate">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line shrink-0">
+          <h2 className="font-heading font-bold text-lg text-brand truncate">
             {mode === "new" ? "Novo artigo" : isEditing ? "Editar artigo" : artigo?.titulo}
           </h2>
           <div className="flex items-center gap-2">
@@ -161,7 +165,7 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
                 <button
                   type="button"
                   onClick={() => setMode("edit")}
-                  className="px-3 py-1.5 text-sm rounded border border-theme hover:border-primary text-theme transition-colors"
+                  className="px-3 py-1.5 text-sm rounded border border-line hover:border-brand text-ink transition-colors"
                 >
                   Editar
                 </button>
@@ -174,7 +178,7 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
                 </button>
               </>
             )}
-            <button type="button" onClick={onClose} className="text-theme-muted hover:text-theme text-xl leading-none px-1">×</button>
+            <button type="button" onClick={onClose} className="text-ink-muted hover:text-ink text-xl leading-none px-1">×</button>
           </div>
         </div>
 
@@ -185,10 +189,10 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
           {isEditing ? (
             <>
               <div className="space-y-1">
-                <label className="text-xs text-theme-muted font-medium">Título *</label>
-                <input
+                <label className="text-xs text-ink-muted font-medium">Título *</label>
+                <Input
                   autoFocus
-                  className="w-full rounded border border-theme bg-theme-card px-3 py-2 text-sm text-theme focus:outline-none focus:border-primary"
+
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
                   placeholder="Ex.: Como emitir o DAS"
@@ -197,20 +201,20 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs text-theme-muted font-medium">Categoria</label>
-                  <select
-                    className="w-full rounded border border-theme bg-theme-card px-3 py-2 text-sm text-theme focus:outline-none focus:border-primary"
+                  <label className="text-xs text-ink-muted font-medium">Categoria</label>
+                  <Select
+
                     value={categoria}
                     onChange={(e) => setCategoria(e.target.value)}
                   >
                     <option value="">— Nenhuma —</option>
                     {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  </Select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-theme-muted font-medium">Resumo</label>
-                  <input
-                    className="w-full rounded border border-theme bg-theme-card px-3 py-2 text-sm text-theme focus:outline-none focus:border-primary"
+                  <label className="text-xs text-ink-muted font-medium">Resumo</label>
+                  <Input
+
                     value={descricao}
                     onChange={(e) => setDescricao(e.target.value)}
                     placeholder="Breve descrição"
@@ -219,9 +223,9 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-theme-muted font-medium">Conteúdo / Passo-a-passo</label>
-                <textarea
-                  className="w-full rounded border border-theme bg-theme-card px-3 py-2 text-sm text-theme focus:outline-none focus:border-primary font-mono resize-none"
+                <label className="text-xs text-ink-muted font-medium">Conteúdo / Passo-a-passo</label>
+                <Textarea
+
                   rows={10}
                   value={conteudo}
                   onChange={(e) => setConteudo(e.target.value)}
@@ -232,12 +236,12 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
               {/* Anexos */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs text-theme-muted font-medium uppercase tracking-wide">Anexos</label>
+                  <label className="text-xs text-ink-muted font-medium uppercase tracking-wide">Anexos</label>
                   <button
                     type="button"
                     onClick={() => fileRef.current?.click()}
                     disabled={uploadAndo}
-                    className="text-xs px-2 py-1 rounded border border-theme hover:border-primary transition-colors disabled:opacity-50"
+                    className="text-xs px-2 py-1 rounded border border-line hover:border-brand transition-colors disabled:opacity-50"
                   >
                     {uploadAndo ? "Enviando..." : "+ Adicionar arquivo"}
                   </button>
@@ -249,7 +253,7 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
                   className="hidden"
                   onChange={onFileChange}
                 />
-                <p className="text-xs text-theme-muted">
+                <p className="text-xs text-ink-muted">
                   PDF, HTML, TXT, CSV, XLSX, XLS, DOCX, DOC, JPG, PNG — até 20 MB
                 </p>
 
@@ -257,11 +261,11 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
                 {anexos.length > 0 && (
                   <ul className="space-y-1">
                     {anexos.map((a) => (
-                      <li key={a.id} className="flex items-center justify-between gap-2 bg-theme-card border border-theme rounded px-3 py-2">
-                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate flex-1">
+                      <li key={a.id} className="flex items-center justify-between gap-2 bg-surface border border-line rounded px-3 py-2">
+                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-sm text-brand hover:underline truncate flex-1">
                           {fileIcon(a.mimeType)} {a.nomeArquivo}
                         </a>
-                        <span className="text-xs text-theme-muted shrink-0">{formatBytes(a.tamanhoBytes)}</span>
+                        <span className="text-xs text-ink-muted shrink-0">{formatBytes(a.tamanhoBytes)}</span>
                         <button
                           type="button"
                           onClick={() => removerAnexo(a)}
@@ -278,11 +282,11 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
                 {pendingFiles.length > 0 && (
                   <ul className="space-y-1">
                     {pendingFiles.map((f, i) => (
-                      <li key={i} className="flex items-center justify-between gap-2 bg-theme-card border border-theme rounded px-3 py-2">
-                        <span className="text-sm text-theme truncate flex-1">
+                      <li key={i} className="flex items-center justify-between gap-2 bg-surface border border-line rounded px-3 py-2">
+                        <span className="text-sm text-ink truncate flex-1">
                           {fileIcon(f.type)} {f.name}
                         </span>
-                        <span className="text-xs text-theme-muted shrink-0">{formatBytes(f.size)}</span>
+                        <span className="text-xs text-ink-muted shrink-0">{formatBytes(f.size)}</span>
                         <button
                           type="button"
                           onClick={() => setPendingFiles((prev) => prev.filter((_, j) => j !== i))}
@@ -296,7 +300,7 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
                 )}
 
                 {anexos.length === 0 && pendingFiles.length === 0 && (
-                  <p className="text-xs text-theme-muted italic">Nenhum anexo.</p>
+                  <p className="text-xs text-ink-muted italic">Nenhum anexo.</p>
                 )}
               </div>
             </>
@@ -304,34 +308,34 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
             <>
               <div className="flex flex-wrap gap-2 items-center">
                 {artigo?.categoria && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-brand/10 text-brand font-medium">
                     {artigo.categoria}
                   </span>
                 )}
                 {artigo?.descricao && (
-                  <span className="text-sm text-theme-muted">{artigo.descricao}</span>
+                  <span className="text-sm text-ink-muted">{artigo.descricao}</span>
                 )}
               </div>
 
               {artigo?.conteudo ? (
-                <div className="bg-theme-card border border-theme rounded-lg p-4 text-sm text-theme whitespace-pre-wrap leading-relaxed font-mono">
+                <div className="bg-surface border border-line rounded-card p-4 text-sm text-ink whitespace-pre-wrap leading-relaxed font-mono">
                   {artigo.conteudo}
                 </div>
               ) : (
-                <p className="text-sm text-theme-muted italic">Sem conteúdo.</p>
+                <p className="text-sm text-ink-muted italic">Sem conteúdo.</p>
               )}
 
               {/* Anexos no modo visualização */}
               {anexos.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs text-theme-muted font-medium uppercase tracking-wide">Anexos</p>
+                  <p className="text-xs text-ink-muted font-medium uppercase tracking-wide">Anexos</p>
                   <ul className="space-y-1">
                     {anexos.map((a) => (
-                      <li key={a.id} className="flex items-center gap-2 bg-theme-card border border-theme rounded px-3 py-2">
-                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate flex-1">
+                      <li key={a.id} className="flex items-center gap-2 bg-surface border border-line rounded px-3 py-2">
+                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-sm text-brand hover:underline truncate flex-1">
                           {fileIcon(a.mimeType)} {a.nomeArquivo}
                         </a>
-                        <span className="text-xs text-theme-muted shrink-0">{formatBytes(a.tamanhoBytes)}</span>
+                        <span className="text-xs text-ink-muted shrink-0">{formatBytes(a.tamanhoBytes)}</span>
                       </li>
                     ))}
                   </ul>
@@ -343,22 +347,21 @@ export function ArtigoDrawer({ artigo, mode: initialMode, onClose, onSalvo, onEx
 
         {/* Footer */}
         {isEditing && (
-          <div className="px-6 py-4 border-t border-theme shrink-0 flex gap-2 justify-end">
+          <div className="px-6 py-4 border-t border-line shrink-0 flex gap-2 justify-end">
             <button
               type="button"
               onClick={() => { if (mode === "new") onClose(); else setMode("view"); }}
-              className="px-4 py-2 text-sm rounded border border-theme hover:border-primary text-theme transition-colors"
+              className="px-4 py-2 text-sm rounded border border-line hover:border-brand text-ink transition-colors"
             >
               Cancelar
             </button>
-            <button
+            <Button
               type="button"
               onClick={salvar}
               disabled={salvando}
-              className="px-4 py-2 text-sm rounded bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {salvando ? "Salvando..." : mode === "new" && pendingFiles.length > 0 ? `Salvar + enviar ${pendingFiles.length} arquivo${pendingFiles.length > 1 ? "s" : ""}` : "Salvar"}
-            </button>
+            </Button>
           </div>
         )}
       </div>

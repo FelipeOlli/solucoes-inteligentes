@@ -12,6 +12,11 @@ import { DocumentoDrawer, DocumentoDetalhe } from "@/components/documentos-fisca
 import { UploadDialog } from "@/components/documentos-fiscais/UploadDialog";
 import { PerfilEmpresa } from "@/components/documentos-fiscais/PerfilEmpresa";
 import { BaseConhecimento } from "@/components/documentos-fiscais/conhecimento/BaseConhecimento";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { Tabs } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 
 type Empresa = {
   id: string; cnpj: string; razaoSocial: string;
@@ -141,43 +146,29 @@ export default function DocumentosFiscaisPage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-theme-primary">Contabilidade</h1>
-          {empresa && (
-            <p className="text-sm text-theme-muted font-mono">{empresa.cnpj} — {empresa.razaoSocial}</p>
-          )}
-        </div>
-        {empresa && aba === "docs" && (
-          <button
-            type="button"
-            className="px-4 py-2 rounded bg-primary text-white text-sm"
-            onClick={() => setShowUpload(true)}
-          >
-            ⬆ Upload
-          </button>
-        )}
-
-      </div>
+      <PageHeader
+        title="Contabilidade"
+        description={empresa ? `${empresa.cnpj} — ${empresa.razaoSocial}` : undefined}
+        actions={
+          empresa && aba === "docs" ? (
+            <Button type="button" onClick={() => setShowUpload(true)}>
+              ⬆ Upload
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Abas */}
       {empresa && (
-        <div className="flex gap-1 border-b border-theme">
-          {(["docs", "conhecimento", "perfil"] as const).map((a) => (
-            <button
-              key={a}
-              type="button"
-              onClick={() => setAba(a)}
-              className={`px-4 py-2 text-sm transition-colors border-b-2 -mb-px ${
-                aba === a
-                  ? "border-primary text-theme-primary font-medium"
-                  : "border-transparent text-theme-muted hover:text-theme"
-              }`}
-            >
-              {a === "docs" ? "Documentos Fiscais" : a === "conhecimento" ? "Base de Conhecimento" : "Perfil da Empresa"}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          value={aba}
+          onChange={(v) => setAba(v as typeof aba)}
+          items={[
+            { value: "docs", label: "Documentos Fiscais" },
+            { value: "conhecimento", label: "Base de Conhecimento" },
+            { value: "perfil", label: "Perfil da Empresa" },
+          ]}
+        />
       )}
 
       {empresa && aba === "perfil" && <PerfilEmpresa empresa={empresa} />}
@@ -186,14 +177,14 @@ export default function DocumentosFiscaisPage() {
 
       {empresa && aba === "docs" && (
         <>
-          <div className="flex flex-wrap gap-3 items-center">
-            <div className="flex-1 min-w-[200px]">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="min-w-[200px] flex-1">
               <BuscaGlobal onBusca={handleBusca} />
             </div>
-            <select
+            <Select
               value={filtroPgto}
               onChange={(e) => { setFiltroPgto(e.target.value as StatusPagamentoFiscal | "TODOS"); setPage(1); }}
-              className="px-3 py-2 rounded border border-theme bg-theme-card text-sm text-theme shrink-0"
+              className="shrink-0"
             >
               <option value="TODOS">Todos os pagamentos</option>
               <option value="PENDENTE">Pendente</option>
@@ -201,7 +192,7 @@ export default function DocumentosFiscaisPage() {
               <option value="ATRASADO">Atrasado</option>
               <option value="ISENTO">Isento</option>
               <option value="NAO_APLICAVEL">N/A</option>
-            </select>
+            </Select>
           </div>
 
           {kpis && (
@@ -216,7 +207,7 @@ export default function DocumentosFiscaisPage() {
             />
           )}
 
-          <div className="grid md:grid-cols-[180px,1fr] gap-4 items-start">
+          <div className="grid items-start gap-4 md:grid-cols-[240px,1fr]">
             <SidebarTipos
               contadores={contadores}
               tipoAtivo={tipoAtivo}
@@ -226,9 +217,9 @@ export default function DocumentosFiscaisPage() {
             <div className="space-y-3">
               {error && <p className="text-sm text-red-600">{error}</p>}
               {loading ? (
-                <div className="bg-theme-card border border-theme rounded-lg p-8 text-center text-sm text-theme-muted">
+                <Card className="p-8 text-center text-sm text-ink-muted">
                   Carregando...
-                </div>
+                </Card>
               ) : (
                 <TabelaDocumentos
                   documentos={documentos}
@@ -240,23 +231,25 @@ export default function DocumentosFiscaisPage() {
 
               {totalPages > 1 && (
                 <div className="flex items-center gap-2 text-sm">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     disabled={page === 1}
                     onClick={() => setPage((p) => p - 1)}
-                    className="px-3 py-1 rounded border border-theme disabled:opacity-40"
                   >
                     ←
-                  </button>
-                  <span className="text-theme-muted">Página {page} de {totalPages}</span>
-                  <button
+                  </Button>
+                  <span className="text-ink-muted">Página {page} de {totalPages}</span>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     disabled={page === totalPages}
                     onClick={() => setPage((p) => p + 1)}
-                    className="px-3 py-1 rounded border border-theme disabled:opacity-40"
                   >
                     →
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>

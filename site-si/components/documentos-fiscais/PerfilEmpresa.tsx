@@ -2,6 +2,9 @@
 
 import { useRef, useState } from "react";
 import { api } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 
 type Empresa = {
   id: string;
@@ -141,22 +144,22 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
   return (
     <div className="space-y-6">
       {/* ── Identificação ── */}
-      <div className="bg-theme-card border border-theme rounded-lg p-5">
+      <div className="bg-surface border border-line rounded-card p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-heading font-semibold text-theme-primary">Identificação</h2>
+          <h2 className="font-heading font-semibold text-brand">Identificação</h2>
           {!editando ? (
             <button type="button" onClick={abrirEdicao}
-              className="px-3 py-1.5 text-xs rounded border border-theme text-theme-muted hover:text-theme transition-colors">
+              className="px-3 py-1.5 text-xs rounded border border-line text-ink-muted hover:text-ink transition-colors">
               Editar
             </button>
           ) : (
             <div className="flex gap-2">
               <button type="button" onClick={() => setEditando(false)}
-                className="px-3 py-1.5 text-xs rounded border border-theme text-theme-muted">
+                className="px-3 py-1.5 text-xs rounded border border-line text-ink-muted">
                 Cancelar
               </button>
               <button type="button" onClick={salvar} disabled={salvando}
-                className="px-3 py-1.5 text-xs rounded bg-primary text-white disabled:opacity-60">
+                className="px-3 py-1.5 text-xs rounded bg-brand text-brand-fg disabled:opacity-60">
                 {salvando ? "Salvando..." : "Salvar"}
               </button>
             </div>
@@ -170,22 +173,20 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
           <EditField label="Razão Social" value={f.razaoSocial} editando={editando}
             onChange={(v) => setForm((x) => ({ ...x, razaoSocial: v }))} />
           <div>
-            <p className="text-xs text-theme-muted mb-1">Regime Tributário</p>
+            <p className="text-xs text-ink-muted mb-1">Regime Tributário</p>
             {editando ? (
-              <select value={f.regime} onChange={(e) => setForm((x) => ({ ...x, regime: e.target.value }))}
-                className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm">
+              <Select value={f.regime} onChange={(e) => setForm((x) => ({ ...x, regime: e.target.value }))}>
                 {Object.entries(REGIME_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-            ) : <p className="text-sm">{REGIME_LABELS[empresa.regime] ?? empresa.regime}</p>}
+              </Select>
+            ) : <p >{REGIME_LABELS[empresa.regime] ?? empresa.regime}</p>}
           </div>
           <div>
-            <p className="text-xs text-theme-muted mb-1">Porte</p>
+            <p className="text-xs text-ink-muted mb-1">Porte</p>
             {editando ? (
-              <select value={f.porte} onChange={(e) => setForm((x) => ({ ...x, porte: e.target.value }))}
-                className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm">
+              <Select value={f.porte} onChange={(e) => setForm((x) => ({ ...x, porte: e.target.value }))}>
                 {Object.entries(PORTE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-            ) : <p className="text-sm">{PORTE_LABELS[empresa.porte] ?? empresa.porte}</p>}
+              </Select>
+            ) : <p >{PORTE_LABELS[empresa.porte] ?? empresa.porte}</p>}
           </div>
           <EditField label="Inscrição Estadual" value={f.inscricaoEstadual ?? ""} editando={editando}
             onChange={(v) => setForm((x) => ({ ...x, inscricaoEstadual: v || null }))} />
@@ -207,8 +208,8 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
       </div>
 
       {/* ── Tributação ── */}
-      <div className="bg-theme-card border border-theme rounded-lg p-5">
-        <h2 className="font-heading font-semibold text-theme-primary mb-4">Tributação</h2>
+      <div className="bg-surface border border-line rounded-card p-5">
+        <h2 className="font-heading font-semibold text-brand mb-4">Tributação</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <TribSetor title="Nacional" campos={[
             { key: "nbs", label: "NBS" },
@@ -230,54 +231,55 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
       </div>
 
       {/* ── Documentos Fixos ── */}
-      <div className="bg-theme-card border border-theme rounded-lg p-5">
-        <h2 className="font-heading font-semibold text-theme-primary mb-4">Documentos Fixos</h2>
+      <div className="bg-surface border border-line rounded-card p-5">
+        <h2 className="font-heading font-semibold text-brand mb-4">Documentos Fixos</h2>
 
         {/* Upload */}
-        <div className="border border-theme rounded-lg p-4 mb-4 space-y-3">
-          <p className="text-xs text-theme-muted font-medium">Adicionar documento</p>
+        <div className="border border-line rounded-card p-4 mb-4 space-y-3">
+          <p className="text-xs text-ink-muted font-medium">Adicionar documento</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <p className="text-xs text-theme-muted mb-1">Categoria</p>
-              <select value={uploadCategoria}
-                onChange={(e) => setUploadCategoria(e.target.value as DocEmpresa["categoria"])}
-                className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm">
+              <p className="text-xs text-ink-muted mb-1">Categoria</p>
+              <Select value={uploadCategoria}
+                onChange={(e) => setUploadCategoria(e.target.value as DocEmpresa["categoria"])}>
                 <option value="CONTRATO_SOCIAL">Contrato Social</option>
                 <option value="CERTIFICADO_DIGITAL">Certificado Digital</option>
-              </select>
+              </Select>
             </div>
             <div>
-              <p className="text-xs text-theme-muted mb-1">Nome / Descrição</p>
-              <input type="text" value={uploadNome} onChange={(e) => setUploadNome(e.target.value)}
-                placeholder="Ex: Contrato Social 2024"
-                className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm" />
+              <p className="text-xs text-ink-muted mb-1">Nome / Descrição</p>
+              <Input type="text" value={uploadNome} onChange={(e) => setUploadNome(e.target.value)}
+                placeholder="Ex: Contrato Social 2024" />
             </div>
             <div>
-              <p className="text-xs text-theme-muted mb-1">Validade (opcional)</p>
-              <input type="date" value={uploadValidade} onChange={(e) => setUploadValidade(e.target.value)}
-                className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm" />
+              <p className="text-xs text-ink-muted mb-1">Validade (opcional)</p>
+              <Input type="date" value={uploadValidade} onChange={(e) => setUploadValidade(e.target.value)} />
             </div>
             {uploadCategoria === "CERTIFICADO_DIGITAL" && (
               <div>
-                <p className="text-xs text-theme-muted mb-1">Senha do certificado</p>
-                <input type="password" value={uploadSenha} onChange={(e) => setUploadSenha(e.target.value)}
-                  placeholder="Senha do arquivo .pfx"
-                  className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm" />
+                <p className="text-xs text-ink-muted mb-1">Senha do certificado</p>
+                <Input type="password" value={uploadSenha} onChange={(e) => setUploadSenha(e.target.value)}
+                  placeholder="Senha do arquivo .pfx" />
               </div>
             )}
             <div>
-              <p className="text-xs text-theme-muted mb-1">Arquivo (PDF, JPG, PNG, PFX)</p>
-              <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.pfx,.p12"
+              <p className="text-xs text-ink-muted mb-1">Arquivo (PDF, JPG, PNG, PFX)</p>
+              <label
+                htmlFor="empresa-doc-file"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-control border border-line bg-surface px-3 py-2 text-sm text-ink transition-colors hover:border-brand"
+              >
+                {uploadArquivo ? uploadArquivo.name : "Escolher arquivo…"}
+              </label>
+              <input ref={inputRef} id="empresa-doc-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.pfx,.p12"
                 onChange={(e) => setUploadArquivo(e.target.files?.[0] ?? null)}
-                className="w-full text-sm text-theme-muted" />
+                className="sr-only" />
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button type="button" onClick={enviarDoc}
-              disabled={enviando || !uploadArquivo || !uploadNome.trim()}
-              className="px-4 py-2 rounded bg-primary text-white text-sm disabled:opacity-60">
+            <Button type="button" onClick={enviarDoc}
+              disabled={enviando || !uploadArquivo || !uploadNome.trim()}>
               {enviando ? "Enviando..." : "Adicionar"}
-            </button>
+            </Button>
             {erro && <p className="text-xs text-red-600">{erro}</p>}
             {sucesso && <p className="text-xs text-green-600">{sucesso}</p>}
           </div>
@@ -285,19 +287,19 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
 
         {/* Lista */}
         {docs.length === 0 ? (
-          <p className="text-sm text-theme-muted text-center py-4">Nenhum documento fixo cadastrado.</p>
+          <p className="text-sm text-ink-muted text-center py-4">Nenhum documento fixo cadastrado.</p>
         ) : (
           <div className="space-y-2">
             {docs.map((doc) => (
-              <div key={doc.id} className="flex items-center justify-between gap-3 rounded border border-theme px-4 py-3">
+              <div key={doc.id} className="flex items-center justify-between gap-3 rounded border border-line px-4 py-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary font-medium">
+                    <span className="text-xs px-2 py-0.5 rounded bg-brand/10 text-brand font-medium">
                       {CAT_LABEL[doc.categoria]}
                     </span>
                     <span className="text-sm font-medium truncate">{doc.nome}</span>
                   </div>
-                  <div className="flex gap-3 mt-1 text-xs text-theme-muted flex-wrap">
+                  <div className="flex gap-3 mt-1 text-xs text-ink-muted flex-wrap">
                     {doc.nomeArquivo && <span>{doc.nomeArquivo}</span>}
                     {doc.tamanhoBytes && <span>{(doc.tamanhoBytes / 1024).toFixed(1)} KB</span>}
                     {doc.dataValidade && (
@@ -332,7 +334,7 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
                 <div className="flex items-center gap-2 shrink-0">
                   {doc.arquivoUrl && (
                     <a href={doc.arquivoUrl} target="_blank" rel="noopener noreferrer"
-                      className="text-primary hover:opacity-70 transition-opacity" title="Abrir">
+                      className="text-brand hover:opacity-70 transition-opacity" title="Abrir">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
@@ -361,7 +363,7 @@ export function PerfilEmpresa({ empresa: inicial }: Props) {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-theme-muted mb-1">{label}</p>
+      <p className="text-xs text-ink-muted mb-1">{label}</p>
       <p className="text-sm font-mono">{value || "—"}</p>
     </div>
   );
@@ -373,10 +375,10 @@ function EditField({ label, value, editando, onChange, mono }: {
 }) {
   return (
     <div>
-      <p className="text-xs text-theme-muted mb-1">{label}</p>
+      <p className="text-xs text-ink-muted mb-1">{label}</p>
       {editando ? (
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)}
-          className={`w-full px-3 py-2 rounded border border-theme bg-transparent text-sm ${mono ? "font-mono" : ""}`} />
+        <Input type="text" value={value} onChange={(e) => onChange(e.target.value)}
+          className={`w-full px-3 py-2 rounded border border-line bg-transparent text-sm ${mono ? "font-mono" : ""}`} />
       ) : (
         <p className={`text-sm ${mono ? "font-mono" : ""}`}>{value || "—"}</p>
       )}
@@ -393,14 +395,14 @@ function TribSetor({ title, campos, dados, editando, onChange }: {
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-xs font-medium text-theme-muted uppercase tracking-wide">{title}</p>
+      <p className="text-xs font-medium text-ink-muted uppercase tracking-wide">{title}</p>
       {campos.map((c) => (
         <div key={c.key}>
-          <p className="text-xs text-theme-muted mb-1">{c.label}</p>
+          <p className="text-xs text-ink-muted mb-1">{c.label}</p>
           {editando ? (
-            <input type="text" value={dados[c.key] ?? ""}
+            <Input type="text" value={dados[c.key] ?? ""}
               onChange={(e) => onChange(c.key, e.target.value)}
-              className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm" />
+               />
           ) : (
             <p className="text-sm">{dados[c.key] || "—"}</p>
           )}

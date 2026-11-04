@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { brl } from "@/lib/format";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 
 /**
  * Calculadora de precificação alternativa — modelo Simples Nacional Anexo III.
@@ -213,14 +215,14 @@ export default function CalculadoraPrecificacao() {
   }, [material, maoDeObra, custosFixos, markup, markupValor, garantiaPct, faixa, rbt12, forma, parcelas]);
 
   const campo =
-    "w-full rounded-lg border border-theme bg-theme-card px-3 py-2.5 text-lg text-theme tabular-nums outline-none focus:border-primary";
-  const label = "mb-1.5 block text-xs font-medium uppercase tracking-wider text-theme-muted";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-lg text-ink tabular-nums outline-none focus:border-brand";
+  const label = "mb-1.5 block text-xs font-medium uppercase tracking-wider text-ink-muted";
 
   const chip = (ativo: boolean) =>
     `rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
       ativo
-        ? "border-primary bg-primary text-white"
-        : "border-theme text-theme-muted hover:opacity-80"
+        ? "border-brand bg-brand text-brand-fg"
+        : "border-line text-ink-muted hover:opacity-80"
     }`;
 
   // linha selecionada na tabela define o cartão; fora do crédito, cai em 1x
@@ -275,32 +277,32 @@ export default function CalculadoraPrecificacao() {
         <button
           onClick={copiarTexto}
           disabled={!textoWhatsapp}
-          className="flex-1 rounded-lg border border-primary bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex-1 rounded-control border border-brand bg-brand px-4 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {copiado ? "Copiado!" : "Copiar texto do WhatsApp"}
         </button>
         {criarServicoHref ? (
           <Link
             href={criarServicoHref}
-            className="flex-1 rounded-lg border border-theme px-4 py-2.5 text-center text-sm font-medium text-theme transition-colors hover:opacity-90"
+            className="flex-1 rounded-control border border-line px-4 py-2.5 text-center text-sm font-medium text-ink transition-colors hover:opacity-90"
           >
             Criar serviço com este orçamento
           </Link>
         ) : (
           <button
             disabled
-            className="flex-1 rounded-lg border border-theme px-4 py-2.5 text-sm font-medium text-theme opacity-40 cursor-not-allowed"
+            className="flex-1 rounded-control border border-line px-4 py-2.5 text-sm font-medium text-ink opacity-40 cursor-not-allowed"
           >
             Criar serviço com este orçamento
           </button>
         )}
       </div>
 
-      <div className="rounded-lg border border-theme bg-theme-card p-5">
+      <div className="rounded-card border border-line bg-surface p-5">
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label className={label}>Peça (custo)</label>
-            <input
+            <Input
               className={campo}
               inputMode="decimal"
               value={material}
@@ -309,7 +311,7 @@ export default function CalculadoraPrecificacao() {
           </div>
           <div>
             <label className={label}>Mão de obra</label>
-            <input
+            <Input
               className={campo}
               inputMode="decimal"
               value={maoDeObra}
@@ -318,7 +320,7 @@ export default function CalculadoraPrecificacao() {
           </div>
           <div>
             <label className={label}>Deslocamento</label>
-            <input
+            <Input
               className={campo}
               inputMode="decimal"
               value={custosFixos}
@@ -341,7 +343,7 @@ export default function CalculadoraPrecificacao() {
               </button>
             </div>
             {markup === null && (
-              <input
+              <Input
                 className={`${campo} mt-2`}
                 inputMode="decimal"
                 placeholder="Quanto você quer ganhar"
@@ -364,11 +366,11 @@ export default function CalculadoraPrecificacao() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-theme bg-theme-card p-5">
+      <div className="rounded-card border border-line bg-surface p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={label}>Faturamento mensal (faixa SumUp)</label>
-            <select
+            <Select
               className={campo}
               value={faixa}
               onChange={(e) => {
@@ -383,15 +385,15 @@ export default function CalculadoraPrecificacao() {
                   {v.rotulo}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className={label}>RBT12 — receita dos últimos 12 meses</label>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg text-theme-muted">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg text-ink-muted">
                 R$
               </span>
-              <input
+              <Input
                 className={`${campo} pl-10`}
                 inputMode="decimal"
                 placeholder="Em branco = 1ª faixa (6%)"
@@ -403,7 +405,7 @@ export default function CalculadoraPrecificacao() {
               />
             </div>
             {rbt12Origem && !rbt12Tocado && (
-              <p className="mt-1 text-xs text-theme-muted">
+              <p className="mt-1 text-xs text-ink-muted">
                 {rbt12Origem.fonte === "PGDAS_D"
                   ? `Preenchido a partir do PGDAS-D${rbt12Origem.competencia ? ` de ${new Date(rbt12Origem.competencia).toLocaleDateString("pt-BR", { month: "2-digit", year: "numeric" })}` : ""}.`
                   : "Estimado a partir dos serviços concluídos nos últimos 12 meses."}
@@ -411,7 +413,7 @@ export default function CalculadoraPrecificacao() {
             )}
           </div>
         </div>
-        <p className="mt-3 text-xs text-theme-muted">
+        <p className="mt-3 text-xs text-ink-muted">
           Carga total de {pct(calc.imposto.total)} em duas guias: DAS a {pct(calc.imposto.das)}{" "}
           (sem ISS, por retenção) e ISS a {pct(calc.imposto.iss)} na Nota Carioca. As duas já
           estão no preço — não some nada por fora.
@@ -424,16 +426,16 @@ export default function CalculadoraPrecificacao() {
         )}
       </div>
 
-      <div className="rounded-lg border border-theme bg-theme-card p-5">
-        <div className="mb-4 border-b border-dashed border-theme pb-4">
-          <p className="text-xs uppercase tracking-wider text-theme-muted">
+      <div className="rounded-card border border-line bg-surface p-5">
+        <div className="mb-4 border-b border-dashed border-line pb-4">
+          <p className="text-xs uppercase tracking-wider text-ink-muted">
             Cobrar no {calc.sel.rotulo.toLowerCase()}
           </p>
-          <p className="mt-1 text-4xl font-semibold tabular-nums tracking-tight text-theme">
+          <p className="mt-1 text-4xl font-semibold tabular-nums tracking-tight text-ink">
             {fmt(calc.sel.preco)}
           </p>
           {calc.sel.parcela && (
-            <p className="mt-1 text-sm text-theme-muted tabular-nums">
+            <p className="mt-1 text-sm text-ink-muted tabular-nums">
               {calc.sel.parcelas}× de {fmt(calc.sel.parcela)}
             </p>
           )}
@@ -457,42 +459,42 @@ export default function CalculadoraPrecificacao() {
           <Linha rotulo={`Taxa SumUp (${pct(calc.sel.taxa)})`} valor={-calc.valorTaxa} />
         </dl>
 
-        <div className="mt-4 border-t border-dashed border-theme pt-4">
+        <div className="mt-4 border-t border-dashed border-line pt-4">
           <div className="flex items-baseline justify-between">
-            <span className="text-sm text-theme-muted">Sobra para você</span>
+            <span className="text-sm text-ink-muted">Sobra para você</span>
             <span className="text-2xl font-semibold tabular-nums text-emerald-600">
               {brl(calc.lucroReal)}
             </span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-xs text-theme-muted">Margem líquida</span>
+            <span className="text-xs text-ink-muted">Margem líquida</span>
             <span
               className={`text-sm font-medium tabular-nums ${
-                calc.margem < 0.15 ? "text-amber-600" : "text-theme"
+                calc.margem < 0.15 ? "text-amber-600" : "text-ink"
               }`}
             >
               {pct(calc.margem)}
             </span>
           </div>
           {calc.margem < 0.15 && calc.sel.preco > 0 && (
-            <p className="mt-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-600">
+            <p className="mt-3 rounded-control bg-amber-500/10 px-3 py-2 text-xs text-amber-600">
               Margem abaixo de 15%. Um retrabalho aqui zera o serviço — suba o markup ou reduza
               o parcelamento.
             </p>
           )}
         </div>
 
-        <p className="mt-4 text-xs leading-relaxed text-theme-muted">
+        <p className="mt-4 text-xs leading-relaxed text-ink-muted">
           Imposto total de {brl(calc.valorImposto)} ({pct(calc.imposto.total)}), pago em duas
           guias.
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-theme">
+      <div className="overflow-hidden rounded-control border border-line">
         <div className="max-h-[22rem] overflow-y-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-theme bg-theme-card text-left text-xs uppercase tracking-wider text-theme-muted">
+              <tr className="border-b border-line bg-surface text-left text-xs uppercase tracking-wider text-ink-muted">
                 <th className="px-4 py-3 font-medium">Forma</th>
                 <th className="px-4 py-3 text-right font-medium">Cobrar</th>
                 <th className="px-4 py-3 text-right font-medium">Parcela</th>
@@ -510,18 +512,18 @@ export default function CalculadoraPrecificacao() {
                       setForma(l.forma);
                       setParcelas(l.parcelas);
                     }}
-                    className={`cursor-pointer border-b border-theme/60 last:border-0 tabular-nums transition-colors ${
-                      ativo ? "bg-primary/10" : "hover:bg-primary/5"
+                    className={`cursor-pointer border-b border-line/60 last:border-0 tabular-nums transition-colors ${
+                      ativo ? "bg-brand/10" : "hover:bg-brand/5"
                     }`}
                   >
                     <td className="px-4 py-2.5">
-                      <span className={ativo ? "font-semibold text-primary" : "text-theme"}>
+                      <span className={ativo ? "font-semibold text-brand" : "text-ink"}>
                         {l.rotulo}
                       </span>
-                      <span className="ml-2 text-xs text-theme-muted">{pct(l.taxa)}</span>
+                      <span className="ml-2 text-xs text-ink-muted">{pct(l.taxa)}</span>
                     </td>
-                    <td className="px-4 py-2.5 text-right font-medium text-theme">{fmt(l.preco)}</td>
-                    <td className="px-4 py-2.5 text-right text-theme-muted">
+                    <td className="px-4 py-2.5 text-right font-medium text-ink">{fmt(l.preco)}</td>
+                    <td className="px-4 py-2.5 text-right text-ink-muted">
                       {l.parcela ? fmt(l.parcela) : "—"}
                     </td>
                     <td className="px-4 py-2.5 text-right text-emerald-600">
@@ -542,8 +544,8 @@ export default function CalculadoraPrecificacao() {
 function Linha({ rotulo, valor }: { rotulo: string; valor: number }) {
   return (
     <div className="flex justify-between">
-      <dt className="text-theme-muted">{rotulo}</dt>
-      <dd className="text-theme">{brl(valor)}</dd>
+      <dt className="text-ink-muted">{rotulo}</dt>
+      <dd className="text-ink">{brl(valor)}</dd>
     </div>
   );
 }

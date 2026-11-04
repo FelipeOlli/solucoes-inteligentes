@@ -3,6 +3,15 @@
 import { useState, useRef, useEffect } from "react";
 import { TipoDocumentoFiscal, StatusProcessamentoFiscal, StatusPagamentoFiscal } from "@prisma/client";
 import { brl } from "@/lib/format";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export type DocumentoRow = {
   id: string;
@@ -35,13 +44,13 @@ const TIPO_LABEL: Record<TipoDocumentoFiscal, string> = {
 };
 
 const TIPO_COLOR: Record<TipoDocumentoFiscal, string> = {
-  DAS:                "border border-theme text-theme-muted",
-  DARF_MAED:          "border border-theme text-theme-muted",
-  PGDAS_D_RECIBO:     "border border-theme text-theme-muted",
-  DEFIS_RECIBO:       "border border-theme text-theme-muted",
-  NOTIFICACAO_MAED:   "border border-theme text-theme-muted",
-  RELATORIO_SITUACAO: "border border-theme text-theme-muted",
-  OUTROS:             "border border-theme text-theme-muted",
+  DAS:                "border border-line text-ink-muted",
+  DARF_MAED:          "border border-line text-ink-muted",
+  PGDAS_D_RECIBO:     "border border-line text-ink-muted",
+  DEFIS_RECIBO:       "border border-line text-ink-muted",
+  NOTIFICACAO_MAED:   "border border-line text-ink-muted",
+  RELATORIO_SITUACAO: "border border-line text-ink-muted",
+  OUTROS:             "border border-line text-ink-muted",
 };
 
 const STATUS_LABEL: Record<StatusProcessamentoFiscal, string> = {
@@ -54,12 +63,12 @@ const STATUS_LABEL: Record<StatusProcessamentoFiscal, string> = {
 };
 
 const STATUS_COLOR: Record<StatusProcessamentoFiscal, string> = {
-  PENDENTE: "text-amber-500",
-  PROCESSANDO: "text-blue-500",
-  PROCESSADO: "text-green-500",
-  PROCESSADO_COM_AVISOS: "text-amber-500",
+  PENDENTE: "text-warn",
+  PROCESSANDO: "text-brand",
+  PROCESSADO: "text-accent",
+  PROCESSADO_COM_AVISOS: "text-warn",
   ERRO: "text-red-500",
-  MANUAL: "text-theme-muted",
+  MANUAL: "text-ink-muted",
 };
 
 const PGTO_LABEL: Record<StatusPagamentoFiscal, string> = {
@@ -71,11 +80,11 @@ const PGTO_LABEL: Record<StatusPagamentoFiscal, string> = {
 };
 
 const PGTO_CLASS: Record<StatusPagamentoFiscal, string> = {
-  PENDENTE: "bg-amber-500/10 text-amber-600 border border-amber-500/30",
-  PAGO: "bg-green-500/10 text-green-600 border border-green-500/30",
-  ATRASADO: "bg-red-500/10 text-red-600 border border-red-500/30",
-  ISENTO: "bg-blue-500/10 text-blue-600 border border-blue-500/30",
-  NAO_APLICAVEL: "bg-theme-muted/10 text-theme-muted border border-theme",
+  PENDENTE: "pgto-pendente",
+  PAGO: "pgto-pago",
+  ATRASADO: "pgto-atrasado",
+  ISENTO: "pgto-isento",
+  NAO_APLICAVEL: "pgto-nao-aplicavel",
 };
 
 function statusPagamentoEfetivo(doc: DocumentoRow): StatusPagamentoFiscal {
@@ -158,9 +167,9 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
 
   if (documentos.length === 0) {
     return (
-      <div className="bg-theme-card border border-theme rounded-lg p-8 text-center text-theme-muted text-sm">
+      <Card className="p-8 text-center text-sm text-ink-muted">
         Nenhum documento encontrado.
-      </div>
+      </Card>
     );
   }
 
@@ -169,102 +178,101 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
       {popoverAberto && (
         <div
           ref={popoverRef}
-          className="fixed z-50 bg-theme-card border border-theme rounded-lg shadow-lg p-3 w-52 space-y-2"
+          className="fixed z-50 w-52 space-y-2 rounded-card border border-line bg-surface p-3 shadow-card-hover"
           style={{ top: popoverPos.top, left: popoverPos.left }}
         >
-          <p className="text-xs text-theme-muted font-medium">Escolha o modo:</p>
+          <p className="text-xs font-medium text-ink-muted">Escolha o modo:</p>
           <button
             type="button"
-            className="w-full text-left px-3 py-2 rounded border border-theme text-xs hover:border-primary/50 hover:text-theme transition-colors"
+            className="w-full rounded-control border border-line px-3 py-2 text-left text-xs transition-colors hover:border-brand/40 hover:text-ink"
             onClick={() => { setPopoverAberto(null); onReprocessar(popoverAberto, "SEMI_AUTO"); }}
           >
-            <span className="font-medium block">Semiautomático</span>
-            <span className="text-theme-muted">Regex — rápido, sem custo</span>
+            <span className="block font-medium">Semiautomático</span>
+            <span className="text-ink-muted">Regex — rápido, sem custo</span>
           </button>
           <button
             type="button"
-            className="w-full text-left px-3 py-2 rounded border border-theme text-xs hover:border-primary/50 hover:text-theme transition-colors"
+            className="w-full rounded-control border border-line px-3 py-2 text-left text-xs transition-colors hover:border-brand/40 hover:text-ink"
             onClick={() => { setPopoverAberto(null); onReprocessar(popoverAberto, "IA"); }}
           >
-            <span className="font-medium block">Com IA</span>
-            <span className="text-theme-muted">Claude Sonnet — mais preciso</span>
+            <span className="block font-medium">Com IA</span>
+            <span className="text-ink-muted">Claude Sonnet — mais preciso</span>
           </button>
         </div>
       )}
 
-      <div className="bg-theme-card border border-theme rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-theme text-theme-muted text-left">
-                <th className="px-4 py-3 font-medium">Tipo</th>
-                <th className="px-4 py-3 font-medium">Competência</th>
-                <th className="px-4 py-3 font-medium font-mono">Nº Documento</th>
-                <th className="px-4 py-3 font-medium">Vencimento</th>
-                <th className="px-4 py-3 font-medium font-mono">Valor</th>
-                <th className="px-4 py-3 font-medium">Pagamento</th>
-                <th className="px-4 py-3 font-medium">Upload</th>
-                <th className="px-4 py-3 font-medium">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documentos.map((doc) => (
-                <tr
-                  key={doc.id}
-                  className="border-b border-theme/50 hover:bg-primary/5 transition-colors cursor-pointer"
-                  onClick={() => onSelecionar(doc)}
-                >
-                  <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${TIPO_COLOR[doc.tipoDocumento]}`}>
-                      {TIPO_LABEL[doc.tipoDocumento]}
+      <Card className="overflow-hidden p-0">
+        <Table>
+          <TableHeader className="bg-surface-subtle">
+            <TableRow className="hover:bg-surface-subtle">
+              <TableHead>Tipo</TableHead>
+              <TableHead>Competência</TableHead>
+              <TableHead className="font-mono">Nº Documento</TableHead>
+              <TableHead>Vencimento</TableHead>
+              <TableHead className="font-mono">Valor</TableHead>
+              <TableHead>Pagamento</TableHead>
+              <TableHead>Upload</TableHead>
+              <TableHead>Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {documentos.map((doc) => (
+              <TableRow
+                key={doc.id}
+                className="cursor-pointer"
+                onClick={() => onSelecionar(doc)}
+              >
+                <TableCell>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${TIPO_COLOR[doc.tipoDocumento]}`}>
+                    {TIPO_LABEL[doc.tipoDocumento]}
+                  </span>
+                </TableCell>
+                <TableCell className="font-mono">{formatCompetencia(doc.competencia)}</TableCell>
+                <TableCell className="font-mono text-xs text-ink-muted">
+                  {doc.numeroDocumento || "—"}
+                </TableCell>
+                <TableCell>{formatData(doc.vencimento)}</TableCell>
+                <TableCell className="font-mono">{formatBrl(doc.valorTotal)}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${PGTO_CLASS[statusPagamentoEfetivo(doc)]}`}>
+                      {PGTO_LABEL[statusPagamentoEfetivo(doc)]}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 font-mono">{formatCompetencia(doc.competencia)}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-theme-muted">
-                    {doc.numeroDocumento || "—"}
-                  </td>
-                  <td className="px-4 py-3">{formatData(doc.vencimento)}</td>
-                  <td className="px-4 py-3 font-mono">{formatBrl(doc.valorTotal)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${PGTO_CLASS[statusPagamentoEfetivo(doc)]}`}>
-                        {PGTO_LABEL[statusPagamentoEfetivo(doc)]}
+                    {doc.comprovanteUrl && (
+                      <span title="Comprovante anexado" className="text-accent">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                        </svg>
                       </span>
-                      {doc.comprovanteUrl && (
-                        <span title="Comprovante anexado" className="text-green-500">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                          </svg>
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-theme-muted">{relativeTime(doc.createdAt)}</td>
-                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex gap-2 items-center">
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="text-xs text-ink-muted">{relativeTime(doc.createdAt)}</TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2">
                       {/* ícone de status de processamento */}
                       {doc.statusProcessamento === "PROCESSADO" && (
-                        <span title="Processado" className="text-green-500 shrink-0">
+                        <span title="Processado" className="shrink-0 text-accent">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         </span>
                       )}
                       {doc.statusProcessamento === "PROCESSADO_COM_AVISOS" && (
-                        <span title="Processado com avisos" className="text-amber-500 shrink-0">
+                        <span title="Processado com avisos" className="shrink-0 text-warn">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                         </span>
                       )}
                       {doc.statusProcessamento === "ERRO" && (
-                        <span title="Erro no processamento" className="text-red-500 shrink-0">
+                        <span title="Erro no processamento" className="shrink-0 text-red-500">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                         </span>
                       )}
                       {doc.statusProcessamento === "MANUAL" && (
-                        <span title="Preenchido manualmente" className="text-theme-muted shrink-0">
+                        <span title="Preenchido manualmente" className="shrink-0 text-ink-muted">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </span>
                       )}
                       {(doc.statusProcessamento === "PENDENTE" || doc.statusProcessamento === "PROCESSANDO") && (
-                        <span title={STATUS_LABEL[doc.statusProcessamento]} className="text-amber-500 shrink-0">
+                        <span title={STATUS_LABEL[doc.statusProcessamento]} className="shrink-0 text-warn">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         </span>
                       )}
@@ -272,7 +280,7 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
                         href={doc.arquivoUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:opacity-70 transition-opacity"
+                        className="text-brand transition-opacity hover:opacity-70"
                         title="Abrir PDF"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -285,7 +293,7 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
                       </a>
                       <button
                         type="button"
-                        className="text-theme-muted hover:opacity-70 transition-opacity"
+                        className="text-ink-muted transition-opacity hover:opacity-70"
                         onClick={(e) => abrirPopover(e, doc.id)}
                         title="Reprocessar"
                       >
@@ -296,7 +304,7 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
                       </button>
                       <button
                         type="button"
-                        className="text-red-600 hover:opacity-70 transition-opacity"
+                        className="text-red-600 transition-opacity hover:opacity-70"
                         onClick={() => onExcluir(doc.id)}
                         title="Excluir"
                       >
@@ -309,13 +317,12 @@ export function TabelaDocumentos({ documentos, onSelecionar, onExcluir, onReproc
                         </svg>
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+      </Card>
     </>
   );
 }

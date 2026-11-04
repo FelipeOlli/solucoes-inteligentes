@@ -3,6 +3,20 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Modal } from "@/components/ui/modal";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const emptyForm = {
   nome: "",
@@ -126,185 +140,179 @@ export default function ClientesPage() {
   }
 
   return (
-    <div className="text-theme">
-      <h1 className="font-heading text-xl sm:text-2xl font-bold text-theme-primary mb-6">Clientes</h1>
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
-        <input
+    <div>
+      <PageHeader
+        title="Clientes"
+        description="Cadastro e histórico de contato dos clientes atendidos."
+        actions={
+          <Button type="button" onClick={openCreateModal} className="w-full sm:w-auto">
+            Novo cliente
+          </Button>
+        }
+      />
+
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+        <Input
           type="search"
           placeholder="Buscar por nome, e-mail, telefone, cidade, CEP..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="px-4 py-2 border rounded-lg font-body w-full sm:flex-1 sm:max-w-md bg-theme-card border-theme text-theme"
+          className="sm:max-w-md"
         />
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:opacity-90 w-full sm:w-auto"
-        >
-          Novo cliente
-        </button>
       </div>
+
       {loading ? (
-        <p className="text-body text-theme-muted">Carregando…</p>
+        <p className="text-sm text-ink-muted">Carregando…</p>
       ) : clientes.length === 0 ? (
-        <p className="text-body text-theme-muted">Nenhum cliente encontrado.</p>
+        <p className="text-sm text-ink-muted">Nenhum cliente encontrado.</p>
       ) : (
-        <div className="bg-theme-card border border-theme rounded-lg overflow-hidden overflow-x-auto">
-          <table className="w-full font-body text-sm text-theme">
-            <thead className="border-b border-theme" style={{ backgroundColor: "var(--color-navbar)" }}>
-              <tr>
-                <th className="text-left p-3 font-heading text-theme-primary">Cliente</th>
-                <th className="text-left p-3 font-heading text-theme-primary">Nome do Contato</th>
-                <th className="text-left p-3 font-heading text-theme-primary">E-mail</th>
-                <th className="text-left p-3 font-heading text-theme-primary">Telefone</th>
-                <th className="text-left p-3 font-heading text-theme-primary">Cidade / UF</th>
-                <th className="text-left p-3 font-heading text-theme-primary">Observação</th>
-                <th className="text-right p-3 font-heading text-theme-primary w-px whitespace-nowrap">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
+          <Table>
+            <TableHeader className="bg-surface-subtle">
+              <TableRow className="hover:bg-surface-subtle">
+                <TableHead>Cliente</TableHead>
+                <TableHead>Nome do Contato</TableHead>
+                <TableHead>E-mail</TableHead>
+                <TableHead>Telefone</TableHead>
+                <TableHead>Cidade / UF</TableHead>
+                <TableHead>Observação</TableHead>
+                <TableHead className="w-px text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {clientes.map((c) => (
-                <tr key={c.id} className="border-t border-theme">
-                  <td className="p-3">{c.nome}</td>
-                  <td className="p-3">{c.nomeContato ?? "—"}</td>
-                  <td className="p-3">{c.email}</td>
-                  <td className="p-3">{c.telefone}</td>
-                  <td className="p-3 text-theme-muted">
+                <TableRow key={c.id}>
+                  <TableCell className="font-medium">{c.nome}</TableCell>
+                  <TableCell>{c.nomeContato ?? "—"}</TableCell>
+                  <TableCell>{c.email}</TableCell>
+                  <TableCell>{c.telefone}</TableCell>
+                  <TableCell className="text-ink-muted">
                     {c.cidade || c.uf ? [c.cidade, c.uf].filter(Boolean).join(" / ") : "—"}
-                  </td>
-                  <td className="p-3 max-w-xs truncate" title={c.observacoes ?? undefined}>{c.observacoes ?? "—"}</td>
-                  <td className="p-3 text-right">
-                    <button
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate" title={c.observacoes ?? undefined}>
+                    {c.observacoes ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => openEditModal(c)}
-                      className="px-3 py-1.5 text-sm rounded-lg border border-theme bg-theme-card hover:opacity-90 text-theme"
                     >
                       Editar
-                    </button>
-                  </td>
-                </tr>
+                    </Button>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 
-      {modal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-10 p-4">
-          <div className="bg-theme-card border border-theme rounded-lg max-w-lg w-full p-5 sm:p-6 text-theme max-h-[90vh] overflow-y-auto">
-            <h2 className="font-heading text-xl font-bold text-theme-primary mb-4">
-              {editingId ? "Editar cliente" : "Novo cliente"}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">Cliente</label>
-                <input
-                  required
-                  value={form.nome}
-                  onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                  placeholder="Razão social ou nome da pessoa"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">Nome do Contato</label>
-                <input
-                  value={form.nomeContato}
-                  onChange={(e) => setForm((f) => ({ ...f, nomeContato: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                  placeholder="Responsável para contato (opcional)"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">E-mail</label>
-                <input
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">Telefone</label>
-                <input
-                  required
-                  value={form.telefone}
-                  onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
-                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                />
-              </div>
-              <div className="pt-2 border-t border-theme">
-                <p className="text-sm font-medium text-theme-primary mb-3">Endereço (opcional)</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-theme-muted mb-1">Logradouro</label>
-                    <input
-                      value={form.logradouro}
-                      onChange={(e) => setForm((f) => ({ ...f, logradouro: e.target.value }))}
-                      className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                      placeholder="Rua, número, complemento…"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-theme-muted mb-1">Bairro</label>
-                    <input
-                      value={form.bairro}
-                      onChange={(e) => setForm((f) => ({ ...f, bairro: e.target.value }))}
-                      className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-theme-muted mb-1">Cidade</label>
-                    <input
-                      value={form.cidade}
-                      onChange={(e) => setForm((f) => ({ ...f, cidade: e.target.value }))}
-                      className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-theme-muted mb-1">UF</label>
-                    <input
-                      value={form.uf}
-                      onChange={(e) => setForm((f) => ({ ...f, uf: e.target.value.toUpperCase().slice(0, 2) }))}
-                      className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme uppercase"
-                      maxLength={2}
-                      placeholder="SP"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-theme-muted mb-1">CEP</label>
-                    <input
-                      value={form.cep}
-                      onChange={(e) => setForm((f) => ({ ...f, cep: e.target.value }))}
-                      className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme"
-                      placeholder="00000-000"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1">Observação (opcional)</label>
-                <textarea
-                  value={form.observacoes}
-                  onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}
-                  rows={3}
-                  className="w-full px-4 py-2 border rounded-lg bg-theme-card border-theme text-theme resize-y"
-                />
-              </div>
-              {error && <p className="text-red-600 text-sm">{error}</p>}
-              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
-                <button type="button" onClick={closeModal} className="px-4 py-2 border border-theme rounded-lg text-theme">
-                  Cancelar
-                </button>
-                <button type="submit" disabled={saving} className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50">
-                  {saving ? "Salvando…" : editingId ? "Atualizar" : "Salvar"}
-                </button>
-              </div>
-            </form>
+      <Modal
+        open={modal}
+        onClose={closeModal}
+        title={editingId ? "Editar cliente" : "Novo cliente"}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label className="mb-1">Cliente</Label>
+            <Input
+              required
+              value={form.nome}
+              onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+              placeholder="Razão social ou nome da pessoa"
+            />
           </div>
-        </div>
-      )}
+          <div>
+            <Label className="mb-1">Nome do Contato</Label>
+            <Input
+              value={form.nomeContato}
+              onChange={(e) => setForm((f) => ({ ...f, nomeContato: e.target.value }))}
+              placeholder="Responsável para contato (opcional)"
+            />
+          </div>
+          <div>
+            <Label className="mb-1">E-mail</Label>
+            <Input
+              type="email"
+              required
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label className="mb-1">Telefone</Label>
+            <Input
+              required
+              value={form.telefone}
+              onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
+            />
+          </div>
+          <div className="border-t border-line pt-4">
+            <p className="mb-3 text-sm font-medium text-ink">Endereço (opcional)</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Label className="mb-1">Logradouro</Label>
+                <Input
+                  value={form.logradouro}
+                  onChange={(e) => setForm((f) => ({ ...f, logradouro: e.target.value }))}
+                  placeholder="Rua, número, complemento…"
+                />
+              </div>
+              <div>
+                <Label className="mb-1">Bairro</Label>
+                <Input
+                  value={form.bairro}
+                  onChange={(e) => setForm((f) => ({ ...f, bairro: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label className="mb-1">Cidade</Label>
+                <Input
+                  value={form.cidade}
+                  onChange={(e) => setForm((f) => ({ ...f, cidade: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label className="mb-1">UF</Label>
+                <Input
+                  value={form.uf}
+                  onChange={(e) => setForm((f) => ({ ...f, uf: e.target.value.toUpperCase().slice(0, 2) }))}
+                  className="uppercase"
+                  maxLength={2}
+                  placeholder="SP"
+                />
+              </div>
+              <div>
+                <Label className="mb-1">CEP</Label>
+                <Input
+                  value={form.cep}
+                  onChange={(e) => setForm((f) => ({ ...f, cep: e.target.value }))}
+                  placeholder="00000-000"
+                />
+              </div>
+            </div>
+          </div>
+          <div>
+            <Label className="mb-1">Observação (opcional)</Label>
+            <Textarea
+              value={form.observacoes}
+              onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}
+              rows={3}
+            />
+          </div>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" onClick={closeModal}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? "Salvando…" : editingId ? "Atualizar" : "Salvar"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -5,6 +5,9 @@ import type { ValidacaoComprovante } from "@/lib/fiscal/validar-comprovante";
 import { TipoDocumentoFiscal, StatusProcessamentoFiscal, StatusObrigacaoFiscal, StatusPagamentoFiscal } from "@prisma/client";
 import { api } from "@/lib/api";
 import { brl } from "@/lib/format";
+import { Select } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export type DocumentoDetalhe = {
   id: string;
@@ -96,7 +99,7 @@ const PGTO_CLASS: Record<StatusPagamentoFiscal, string> = {
   PAGO: "text-green-600",
   ATRASADO: "text-red-600",
   ISENTO: "text-blue-600",
-  NAO_APLICAVEL: "text-theme-muted",
+  NAO_APLICAVEL: "text-ink-muted",
 };
 
 export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, onAtualizado }: Props) {
@@ -269,12 +272,12 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
   return (
     <>
       <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
-      <aside className="fixed right-0 top-0 h-full w-full max-w-md bg-theme-card border-l border-theme z-50 flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-theme">
-          <h2 className="font-heading font-semibold text-theme-primary truncate pr-4">
+      <aside className="fixed right-0 top-0 h-full w-full max-w-md bg-surface border-l border-line z-50 flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-line">
+          <h2 className="font-heading font-semibold text-brand truncate pr-4">
             {documento.nomeArquivo}
           </h2>
-          <button type="button" className="text-theme-muted hover:text-theme shrink-0" onClick={onClose}>
+          <button type="button" className="text-ink-muted hover:text-ink shrink-0" onClick={onClose}>
             ✕
           </button>
         </div>
@@ -282,7 +285,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
         <div className="p-4 space-y-4 flex-1 overflow-y-auto">
           {/* Empresa */}
           <div>
-            <p className="text-xs text-theme-muted mb-1">Empresa</p>
+            <p className="text-xs text-ink-muted mb-1">Empresa</p>
             <p className="text-sm font-mono">{documento.empresaFiscal.cnpj}</p>
             <p className="text-sm">{documento.empresaFiscal.razaoSocial}</p>
           </div>
@@ -291,15 +294,15 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
           {!editando && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-xs text-theme-muted">Tipo</p>
+                <p className="text-xs text-ink-muted">Tipo</p>
                 <p className="text-sm font-medium">{TIPO_LABEL[documento.tipoDocumento]}</p>
               </div>
               <div>
-                <p className="text-xs text-theme-muted">Status</p>
+                <p className="text-xs text-ink-muted">Status</p>
                 <p className="text-sm font-medium">{documento.statusProcessamento.replace(/_/g, " ")}</p>
               </div>
               <div>
-                <p className="text-xs text-theme-muted">Competência</p>
+                <p className="text-xs text-ink-muted">Competência</p>
                 <p className="text-sm font-mono">
                   {documento.competencia
                     ? (() => { const d = new Date(documento.competencia); return `${String(d.getUTCMonth() + 1).padStart(2, "0")}/${d.getUTCFullYear()}`; })()
@@ -307,17 +310,17 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
                 </p>
               </div>
               <div>
-                <p className="text-xs text-theme-muted">Vencimento</p>
+                <p className="text-xs text-ink-muted">Vencimento</p>
                 <p className="text-sm font-mono">
                   {documento.vencimento ? new Date(documento.vencimento).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "—"}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-theme-muted">Valor</p>
+                <p className="text-xs text-ink-muted">Valor</p>
                 <p className="text-sm font-mono">{formatBrl(documento.valorTotal)}</p>
               </div>
               <div>
-                <p className="text-xs text-theme-muted">Nº Documento</p>
+                <p className="text-xs text-ink-muted">Nº Documento</p>
                 <p className="text-sm font-mono">{documento.numeroDocumento || "—"}</p>
               </div>
             </div>
@@ -327,79 +330,77 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
           {editando && form && (
             <div className="space-y-3">
               <label className="block text-sm space-y-1">
-                <span className="text-theme-muted text-xs">Tipo de documento</span>
-                <select
+                <span className="text-ink-muted text-xs">Tipo de documento</span>
+                <Select
                   value={form.tipoDocumento}
                   onChange={(e) => setForm((f) => f && ({ ...f, tipoDocumento: e.target.value as TipoDocumentoFiscal }))}
-                  className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm"
                 >
                   {TIPOS.map((t) => (
                     <option key={t} value={t}>{TIPO_LABEL[t]}</option>
                   ))}
-                </select>
+                </Select>
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-theme-muted text-xs">Competência (mês/ano)</span>
-                <input
+                <span className="text-ink-muted text-xs">Competência (mês/ano)</span>
+                <Input
                   type="month"
                   value={form.competencia}
                   onChange={(e) => setForm((f) => f && ({ ...f, competencia: e.target.value }))}
-                  className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm"
+
                 />
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-theme-muted text-xs">Vencimento</span>
-                <input
+                <span className="text-ink-muted text-xs">Vencimento</span>
+                <Input
                   type="date"
                   value={form.vencimento}
                   onChange={(e) => setForm((f) => f && ({ ...f, vencimento: e.target.value }))}
-                  className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm"
+
                 />
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-theme-muted text-xs">Valor (R$)</span>
-                <input
+                <span className="text-ink-muted text-xs">Valor (R$)</span>
+                <Input
                   type="number"
                   step="0.01"
                   min="0"
                   value={form.valorTotal}
                   onChange={(e) => setForm((f) => f && ({ ...f, valorTotal: e.target.value }))}
-                  className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm font-mono"
+                  className="font-mono"
                   placeholder="0,00"
                 />
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-theme-muted text-xs">Nº do documento</span>
-                <input
+                <span className="text-ink-muted text-xs">Nº do documento</span>
+                <Input
                   type="text"
                   value={form.numeroDocumento}
                   onChange={(e) => setForm((f) => f && ({ ...f, numeroDocumento: e.target.value }))}
-                  className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm font-mono"
+                  className="font-mono"
                 />
               </label>
 
               {erro && <p className="text-sm text-red-600">{erro}</p>}
 
               <div className="flex gap-2 pt-1">
-                <button
+                <Button
                   type="button"
                   onClick={salvar}
                   disabled={salvando}
-                  className="px-4 py-2 rounded bg-primary text-white text-sm disabled:opacity-60"
                 >
                   {salvando ? "Salvando..." : "Salvar"}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   onClick={cancelarEdicao}
-                  className="px-4 py-2 rounded border border-theme text-sm"
+                  variant="outline"
                 >
                   Cancelar
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -413,10 +414,10 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
 
           {/* Obrigação vinculada */}
           {documento.obrigacao && (
-            <div className="rounded border border-theme p-3 space-y-1">
-              <p className="text-xs text-theme-muted">Obrigação vinculada</p>
+            <div className="rounded border border-line p-3 space-y-1">
+              <p className="text-xs text-ink-muted">Obrigação vinculada</p>
               <p className="text-sm font-medium">{documento.obrigacao.tipo}</p>
-              <p className="text-xs text-theme-muted">
+              <p className="text-xs text-ink-muted">
                 Vencimento: {new Date(documento.obrigacao.vencimento).toLocaleDateString("pt-BR", { timeZone: "UTC" })} • {documento.obrigacao.status}
               </p>
               {documento.obrigacao.valorTotal && (
@@ -426,13 +427,13 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
           )}
 
           {/* Pagamento */}
-          <div className="rounded border border-theme p-3 space-y-2">
+          <div className="rounded border border-line p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-theme-muted font-medium">Pagamento</p>
+              <p className="text-xs text-ink-muted font-medium">Pagamento</p>
               {!editandoPgto && (
                 <button
                   type="button"
-                  className="text-xs text-theme-primary hover:opacity-70 transition-opacity"
+                  className="text-xs text-brand hover:opacity-70 transition-opacity"
                   onClick={abrirEdicaoPgto}
                 >
                   Editar
@@ -443,19 +444,19 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
             {!editandoPgto && (
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <p className="text-xs text-theme-muted">Status</p>
+                  <p className="text-xs text-ink-muted">Status</p>
                   <p className={`text-sm font-medium ${PGTO_CLASS[documento.statusPagamento]}`}>
                     {PGTO_LABEL[documento.statusPagamento]}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-theme-muted">Data pagamento</p>
+                  <p className="text-xs text-ink-muted">Data pagamento</p>
                   <p className="text-sm font-mono">
                     {documento.dataPagamento ? new Date(documento.dataPagamento).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "—"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-theme-muted">Valor pago</p>
+                  <p className="text-xs text-ink-muted">Valor pago</p>
                   <p className="text-sm font-mono">{formatBrl(documento.valorPago)}</p>
                 </div>
               </div>
@@ -464,81 +465,79 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
             {editandoPgto && pgtoForm && (
               <div className="space-y-2">
                 <label className="block text-sm space-y-1">
-                  <span className="text-theme-muted text-xs">Status</span>
-                  <select
+                  <span className="text-ink-muted text-xs">Status</span>
+                  <Select
                     value={pgtoForm.statusPagamento}
                     onChange={(e) => setPgtoForm((f) => f && ({ ...f, statusPagamento: e.target.value as StatusPagamentoFiscal }))}
-                    className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm"
-                  >
+                >
                     {PGTO_STATUS.map((s) => (
                       <option key={s} value={s}>{PGTO_LABEL[s]}</option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
                 <label className="block text-sm space-y-1">
-                  <span className="text-theme-muted text-xs">Data de pagamento</span>
-                  <input
+                  <span className="text-ink-muted text-xs">Data de pagamento</span>
+                  <Input
                     type="date"
                     value={pgtoForm.dataPagamento}
                     onChange={(e) => setPgtoForm((f) => f && ({ ...f, dataPagamento: e.target.value }))}
-                    className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm"
+
                   />
                 </label>
                 <label className="block text-sm space-y-1">
-                  <span className="text-theme-muted text-xs">Valor pago (R$)</span>
-                  <input
+                  <span className="text-ink-muted text-xs">Valor pago (R$)</span>
+                  <Input
                     type="number"
                     step="0.01"
                     min="0"
                     value={pgtoForm.valorPago}
                     onChange={(e) => setPgtoForm((f) => f && ({ ...f, valorPago: e.target.value }))}
-                    className="w-full px-3 py-2 rounded border border-theme bg-transparent text-sm font-mono"
+                    className="font-mono"
                     placeholder="0,00"
                   />
                 </label>
                 {erroPgto && <p className="text-sm text-red-600">{erroPgto}</p>}
                 <div className="flex gap-2">
-                  <button
+                  <Button
                     type="button"
                     onClick={salvarPgto}
                     disabled={salvandoPgto}
-                    className="px-4 py-2 rounded bg-primary text-white text-sm disabled:opacity-60"
-                  >
+                >
                     {salvandoPgto ? "Salvando..." : "Salvar"}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={cancelarEdicaoPgto}
-                    className="px-4 py-2 rounded border border-theme text-sm"
+                    variant="outline"
                   >
                     Cancelar
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
 
             {/* Comprovante */}
-            <div className="pt-1 border-t border-theme/50">
-              <p className="text-xs text-theme-muted mb-2">Comprovante</p>
+            <div className="pt-1 border-t border-line/50">
+              <p className="text-xs text-ink-muted mb-2">Comprovante</p>
               {documento.comprovanteUrl ? (
                 <div className="flex items-center gap-2">
                   <a
                     href={documento.comprovanteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 text-xs text-primary truncate hover:opacity-70 transition-opacity"
+                    className="flex-1 text-xs text-brand truncate hover:opacity-70 transition-opacity"
                     title={documento.comprovanteNomeArquivo ?? undefined}
                   >
                     {documento.comprovanteNomeArquivo ?? "comprovante"}
                     {documento.comprovanteTamanhoBytes && (
-                      <span className="text-theme-muted ml-1">
+                      <span className="text-ink-muted ml-1">
                         ({(documento.comprovanteTamanhoBytes / 1024).toFixed(0)} KB)
                       </span>
                     )}
                   </a>
                   <button
                     type="button"
-                    className="text-xs text-theme-muted hover:text-theme transition-colors shrink-0"
+                    className="text-xs text-ink-muted hover:text-ink transition-colors shrink-0"
                     onClick={() => comprovanteInputRef.current?.click()}
                     disabled={enviandoComprovante}
                     title="Substituir"
@@ -558,7 +557,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
               ) : (
                 <button
                   type="button"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-theme-primary/40 text-xs text-theme-primary hover:opacity-70 transition-opacity disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-line-primary/40 text-xs text-brand hover:opacity-70 transition-opacity disabled:opacity-50"
                   onClick={() => comprovanteInputRef.current?.click()}
                   disabled={enviandoComprovante}
                 >
@@ -573,29 +572,29 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
                 const badgeCls =
                   v.status === "CONFERE" ? "bg-green-500/10 text-green-600 border-green-500/30" :
                   v.status === "DIVERGENCIA" ? "bg-red-500/10 text-red-600 border-red-500/30" :
-                  "bg-gray-500/10 text-theme-muted border-theme/50";
+                  "bg-gray-500/10 text-ink-muted border-line/50";
                 const badgeLabel =
                   v.status === "CONFERE" ? "Confere" :
                   v.status === "DIVERGENCIA" ? "Divergência" : "Inconclusivo";
                 return (
-                  <div className="mt-2 rounded border border-theme/50 bg-theme/30 p-2 space-y-1.5">
+                  <div className="mt-2 rounded border border-line/50 bg-surface-hover p-2 space-y-1.5">
                     <div className="flex items-center gap-2">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded border ${badgeCls}`}>{badgeLabel}</span>
-                      <span className="text-xs text-theme-muted">Validação IA</span>
+                      <span className="text-xs text-ink-muted">Validação IA</span>
                     </div>
                     <ul className="space-y-0.5">
                       {v.itens.map((item, i) => (
                         <li key={i} className="flex items-start gap-1.5 text-xs">
                           <span className={item.ok ? "text-green-600" : "text-red-500"}>{item.ok ? "✓" : "✗"}</span>
-                          <span className="text-theme-muted">{item.campo}:</span>
+                          <span className="text-ink-muted">{item.campo}:</span>
                           <span className="font-mono">{item.encontrado ?? "—"}</span>
                           {!item.ok && item.esperado && (
-                            <span className="text-theme-muted">(esperado: {item.esperado})</span>
+                            <span className="text-ink-muted">(esperado: {item.esperado})</span>
                           )}
                         </li>
                       ))}
                     </ul>
-                    {v.resumo && <p className="text-xs text-theme-muted italic">{v.resumo}</p>}
+                    {v.resumo && <p className="text-xs text-ink-muted italic">{v.resumo}</p>}
                   </div>
                 );
               })()}
@@ -613,19 +612,19 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
             </div>
           </div>
 
-          <p className="text-xs text-theme-muted">
+          <p className="text-xs text-ink-muted">
             {(documento.tamanhoBytes / 1024).toFixed(1)} KB • {new Date(documento.createdAt).toLocaleDateString("pt-BR")}
           </p>
         </div>
 
         {/* Ações */}
         {!editando && (
-          <div className="px-6 py-4 mb-6 border-t border-theme flex items-center gap-2 flex-wrap">
+          <div className="px-6 py-4 mb-6 border-t border-line flex items-center gap-2 flex-wrap">
             <a
               href={documento.arquivoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-theme text-xs text-theme-muted hover:text-theme transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-line text-xs text-ink-muted hover:text-ink transition-colors"
               title="Baixar PDF"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -638,7 +637,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
             </a>
             <button
               type="button"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-theme-primary/40 text-xs text-theme-primary hover:opacity-70 transition-opacity"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-line-primary/40 text-xs text-brand hover:opacity-70 transition-opacity"
               onClick={abrirEdicao}
               title="Editar"
             >
@@ -651,7 +650,7 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
             <div className="relative">
               <button
                 type="button"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-theme text-xs text-theme-muted hover:text-theme transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-line text-xs text-ink-muted hover:text-ink transition-colors"
                 onClick={() => setModoReprocessar((o) => !o)}
                 title="Reprocessar"
               >
@@ -664,23 +663,23 @@ export function DocumentoDrawer({ documento, onClose, onExcluir, onReprocessar, 
               {modoReprocessar && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setModoReprocessar(false)} />
-                  <div className="absolute bottom-full mb-2 left-0 z-20 bg-theme-card border border-theme rounded-lg shadow-lg p-3 w-52 space-y-2">
-                    <p className="text-xs text-theme-muted font-medium">Escolha o modo:</p>
+                  <div className="absolute bottom-full mb-2 left-0 z-20 bg-surface border border-line rounded-card shadow-lg p-3 w-52 space-y-2">
+                    <p className="text-xs text-ink-muted font-medium">Escolha o modo:</p>
                     <button
                       type="button"
-                      className="w-full text-left px-3 py-2 rounded border border-theme text-xs hover:border-primary/50 hover:text-theme transition-colors"
+                      className="w-full text-left px-3 py-2 rounded border border-line text-xs hover:border-brand/50 hover:text-ink transition-colors"
                       onClick={() => { setModoReprocessar(false); onReprocessar(documento.id, "SEMI_AUTO"); }}
                     >
                       <span className="font-medium block">Semiautomático</span>
-                      <span className="text-theme-muted">Regex — rápido, sem custo</span>
+                      <span className="text-ink-muted">Regex — rápido, sem custo</span>
                     </button>
                     <button
                       type="button"
-                      className="w-full text-left px-3 py-2 rounded border border-theme text-xs hover:border-primary/50 hover:text-theme transition-colors"
+                      className="w-full text-left px-3 py-2 rounded border border-line text-xs hover:border-brand/50 hover:text-ink transition-colors"
                       onClick={() => { setModoReprocessar(false); onReprocessar(documento.id, "IA"); }}
                     >
                       <span className="font-medium block">Com IA</span>
-                      <span className="text-theme-muted">Claude Sonnet — mais preciso</span>
+                      <span className="text-ink-muted">Claude Sonnet — mais preciso</span>
                     </button>
                   </div>
                 </>
