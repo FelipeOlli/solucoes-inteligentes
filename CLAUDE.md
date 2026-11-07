@@ -69,6 +69,7 @@ DATABASE_URL
 JWT_SECRET
 NEXT_PUBLIC_APP_URL
 ANTHROPIC_API_KEY
+SI_MCP_TOKEN (endpoint MCP `/mcp` — tools em `site-si/lib/mcp/server.ts`, chamam as rotas `app/api/**` em processo como dono)
 
 ## Regra de sessão
 Ao encerrar, adicione 1 linha em "Sessões recentes" abaixo.
