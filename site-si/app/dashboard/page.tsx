@@ -25,6 +25,8 @@ type Servico = {
   dataAbertura: string;
   dataAgendamento: string | null;
   valorEstimado: number | null;
+  repasseProposto?: number | null;
+  repassePropostoOrigem?: "TECNICO" | "DONO" | null;
   cliente: { nome: string; email: string };
 };
 
@@ -177,6 +179,12 @@ export default function DashboardPage() {
                     {STATUS_LABEL[s.statusAtual] || s.statusAtual}
                   </span>
                 </div>
+
+                {s.repasseProposto != null && s.repassePropostoOrigem === "TECNICO" && (
+                  <p className="rounded-control bg-warn-bg px-2 py-1 text-xs font-medium text-warn">
+                    Repasse proposto pelo técnico: {brl(s.repasseProposto)}
+                  </p>
+                )}
 
                 <div className="mt-auto space-y-1 text-xs text-ink-muted">
                   <p className="truncate">

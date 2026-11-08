@@ -104,6 +104,9 @@ type ServicoDetail = {
   comprovanteRepasseNomeArquivo?: string | null;
   valorEstimado?: number | null;
   valorRepasse?: number | null;
+  repasseProposto?: number | null;
+  repassePropostoOrigem?: "TECNICO" | "DONO" | null;
+  repassePropostoObs?: string | null;
   valorMaterial?: number | null;
   custoFixo?: number | null;
   valorGarantia?: number | null;
@@ -151,6 +154,10 @@ export default function ServicoDetailPage() {
   const [loading, setLoading] = useState(true);
   const [novoStatus, setNovoStatus] = useState("");
   const [reagendamentoPendente, setReagendamentoPendente] = useState(false);
+  const [repassePendente, setRepassePendente] = useState(false);
+  const [contrapropondo, setContrapropondo] = useState(false);
+  const [contraValor, setContraValor] = useState("");
+  const [contraObs, setContraObs] = useState("");
   const [uploadingComprovante, setUploadingComprovante] = useState(false);
   const [reabrindoAtendimento, setReabrindoAtendimento] = useState(false);
   const [notaConteudo, setNotaConteudo] = useState("");
@@ -376,6 +383,24 @@ export default function ServicoDetailPage() {
     if (status === 401) router.push("/login");
     if (status === 200) load();
     else alert(err?.message ?? "Não foi possível recusar o reagendamento.");
+  }
+
+  async function handleRepasse(acao: "aprovar" | "recusar" | "contrapropor") {
+    const valor = Number(contraValor.replace(/\./g, "").replace(",", "."));
+    if (acao === "contrapropor" && !(valor > 0)) return;
+    setRepassePendente(true);
+    const { status, error: err } = await api(`/servicos/${id}/repasse`, {
+      method: "POST",
+      body: acao === "contrapropor" ? { acao, valor, observacao: contraObs } : { acao },
+    });
+    setRepassePendente(false);
+    if (status === 401) router.push("/login");
+    if (status === 200) {
+      setContrapropondo(false);
+      setContraValor("");
+      setContraObs("");
+      load();
+    } else alert(err?.message ?? "Não foi possível atualizar o repasse.");
   }
 
   async function uploadComprovanteRepasse(file: File) {
@@ -735,6 +760,90 @@ export default function ServicoDetailPage() {
               {reagendamentoPendente ? "Enviando…" : "Aprovar novo agendamento"}
             </button>
           </div>
+        </div>
+      )}
+
+      {servico.repasseProposto != null && servico.repassePropostoOrigem === "TECNICO" && (
+        <div className="banner-alert rounded-card border p-4 mb-6">
+          <h2 className="font-heading font-semibold text-sm mb-1">Técnico propôs um valor de repasse</h2>
+          <p className="text-sm mb-1">
+            Proposta: <strong>{brl(servico.repasseProposto)}</strong>
+            {servico.valorRepasse != null && <> (atual: {brl(servico.valorRepasse)})</>}
+          </p>
+          {servico.repassePropostoObs && <p className="text-sm mb-2">Obs.: {servico.repassePropostoObs}</p>}
+          {contrapropondo ? (
+            <div className="mt-2 space-y-2">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={contraValor}
+                onChange={(e) => setContraValor(e.target.value)}
+                autoFocus
+                placeholder="Contraproposta (R$), ex.: 120,00"
+                className="w-full rounded-control border px-3 py-1.5 text-sm bg-transparent"
+              />
+              <input
+                type="text"
+                value={contraObs}
+                onChange={(e) => setContraObs(e.target.value)}
+                placeholder="Observação (opcional)"
+                className="w-full rounded-control border px-3 py-1.5 text-sm bg-transparent"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setContrapropondo(false)}
+                  className="rounded-control border border-current px-3 py-1.5 text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={repassePendente || !(Number(contraValor.replace(/\./g, "").replace(",", ".")) > 0)}
+                  onClick={() => handleRepasse("contrapropor")}
+                  className="rounded-control bg-pink-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                >
+                  {repassePendente ? "Enviando…" : "Enviar contraproposta"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 mt-2">
+              <button
+                type="button"
+                disabled={repassePendente}
+                onClick={() => handleRepasse("recusar")}
+                className="rounded-control border border-current px-3 py-1.5 text-sm disabled:opacity-50"
+              >
+                Recusar
+              </button>
+              <button
+                type="button"
+                disabled={repassePendente}
+                onClick={() => setContrapropondo(true)}
+                className="rounded-control border border-current px-3 py-1.5 text-sm disabled:opacity-50"
+              >
+                Contrapropor
+              </button>
+              <button
+                type="button"
+                disabled={repassePendente}
+                onClick={() => handleRepasse("aprovar")}
+                className="rounded-control bg-pink-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+              >
+                {repassePendente ? "Enviando…" : `Aprovar ${brl(servico.repasseProposto)}`}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {servico.repasseProposto != null && servico.repassePropostoOrigem === "DONO" && (
+        <div className="banner-info rounded-card border p-4 mb-6">
+          <h2 className="font-heading font-semibold text-sm mb-1">Contraproposta de repasse enviada</h2>
+          <p className="text-sm">
+            Aguardando o técnico aceitar <strong>{brl(servico.repasseProposto)}</strong>.
+          </p>
         </div>
       )}
 

@@ -9,6 +9,7 @@ import * as servicoNotas from "@/app/api/servicos/[id]/notas/route";
 import * as servicoLink from "@/app/api/servicos/[id]/link-cliente/route";
 import * as reagAprovar from "@/app/api/servicos/[id]/reagendamento/aprovar/route";
 import * as reagRecusar from "@/app/api/servicos/[id]/reagendamento/recusar/route";
+import * as repasseNegociacao from "@/app/api/servicos/[id]/repasse/route";
 import * as servicosContagem from "@/app/api/servicos/contagem/route";
 import * as clientes from "@/app/api/clientes/route";
 import * as clienteId from "@/app/api/clientes/[id]/route";
@@ -160,6 +161,14 @@ export function criarServidorSI(): McpServer {
     params: { id: String(a.id) },
     body: a.dados ?? {},
   }), { ...idServ, dados: dados.optional() });
+  escrita(
+    "negociar_repasse",
+    "Negocia o repasse ao técnico. Em `dados`: acao = aprovar (aceita a proposta do técnico) | recusar | contrapropor (exige valor; observacao opcional).",
+    "POST",
+    repasseNegociacao,
+    (a) => ({ path: `/api/servicos/${a.id}/repasse`, params: { id: String(a.id) }, body: a.dados }),
+    { ...idServ, dados }
+  );
   escrita("excluir_servico", "Exclui um serviço.", "DELETE", servicoId, (a) => ({
     path: `/api/servicos/${a.id}`,
     params: { id: String(a.id) },

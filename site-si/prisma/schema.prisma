@@ -176,6 +176,9 @@ model Servico {
   comprovantesMaterial          String? // JSON array de URLs — comprovantes de material enviados pelo técnico
   valorEstimado       Float?
   valorRepasse        Float?
+  repasseProposto       Float?  // proposta de repasse em negociação, aguardando a outra parte
+  repassePropostoOrigem String? // quem fez a proposta pendente: TECNICO | DONO
+  repassePropostoObs    String?
   valorMaterial       Float?
   custoFixo           Float?
   valorGarantia       Float?

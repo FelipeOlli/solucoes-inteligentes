@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { api, withBasePath } from "@/lib/api";
-import { brl } from "@/lib/format";
+import { brl, linhasDescricao, linkGoogleMaps } from "@/lib/format";
 import { STATUS_LABEL, getStatusBadgeClass } from "@/lib/status";
 
 type ServicoTecnico = {
@@ -23,9 +23,47 @@ type ServicoTecnico = {
   enderecoServico: string | null;
   contatoPreferencial: string | null;
   valorRepasse: number | null;
+  repasseProposto: number | null;
+  repassePropostoOrigem: "TECNICO" | "DONO" | null;
+  repassePropostoObs: string | null;
   categoria: string | null;
-  cliente: { nome: string; nomeContato: string | null; telefone: string | null };
+  cliente: {
+    nome: string;
+    nomeContato: string | null;
+    telefone: string | null;
+    logradouro: string | null;
+    bairro: string | null;
+    cidade: string | null;
+    uf: string | null;
+    cep: string | null;
+  };
 };
+
+/** Renderiza *negrito* no estilo WhatsApp. */
+function TextoInline({ texto }: { texto: string }) {
+  return (
+    <>
+      {texto.split(/(\*[^*]+\*)/g).map((parte, i) =>
+        parte.length > 2 && parte.startsWith("*") && parte.endsWith("*") ? (
+          <strong key={i} className="font-semibold">{parte.slice(1, -1)}</strong>
+        ) : (
+          <span key={i}>{parte}</span>
+        )
+      )}
+    </>
+  );
+}
+
+function enderecoCompleto(s: ServicoTecnico): string | null {
+  if (s.enderecoServico?.trim()) return s.enderecoServico.trim();
+  const c = s.cliente;
+  const partes = [c.logradouro, c.bairro, [c.cidade, c.uf].filter(Boolean).join("/"), c.cep].filter(Boolean);
+  return partes.length ? partes.join(", ") : null;
+}
+
+function parseValor(v: string): number {
+  return Number(v.replace(/\./g, "").replace(",", "."));
+}
 
 function formatDataHora(iso: string | null): string {
   if (!iso) return "—";
@@ -51,6 +89,9 @@ export default function TecnicoPage() {
   const [novaData, setNovaData] = useState("");
   const [motivoReagendamento, setMotivoReagendamento] = useState("");
   const [enviandoMaterialId, setEnviandoMaterialId] = useState<string | null>(null);
+  const [propondoId, setPropondoId] = useState<string | null>(null);
+  const [valorProposto, setValorProposto] = useState("");
+  const [obsProposta, setObsProposta] = useState("");
 
   const carregar = useCallback(() => {
     setLoading(true);
@@ -125,6 +166,25 @@ export default function TecnicoPage() {
     carregar();
   }
 
+  async function handleRepasse(id: string, acao: "propor" | "aceitar" | "recusar") {
+    const valor = parseValor(valorProposto);
+    if (acao === "propor" && !(valor > 0)) return;
+    setAcaoPendenteId(id);
+    const { error } = await api(`/tecnicos/me/servicos/${id}/repasse`, {
+      method: "POST",
+      body: acao === "propor" ? { acao, valor, observacao: obsProposta } : { acao },
+    });
+    setAcaoPendenteId(null);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    setPropondoId(null);
+    setValorProposto("");
+    setObsProposta("");
+    carregar();
+  }
+
   async function uploadComprovantesMaterial(id: string, files: FileList | null) {
     if (!files || !files.length) return;
     setEnviandoMaterialId(id);
@@ -194,34 +254,149 @@ export default function TecnicoPage() {
                 </span>
               </div>
 
-              <p className="text-body text-theme mb-2">{s.descricao}</p>
+              <div className="text-sm text-theme space-y-1 mb-4 leading-relaxed">
+                {linhasDescricao(s.descricao).map((linha, i) => (
+                  <p key={i} className={/^(✅|•)/.test(linha) ? "pl-4 -indent-4" : ""}>
+                    <TextoInline texto={linha} />
+                  </p>
+                ))}
+              </div>
 
-              <dl className="text-sm text-theme-muted space-y-1 mb-3">
-                {s.enderecoServico && (
-                  <div>
-                    <dt className="inline font-medium text-theme">Endereço: </dt>
-                    <dd className="inline">{s.enderecoServico}</dd>
+              {(() => {
+                const endereco = enderecoCompleto(s);
+                const mapa = linkGoogleMaps(s.enderecoServico, s.cliente);
+                const fone = s.contatoPreferencial || s.cliente.telefone;
+                return (
+                  <dl className="rounded-lg border border-theme p-3 text-sm space-y-2 mb-3">
+                    {endereco && (
+                      <div>
+                        <dt className="text-xs uppercase tracking-wide text-theme-muted">Local</dt>
+                        <dd className="text-theme">{endereco}</dd>
+                        {mapa && (
+                          <a
+                            href={mapa}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block mt-1 text-theme-primary underline font-medium"
+                          >
+                            Abrir no Google Maps
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    {fone && (
+                      <div>
+                        <dt className="text-xs uppercase tracking-wide text-theme-muted">Contato</dt>
+                        <dd>
+                          <a href={`tel:${fone.replace(/[^\d+]/g, "")}`} className="text-theme-primary underline">
+                            {fone}
+                          </a>
+                        </dd>
+                      </div>
+                    )}
+                    {s.dataAgendamento && (
+                      <div>
+                        <dt className="text-xs uppercase tracking-wide text-theme-muted">Agendado</dt>
+                        <dd className="text-theme">{formatDataHora(s.dataAgendamento)}</dd>
+                      </div>
+                    )}
+                  </dl>
+                );
+              })()}
+
+              <div className="rounded-lg border border-theme p-3 mb-3">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-xs uppercase tracking-wide text-theme-muted">Seu repasse</span>
+                  <span className="font-heading text-lg font-bold text-theme">
+                    {s.valorRepasse != null ? brl(s.valorRepasse) : "A combinar"}
+                  </span>
+                </div>
+
+                {s.repasseProposto != null && s.repassePropostoOrigem === "TECNICO" && (
+                  <p className="text-sm text-theme-muted mt-2">
+                    Você propôs <strong className="text-theme">{brl(s.repasseProposto)}</strong> — aguardando aprovação da gestão.
+                  </p>
+                )}
+
+                {s.repasseProposto != null && s.repassePropostoOrigem === "DONO" && (
+                  <div className="mt-2">
+                    <p className="text-sm text-theme">
+                      Contraproposta da gestão: <strong>{brl(s.repasseProposto)}</strong>
+                    </p>
+                    {s.repassePropostoObs && <p className="text-sm text-theme-muted">{s.repassePropostoObs}</p>}
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        disabled={acaoPendenteId === s.id}
+                        onClick={() => handleRepasse(s.id, "recusar")}
+                        className="flex-1 py-2 rounded-lg text-sm font-medium border border-theme text-theme disabled:opacity-50"
+                      >
+                        Recusar
+                      </button>
+                      <button
+                        type="button"
+                        disabled={acaoPendenteId === s.id}
+                        onClick={() => handleRepasse(s.id, "aceitar")}
+                        className="flex-1 py-2 rounded-lg text-sm font-medium bg-theme-cta disabled:opacity-50"
+                      >
+                        Aceitar {brl(s.repasseProposto)}
+                      </button>
+                    </div>
                   </div>
                 )}
-                {(s.cliente.telefone || s.contatoPreferencial) && (
-                  <div>
-                    <dt className="inline font-medium text-theme">Contato: </dt>
-                    <dd className="inline">{s.contatoPreferencial || s.cliente.telefone}</dd>
+
+                {s.statusAtual !== "CONCLUIDO" &&
+                  s.statusAtual !== "CANCELADO" &&
+                  s.repassePropostoOrigem !== "DONO" &&
+                  propondoId !== s.id && (
+                    <button
+                      type="button"
+                      onClick={() => { setPropondoId(s.id); setValorProposto(""); setObsProposta(""); }}
+                      className="mt-2 text-sm text-theme-primary underline"
+                    >
+                      {s.repasseProposto != null ? "Propor outro valor" : "Propor valor de repasse"}
+                    </button>
+                  )}
+
+                {propondoId === s.id && (
+                  <div className="mt-3 pt-3 border-t border-theme">
+                    <label className="block text-sm font-medium text-theme mb-1">Valor que você quer receber (R$)</label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={valorProposto}
+                      onChange={(e) => setValorProposto(e.target.value)}
+                      autoFocus
+                      placeholder="Ex.: 150,00"
+                      className="w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm mb-2"
+                    />
+                    <input
+                      type="text"
+                      value={obsProposta}
+                      onChange={(e) => setObsProposta(e.target.value)}
+                      placeholder="Observação (opcional)"
+                      className="w-full px-3 py-2 border rounded-lg bg-theme-card border-theme text-theme text-sm mb-2"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPropondoId(null)}
+                        className="flex-1 py-2 rounded-lg text-sm font-medium border border-theme text-theme"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!(parseValor(valorProposto) > 0) || acaoPendenteId === s.id}
+                        onClick={() => handleRepasse(s.id, "propor")}
+                        className="flex-1 py-2 rounded-lg text-sm font-medium bg-theme-cta disabled:opacity-50"
+                      >
+                        {acaoPendenteId === s.id ? "Enviando…" : "Enviar para aprovação"}
+                      </button>
+                    </div>
                   </div>
                 )}
-                {s.dataAgendamento && (
-                  <div>
-                    <dt className="inline font-medium text-theme">Agendado: </dt>
-                    <dd className="inline">{formatDataHora(s.dataAgendamento)}</dd>
-                  </div>
-                )}
-                {s.valorRepasse != null && (
-                  <div>
-                    <dt className="inline font-medium text-theme">Seu repasse: </dt>
-                    <dd className="inline">{brl(s.valorRepasse)}</dd>
-                  </div>
-                )}
-              </dl>
+              </div>
 
               {s.statusAtual !== "CONCLUIDO" && s.statusAtual !== "CANCELADO" && (
                 <div className="mb-3 pb-3 border-b border-theme">

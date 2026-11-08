@@ -28,8 +28,13 @@ export const SELECT_SERVICO_TECNICO = {
   enderecoServico: true,
   contatoPreferencial: true,
   valorRepasse: true,
+  repasseProposto: true,
+  repassePropostoOrigem: true,
+  repassePropostoObs: true,
   categoria: { select: { nome: true } },
-  cliente: { select: { nome: true, nomeContato: true, telefone: true } },
+  cliente: {
+    select: { nome: true, nomeContato: true, telefone: true, logradouro: true, bairro: true, cidade: true, uf: true, cep: true },
+  },
 } satisfies Prisma.ServicoSelect;
 
 type ServicoParaTecnico = Prisma.ServicoGetPayload<{ select: typeof SELECT_SERVICO_TECNICO }>;
@@ -58,11 +63,19 @@ export function serializeServicoParaTecnico(s: ServicoParaTecnico) {
     enderecoServico: s.enderecoServico,
     contatoPreferencial: s.contatoPreferencial,
     valorRepasse: s.valorRepasse,
+    repasseProposto: s.repasseProposto,
+    repassePropostoOrigem: s.repassePropostoOrigem,
+    repassePropostoObs: s.repassePropostoObs,
     categoria: s.categoria?.nome ?? null,
     cliente: {
       nome: s.cliente.nome,
       nomeContato: s.cliente.nomeContato,
       telefone: s.cliente.telefone,
+      logradouro: s.cliente.logradouro,
+      bairro: s.cliente.bairro,
+      cidade: s.cliente.cidade,
+      uf: s.cliente.uf,
+      cep: s.cliente.cep,
     },
   };
 }
