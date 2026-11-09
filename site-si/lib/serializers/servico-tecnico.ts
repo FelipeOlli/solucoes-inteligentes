@@ -26,14 +26,13 @@ export const SELECT_SERVICO_TECNICO = {
   comprovanteRepasseNomeArquivo: true,
   comprovantesMaterial: true,
   enderecoServico: true,
-  contatoPreferencial: true,
   valorRepasse: true,
   repasseProposto: true,
   repassePropostoOrigem: true,
   repassePropostoObs: true,
   categoria: { select: { nome: true } },
   cliente: {
-    select: { nome: true, nomeContato: true, telefone: true, logradouro: true, bairro: true, cidade: true, uf: true, cep: true },
+    select: { nome: true, logradouro: true, bairro: true, cidade: true, uf: true, cep: true },
   },
 } satisfies Prisma.ServicoSelect;
 
@@ -61,7 +60,6 @@ export function serializeServicoParaTecnico(s: ServicoParaTecnico) {
     comprovanteRepasseNomeArquivo: s.comprovanteRepasseNomeArquivo,
     comprovantesMaterial: s.comprovantesMaterial ? (JSON.parse(s.comprovantesMaterial) as string[]) : [],
     enderecoServico: s.enderecoServico,
-    contatoPreferencial: s.contatoPreferencial,
     valorRepasse: s.valorRepasse,
     repasseProposto: s.repasseProposto,
     repassePropostoOrigem: s.repassePropostoOrigem,
@@ -69,8 +67,6 @@ export function serializeServicoParaTecnico(s: ServicoParaTecnico) {
     categoria: s.categoria?.nome ?? null,
     cliente: {
       nome: s.cliente.nome,
-      nomeContato: s.cliente.nomeContato,
-      telefone: s.cliente.telefone,
       logradouro: s.cliente.logradouro,
       bairro: s.cliente.bairro,
       cidade: s.cliente.cidade,

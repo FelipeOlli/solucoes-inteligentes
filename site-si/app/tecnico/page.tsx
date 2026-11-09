@@ -21,7 +21,6 @@ type ServicoTecnico = {
   comprovanteRepasseNomeArquivo: string | null;
   comprovantesMaterial: string[];
   enderecoServico: string | null;
-  contatoPreferencial: string | null;
   valorRepasse: number | null;
   repasseProposto: number | null;
   repassePropostoOrigem: "TECNICO" | "DONO" | null;
@@ -29,8 +28,6 @@ type ServicoTecnico = {
   categoria: string | null;
   cliente: {
     nome: string;
-    nomeContato: string | null;
-    telefone: string | null;
     logradouro: string | null;
     bairro: string | null;
     cidade: string | null;
@@ -265,7 +262,6 @@ export default function TecnicoPage() {
               {(() => {
                 const endereco = enderecoCompleto(s);
                 const mapa = linkGoogleMaps(s.enderecoServico, s.cliente);
-                const fone = s.contatoPreferencial || s.cliente.telefone;
                 return (
                   <dl className="rounded-lg border border-theme p-3 text-sm space-y-2 mb-3">
                     {endereco && (
@@ -284,16 +280,6 @@ export default function TecnicoPage() {
                         )}
                       </div>
                     )}
-                    {fone && (
-                      <div>
-                        <dt className="text-xs uppercase tracking-wide text-theme-muted">Contato</dt>
-                        <dd>
-                          <a href={`tel:${fone.replace(/[^\d+]/g, "")}`} className="text-theme-primary underline">
-                            {fone}
-                          </a>
-                        </dd>
-                      </div>
-                    )}
                     {s.dataAgendamento && (
                       <div>
                         <dt className="text-xs uppercase tracking-wide text-theme-muted">Agendado</dt>
@@ -306,7 +292,7 @@ export default function TecnicoPage() {
 
               <div className="rounded-lg border border-theme p-3 mb-3">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-xs uppercase tracking-wide text-theme-muted">Seu repasse</span>
+                  <span className="text-xs uppercase tracking-wide text-theme-muted">Seu ganho</span>
                   <span className="font-heading text-lg font-bold text-theme">
                     {s.valorRepasse != null ? brl(s.valorRepasse) : "A combinar"}
                   </span>
@@ -354,7 +340,7 @@ export default function TecnicoPage() {
                       onClick={() => { setPropondoId(s.id); setValorProposto(""); setObsProposta(""); }}
                       className="mt-2 text-sm text-theme-primary underline"
                     >
-                      {s.repasseProposto != null ? "Propor outro valor" : "Propor valor de repasse"}
+                      {s.repasseProposto != null ? "Propor outro valor" : "Propor valor do meu ganho"}
                     </button>
                   )}
 
