@@ -273,7 +273,7 @@ export default function TecnicoPage() {
                             href={mapa}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block mt-1 text-theme-primary underline font-medium"
+                            className="mt-2 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium border border-theme text-theme transition hover:opacity-80"
                           >
                             Abrir no Google Maps
                           </a>
@@ -338,7 +338,7 @@ export default function TecnicoPage() {
                     <button
                       type="button"
                       onClick={() => { setPropondoId(s.id); setValorProposto(""); setObsProposta(""); }}
-                      className="mt-2 text-sm text-theme-primary underline"
+                      className="mt-3 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium border border-theme text-theme transition hover:opacity-80"
                     >
                       {s.repasseProposto != null ? "Propor outro valor" : "Propor valor do meu ganho"}
                     </button>
@@ -402,7 +402,7 @@ export default function TecnicoPage() {
                           <button
                             type="button"
                             onClick={() => removerComprovanteMaterial(s.id, url)}
-                            className="text-red-600 text-xs underline shrink-0"
+                            className="shrink-0 px-2 py-1 rounded-lg text-xs font-medium border border-red-600/50 text-red-600"
                           >
                             Remover
                           </button>
@@ -410,7 +410,7 @@ export default function TecnicoPage() {
                       ))}
                     </ul>
                   )}
-                  <label className="inline-block text-sm underline cursor-pointer text-theme-primary">
+                  <label className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium border border-theme text-theme transition hover:opacity-80 cursor-pointer">
                     {enviandoMaterialId === s.id ? "Enviando…" : "+ Anexar comprovante de peça/material"}
                     <input
                       type="file"
@@ -436,7 +436,7 @@ export default function TecnicoPage() {
                   href={withBasePath(s.comprovanteRepasseUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block text-sm text-theme-primary underline"
+                  className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium border border-theme text-theme transition hover:opacity-80"
                 >
                   Ver comprovante do pagamento
                 </a>
