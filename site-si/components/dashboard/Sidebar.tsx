@@ -14,6 +14,7 @@ import {
   HardHat,
   ShieldCheck,
   Tags,
+  KeyRound,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -38,6 +39,7 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/dashboard/tecnicos", label: "Técnicos", icon: HardHat },
   { href: "/dashboard/usuarios", label: "Usuários", icon: ShieldCheck },
   { href: "/dashboard/categorias", label: "Categorias", icon: Tags },
+  { href: "/dashboard/mcp", label: "Chaves MCP", icon: KeyRound },
 ];
 
 export function SidebarNav({

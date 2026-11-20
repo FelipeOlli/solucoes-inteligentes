@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { criarServidorSI } from "@/lib/mcp/server";
+import { validarChaveMcp } from "@/lib/mcp/chaves";
 
 /**
  * Servidor MCP do site, via HTTP (Streamable HTTP), stateless.
@@ -24,21 +25,27 @@ function igual(a: string, b: string): boolean {
   return ba.length === bb.length && timingSafeEqual(ba, bb);
 }
 
-function autorizado(req: NextRequest): boolean {
-  const esperado = process.env.SI_MCP_TOKEN?.trim();
-  if (!esperado) return false;
+async function autorizado(req: NextRequest): Promise<boolean> {
   const authorization = req.headers.get("authorization") ?? "";
   const candidatos = [
     authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : authorization.trim(),
     req.headers.get("x-api-key")?.trim() ?? "",
   ].filter((t) => t.length > 0);
-  return candidatos.some((t) => igual(t, esperado));
+
+  // Chave única legada (variável de ambiente), mantida como fallback.
+  const esperado = process.env.SI_MCP_TOKEN?.trim();
+  if (esperado && candidatos.some((t) => igual(t, esperado))) return true;
+
+  for (const t of candidatos) {
+    if (await validarChaveMcp(t)) return true;
+  }
+  return false;
 }
 
 async function tratar(req: NextRequest): Promise<Response> {
-  if (!autorizado(req)) {
+  if (!(await autorizado(req))) {
     return NextResponse.json(
-      { erro: "Token inválido ou ausente. Use: Authorization: Bearer <SI_MCP_TOKEN>" },
+      { erro: "Token inválido ou ausente. Use: Authorization: Bearer <chave MCP>" },
       { status: 401, headers: CORS_HEADERS }
     );
   }
