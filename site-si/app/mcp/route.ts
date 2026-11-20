@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { criarServidorSI } from "@/lib/mcp/server";
-import { validarChaveMcp } from "@/lib/mcp/chaves";
+import { validarChaveMcp, sincronizarChaveEnv } from "@/lib/mcp/chaves";
 
 /**
  * Servidor MCP do site, via HTTP (Streamable HTTP), stateless.
@@ -32,9 +32,8 @@ async function autorizado(req: NextRequest): Promise<boolean> {
     req.headers.get("x-api-key")?.trim() ?? "",
   ].filter((t) => t.length > 0);
 
-  // Chave única legada (variável de ambiente), mantida como fallback.
-  const esperado = process.env.SI_MCP_TOKEN?.trim();
-  if (esperado && candidatos.some((t) => igual(t, esperado))) return true;
+  // A chave legada (SI_MCP_TOKEN) vira um registro na tabela, revogável pela página.
+  await sincronizarChaveEnv().catch(() => {});
 
   for (const t of candidatos) {
     if (await validarChaveMcp(t)) return true;

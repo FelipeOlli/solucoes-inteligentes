@@ -2,12 +2,13 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireDono } from "@/lib/guards";
 import { jsonResponse, badRequest, errorResponse } from "@/lib/api-response";
-import { gerarChaveMcp } from "@/lib/mcp/chaves";
+import { gerarChaveMcp, sincronizarChaveEnv } from "@/lib/mcp/chaves";
 
 export async function GET(request: NextRequest) {
   const guard = await requireDono(request);
   if (!guard.ok) return guard.res;
 
+  await sincronizarChaveEnv().catch(() => {});
   const chaves = await prisma.chaveMcp.findMany({
     orderBy: { criadaEm: "desc" },
     select: { id: true, nome: true, prefixo: true, criadaEm: true, ultimoUso: true, revogadaEm: true },

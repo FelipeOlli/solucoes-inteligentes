@@ -141,7 +141,7 @@ export default function ChavesMcpPage() {
               {chaves.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.nome}</TableCell>
-                  <TableCell className="font-mono text-ink-muted">{c.prefixo}…</TableCell>
+                  <TableCell className="font-mono text-ink-muted">{c.prefixo.startsWith("simcp_") ? `${c.prefixo}…` : c.prefixo}</TableCell>
                   <TableCell className="text-ink-muted">{fmt(c.criadaEm)}</TableCell>
                   <TableCell className="text-ink-muted">{fmt(c.ultimoUso)}</TableCell>
                   <TableCell>

@@ -25,3 +25,18 @@ export async function validarChaveMcp(chave: string): Promise<boolean> {
     .catch(() => {});
   return true;
 }
+
+/**
+ * Registra na tabela a chave legada (SI_MCP_TOKEN) para que apareça na página,
+ * mostre último uso e possa ser revogada. Só guarda o hash; não sobrescreve revogação.
+ */
+export async function sincronizarChaveEnv(): Promise<void> {
+  const token = process.env.SI_MCP_TOKEN?.trim();
+  if (!token) return;
+  const hash = hashChave(token);
+  await prisma.chaveMcp.upsert({
+    where: { hash },
+    create: { nome: "Chave original (SI_MCP_TOKEN)", hash, prefixo: "SI_MCP_TOKEN" },
+    update: {},
+  });
+}
